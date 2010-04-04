@@ -1,12 +1,17 @@
-# Welcome to Gitit!
+# Ersatz 
 
-This is the front page of your new gitit wiki.  You can edit this
-page by clicking on the "edit" tab at the top of the screen.
-For instructions on how to make a link to another wiki page, see [the
-Help page](Help#wiki-links). To create a new wiki page, just create a
-link to it and follow the link.
+Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad to be solved by external solvers.
 
-Help is always available through the "Help" link in the sidebar.
-More details on installing and configurating gitit are available
-in the [Gitit User's Guide]().
+What differentiates Ersatz is the use of observable sharing in the API.
 
+For instance to define a full adder:
+
+    full_adder :: Bit b -> Bit b -> Bit b -> (Bit b, Bit b)
+    full_adder a b cin = (s2, c1 || c2)
+        where (s1,c1) = half_adder a b
+              (s2,c2) = half_adder s1 cin
+
+    half_adder :: Bit b -> Bit b -> (Bit b, Bit b)
+    half_adder a b = (a `xor` b, a && b)
+
+This enables you to use the a much richer subset of Haskell than the purely monadic meta-language.
