@@ -1,11 +1,12 @@
 # Ersatz 
 
-Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad to be solved by external solvers.
+Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad. It takes care of generating the normal form, encoding your problem, marshaling the data to an external solver, and parsing and interpreting the result into Haskell types.
 
 What differentiates Ersatz is the use of observable sharing in the API.
 
 For instance to define a full adder:
 
+~~~ { .haskell }
         full_adder :: Bit b -> Bit b -> Bit b -> (Bit b, Bit b)
         full_adder a b cin = (s2, c1 || c2)
             where (s1,c1) = half_adder a b
@@ -13,9 +14,12 @@ For instance to define a full adder:
 
         half_adder :: Bit b -> Bit b -> (Bit b, Bit b)
         half_adder a b = (a `xor` b, a && b)
+~~~
 
 as opposed to the following code in [satchmo](http://dfa.imn.htwk-leipzig.de/satchmo/):
 
+
+~~~ { .haskell }
         full_adder :: Boolean -> Boolean -> Boolean
                   -> SAT ( Boolean, Boolean )
         full_adder a b c = do
@@ -31,5 +35,17 @@ as opposed to the following code in [satchmo](http://dfa.imn.htwk-leipzig.de/sat
             r <- fun2 ( \ x y -> odd $ s x y ) a b
             d <- fun2 ( \ x y -> 1   < s x y ) a b
             return ( r, d )
+~~~
 
-This enables you to use the a much richer subset of Haskell than the purely monadic meta-language.
+This enables you to use the a much richer subset of Haskell than the purely monadic meta-language, and it becomes much easier to see that the resulting encoding is correct.
+
+To allocate fresh existentially or universally quantified variables or to assert that a Bit is true and add the attendant circuit with sharing to the current problem you use the SAT monad.
+
+~~~ { .haskell } 
+        verify_currying :: SAT b () 
+        verify_currying = do
+            x <- forall
+            y <- forall 
+            z <- forall
+            assert $ ((x && y) ==> z) === (x ==> y ==> z)
+~~~
