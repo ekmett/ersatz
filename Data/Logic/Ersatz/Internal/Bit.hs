@@ -1,19 +1,27 @@
-{-# LANGUAGE TypeFamilies, TypeOperators #-}
+{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances #-}
 module Data.Logic.Ersatz.Internal.Bit
     ( Boolean(..)
     , Equatable(..)
     , Bit(..)
+    , bit
     , Circuit(..)
 --  , assertBit
     ) where
- 
+
 import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 import Control.Applicative
+import Data.List (partition)
 import Data.Traversable (Traversable,traverse)
 import Data.Logic.Ersatz.Encoding (Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
-import Data.Logic.Ersatz.Internal.Reify
+import Data.Reify
+-- import Data.Reify.Graph -- Logic.Ersatz.Internal.Reify
+
+infix  4 ===, /==
+infixr 3 &&
+infixr 2 ||
+infixr 0 ==> 
 
 class Boolean t where
     bool :: Bool -> t
@@ -29,13 +37,16 @@ class Boolean t where
     nor :: [t] -> t
     xor :: t -> t -> t
 
-    -- 2x2 multiplexor
+    -- map a 2x2 multiplexor over the functor
     choose :: Functor f => t -> f (t,t) -> f t
     choose s = fmap (\(a,b) -> (a && not s) || (b && s)) 
 
     x ==> y = not x || y
     nand = not . and
     nor = not . or
+
+bit :: Bool -> Bit
+bit = bool
     
 instance Boolean Bool where
     bool = id
@@ -58,26 +69,36 @@ instance Boolean Bool where
     choose False = fmap fst
     choose True = fmap snd
 
-data Circuit c b
-    = And [c b]
-    | Or [c b]
-    | Xor (c b) (c b)
-    | Not (c b)
-    | Var (Lit b)
+data Circuit c
+    = And [c]
+    | Or [c]
+    | Xor c c
+    | Not c
+    | Var !Lit
 
-data Bit b = Bit (Circuit Bit b)
+-- does this have to be data?
+newtype Bit = Bit (Circuit Bit)
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Encoding Bit where
     type Decoded Bit = Bool
     decode f (Bit c) = case c of
-        And cs  -> and <$> traverse (decode f) cs
-        Or cs   -> or <$> traverse (decode f) cs
-        Xor x y -> xor <$> decode f x <*> decode f y
-        Not c'   -> not <$> decode f c'
+        And cs  -> all (decode f) cs
+        Or cs   -> any (decode f) cs
+        Xor x y -> xor (decode f x) (decode f y)
+        Not c'   -> not (decode f c')
         Var l   -> decode f l 
 
-instance Boolean (Bit b) where
+    decide f (Bit c) = case c of
+        And cs -> let (knowns, unknowns) = partition (decide f) cs
+                  in not (all (decode f) knowns) || null unknowns
+        Or cs  -> let (knowns, unknowns) = partition (decide f) cs 
+                  in any (decode f) knowns || null unknowns
+        Xor x y -> decide f x && decide f y
+        Not c'  -> decide f c'
+        Var l   -> decide f l
+                  
+instance Boolean Bit where
     -- improve the stablemap this way
     bool t | t = true 
            | otherwise = false
@@ -93,16 +114,25 @@ instance Boolean (Bit b) where
     or xs   = Bit (Or xs)
 
 class Equatable t where
-    (===) :: t s -> t s -> Bit s
-    (/==) :: t s -> t s -> Bit s
+    (===) :: t -> t -> Bit
+    (/==) :: t -> t -> Bit
+
     a === b = not (a /== b)
     a /== b = not (a === b)
 
 instance Equatable Bit where
     (/==) = xor
+instance (Equatable a, Equatable b) => Equatable (a,b) where
+    (a,b) === (a',b') = a === a' && b === b'
+instance (Equatable a, Equatable b, Equatable c) => Equatable (a,b,c) where
+    (a,b,c) === (a',b',c') = a === a' && b === b' && c === c'
+instance (Equatable a, Equatable b, Equatable c, Equatable d) => Equatable (a,b,c,d) where
+    (a,b,c,d) === (a',b',c',d') = a === a' && b === b' && c === c' && d === d'
+instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e) => Equatable (a,b,c,d,e) where
+    (a,b,c,d,e) === (a',b',c',d',e') = a === a' && b === b' && c === c' && d === d' && e === e'
 
-instance (Equatable f, Equatable g) => Equatable (f :*: g) where
-    (a :*: b) === (c :*: d) = (a === c) && (b === d)
+instance Equatable [Bit] where
+    as === bs = bool (length as == length bs) && and (zipWith (===) as bs)
     
 instance Variable Bit where
     known (Bit b) = case b of

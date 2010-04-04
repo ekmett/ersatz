@@ -3,22 +3,21 @@
 module Data.Logic.Ersatz.Monad
     ( SAT
     , MonadSAT(..)
-    , satToST
+    , satToIO
     , showSAT
---    , Solver
     ) where
 
-import Control.Monad.ST (ST, runST)
 import Control.Monad.State (runStateT)
 -- import Control.Monad.Trans (MonadIO(..))
 import Data.Logic.Ersatz.Internal.Problem
+import System.IO.Unsafe
 -- import Data.Logic.Ersatz.Solution
 
-showSAT :: (forall s. SAT s ()) -> String    
-showSAT s = runST (do (a,problem) <- satToST s; return (qdimacs problem))
+showSAT :: SAT a -> String    
+showSAT = qdimacs . snd . unsafePerformIO . satToIO
 
-satToST :: SAT s a -> ST s (a, QBF s)
-satToST m = runStateT (runSAT m) emptyQBF
+satToIO :: SAT a -> IO (a, QBF)
+satToIO m = runStateT (runSAT m) emptyQBF
 
 {-
 withST :: (forall s. (SAT s a, a -> QBF s -> ST s r)) -> r

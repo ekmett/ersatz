@@ -9,7 +9,6 @@ module Data.Logic.Ersatz.Internal.Problem
     , SAT(..)
     , MonadSAT(..)
     , Variable(..)
-    , (:*:)(..)
     , assertLits, assertNamedLits
     -- , assume
     -- , reifyLit
@@ -17,16 +16,9 @@ module Data.Logic.Ersatz.Internal.Problem
 
 import Control.Applicative
 -- import Control.Monad (ap)
-import Control.Monad.ST
 import Control.Monad.State
-
 -- import qualified Data.Sequence as Seq
 -- import Data.Sequence (Seq)
-
-import Data.Foldable (Foldable, foldMap)
-import Data.Traversable (Traversable, traverse)
-import qualified Data.Traversable as Traversable
-
 -- import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 
@@ -50,25 +42,25 @@ import Data.Monoid
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
-    qdimacs :: t s -> String
+    qdimacs :: t -> String
 
 instance QDIMACS Literal where
     qdimacs (Literal n) = show n
 
 -- | A naked possibly-negated Atom, present in the target solver.
-newtype Literal s = Literal { literalId :: Int } deriving (Eq,Ord)
+newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord)
 
-instance Show (Literal b) where
+instance Show Literal where
     showsPrec i = showsPrec i . literalId
     show = show . literalId
     showList = showList . map literalId
 
-negateLiteral :: Literal b -> Literal b
+negateLiteral :: Literal -> Literal
 negateLiteral = Literal . negate . literalId
 
 -- | Literals with partial evaluation
-data Lit s
-    = Lit  { getLiteral  :: {-# UNPACK #-} !(Literal s) }
+data Lit 
+    = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
     | Bool { getValue :: !Bool }
 
 instance Variable Lit where
@@ -77,73 +69,72 @@ instance Variable Lit where
     exists = litExists
     forall = litForall
 
-litExists :: MonadSAT s m => m (Lit s)
+litExists :: MonadSAT m => m Lit
 litExists = Lit <$> exists
 
-litForall  :: MonadSAT s m => m (Lit s)
+litForall  :: MonadSAT m => m Lit
 litForall = Lit <$> forall
 
-lit :: Bool -> Lit b
+lit :: Bool -> Lit
 lit = Bool
 
-negateLit :: Lit s -> Lit s
+negateLit :: Lit -> Lit
 negateLit (Bool b) = Bool (not b)
 negateLit (Lit l) = Lit (negateLiteral l)
 
 -- type Solver t m = forall b. t b -> m (Solution b)
 -- newtype Solution b = Solution { solutionMap :: IntMap Bool } 
 
-newtype Clause s = Clause { clauseSet :: IntSet } deriving (Eq, Ord, Monoid)
+newtype Clause = Clause { clauseSet :: IntSet } deriving (Eq, Ord, Monoid)
 
 instance QDIMACS Clause where
     qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
 
-clauseLiterals :: Clause s -> [Literal s]
+clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
-type Clauses s = Map (Clause s) (Maybe String)
+type Clauses = Map Clause (Maybe String)
 
-data QBF s = QBF 
+data QBF = QBF 
     { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
-    , qbfClauses    :: !(Clauses s)             -- ^ a map of clauses to assert to names
+    , qbfClauses    :: !Clauses                 -- ^ a map of clauses to assert to names
     , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-    , qbfLitMap     :: !(DynStableMap (Lit s))  -- ^ a mapping used during 'Bit' expansion
+    , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
 --  , qbfNameMap    :: !(IntMap String)         -- ^ a map of literals to given names
     } 
 
 -- provided for convenience
-instance Show (QBF s) where
+instance Show QBF where
     show = qdimacs
 
-emptyQBF :: QBF s
+emptyQBF :: QBF
 emptyQBF = QBF 0 Map.empty IntSet.empty IntMap.empty
 
 {-
 class Annotated t where
     (<?>) :: t -> String -> t 
 
-instance Annotated (SAT s (Literal s)) where 
+instance Annotated (SAT Literal) where 
     m <?> name = SAT $ do
         modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
 -}
 
-newtype SAT s a = SAT { runSAT :: StateT (QBF s) (ST s) a } 
+newtype SAT a = SAT { runSAT :: StateT QBF IO a } 
     deriving (Functor,Monad)
 
 -- We can't rely on having an Applicative instance for StateT st (ST s)
-instance Applicative (SAT s) where
+instance Applicative SAT where
     pure = return
     (<*>) = ap
 
-class (Applicative m, Monad m) => MonadSAT s m | m -> s where
-    literalExists :: m (Literal s)
-    literalForall :: m (Literal s)
-    assertClause  :: Clause s -> Maybe String -> m ()
-    liftST        :: ST s a -> m a
-    insertDyn     :: DynStableName -> Lit s -> m ()
-    lookupDyn     :: DynStableName -> m (Maybe (Lit s))
+class (Monad m, Applicative m) => MonadSAT m where
+    literalExists :: m Literal
+    literalForall :: m Literal
+    assertClause  :: Clause -> Maybe String -> m ()
+    insertDyn     :: DynStableName -> Lit -> m ()
+    lookupDyn     :: DynStableName -> m (Maybe Lit)
 
-instance MonadSAT s (SAT s) where
+instance MonadSAT SAT where
     literalExists = SAT $ do
         qbf <- get 
         let qbfLastAtom' = qbfLastAtom qbf + 1
@@ -153,8 +144,6 @@ instance MonadSAT s (SAT s) where
 
     assertClause clause name = SAT $ do
         modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) } 
-
-    liftST = SAT . lift
 
     insertDyn k v = SAT $ modify $
         \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
@@ -171,46 +160,33 @@ instance MonadSAT s (SAT s) where
         return (Literal qbfLastAtom')
     
 class Variable t where
-    known  :: t s -> Bool
-    exists :: MonadSAT s m => m (t s)
-    forall :: MonadSAT s m => m (t s)
+    known  :: t -> Bool
+    exists :: MonadSAT m => m t
+    forall :: MonadSAT m => m t 
 
 instance Variable Literal where
     known _ = False
     exists = literalExists
     forall = literalForall
 
--- functor product
-data (f :*: g) a = f a :*: g a
+instance (Variable f, Variable g) => Variable (f, g) where
+    known (f, g) = known f && known g
+    exists = (,) <$> exists <*> exists
+    forall = (,) <$> forall <*> forall
 
-instance (Functor f, Functor g) => Functor (f :*: g) where
-    fmap f (a :*: b) = fmap f a :*: fmap f b
-
-instance (Foldable f, Foldable g) => Foldable (f :*: g) where
-    foldMap f (a :*: b) = foldMap f a `mappend` foldMap f b
-
-instance (Traversable f, Traversable g) => Traversable (f :*: g) where
-    traverse f (a :*: b) = (:*:) <$> traverse f a <*> traverse f b
-
-instance (Variable f, Variable g) => Variable (f :*: g) where
-    known (f :*: g) = known f && known g
-    exists = (:*:) <$> exists <*> exists
-    forall = (:*:) <$> forall <*> forall
-
-assertLits :: MonadSAT s m => [Lit s] -> m ()
+assertLits :: MonadSAT m => [Lit] -> m ()
 assertLits lits 
     | any getValue knowns = return ()
     | otherwise = assertClause (Clause literalSet) Nothing
     where (knowns, unknowns) = List.partition known lits
           literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
 
-assertNamedLits :: MonadSAT s m => [Lit s] -> String -> m ()
+assertNamedLits :: MonadSAT m => [Lit] -> String -> m ()
 assertNamedLits lits name
     | any getValue knowns = return ()
     | otherwise = assertClause (Clause literalSet) (Just name)
     where (knowns, unknowns) = List.partition known lits
           literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
-
 
 {-
 assume :: IntMap Bool -> Clauses b -> Clauses b

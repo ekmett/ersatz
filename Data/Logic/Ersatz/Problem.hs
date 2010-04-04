@@ -6,7 +6,6 @@ module Data.Logic.Ersatz.Problem
     , Lit, lit, negateLit, litForall, litExists
     , QDIMACS(..)
     , Variable(..)
-    , (:*:)(..)
     , assertLits
     -- , assume
     -- , reifyLit

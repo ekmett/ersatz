@@ -31,12 +31,12 @@ tests =
         ] 
     ]
 
-full_adder :: Bit b -> Bit b -> Bit b -> (Bit b, Bit b)
+full_adder :: Bit -> Bit -> Bit -> (Bit, Bit)
 full_adder a b cin = (s2, c1 || c2)
         where (s1,c1) = half_adder a b
               (s2,c2) = half_adder s1 cin
 
-half_adder :: Bit b -> Bit b -> (Bit b, Bit b)
+half_adder :: Bit -> Bit -> (Bit, Bit)
 half_adder a b = (a `xor` b, a && b)
 
 {-
