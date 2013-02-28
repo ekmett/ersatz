@@ -11,4 +11,4 @@ module Data.Logic.Ersatz.Problem
     -- , reifyLit
     ) where
 
-import Data.Logic.Ersatz.Internal.Problem 
+import Data.Logic.Ersatz.Internal.Problem

@@ -1,4 +1,4 @@
-module Data.Logic.Ersatz 
+module Data.Logic.Ersatz
     ( module Data.Logic.Ersatz.Bit
     , module Data.Logic.Ersatz.Encoding
     , module Data.Logic.Ersatz.Monad

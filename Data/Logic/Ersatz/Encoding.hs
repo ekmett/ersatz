@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilies, Rank2Types #-}
-module Data.Logic.Ersatz.Encoding 
+module Data.Logic.Ersatz.Encoding
     ( Encoding(..)
     , decodeFunctor
     , decideFoldable
@@ -23,13 +23,13 @@ class Encoding a where
 
 instance Encoding Literal where
     type Decoded Literal = Bool
-    decode m l 
+    decode m l
         | i < 0     = maybe True not $ IntMap.lookup (negate i) m
         | otherwise = maybe False id $ IntMap.lookup i m
-        where i = literalId l 
-    decide m l 
-        | i < 0     = IntMap.member (negate i) m 
-        | otherwise = IntMap.member i m 
+        where i = literalId l
+    decide m l
+        | i < 0     = IntMap.member (negate i) m
+        | otherwise = IntMap.member i m
         where i = literalId l
 
 instance Encoding Lit where
@@ -37,13 +37,13 @@ instance Encoding Lit where
     decode _ (Bool b) = b
     decode f (Lit l)  = decode f l
     decide _ (Bool _) = True
-    decide f (Lit l)  = decide f l 
+    decide f (Lit l)  = decide f l
 
 instance (Encoding a, Encoding b) => Encoding (a,b) where
-    type Decoded (a,b) = (Decoded a, Decoded b) 
+    type Decoded (a,b) = (Decoded a, Decoded b)
     decode f (a,b) =  (decode f a, decode f b)
     decide f (a,b) = decide f a && decide f b
-    
+
 instance (Encoding a, Encoding b, Encoding c) => Encoding (a,b,c) where
     type Decoded (a,b,c) = (Decoded a, Decoded b, Decoded c)
     decode f (a,b,c) = (decode f a, decode f b, decode f c)
@@ -53,7 +53,7 @@ instance (Encoding a, Encoding b, Encoding c, Encoding d) => Encoding (a,b,c,d) 
     type Decoded (a,b,c,d) = (Decoded a, Decoded b, Decoded c, Decoded d)
     decode f (a,b,c,d) = (decode f a, decode f b, decode f c, decode f d)
     decide f (a,b,c,d) = decide f a && decide f b && decide f c && decide f d
-    
+
 instance (Encoding a, Encoding b) => Encoding (Either a b) where
     type Decoded (Either a b) = Either (Decoded a) (Decoded b)
     decode f (Left a) = Left (decode f a)
@@ -65,7 +65,7 @@ decodeFunctor :: (Functor f, Encoding a) => Solution -> f a -> f (Decoded a)
 decodeFunctor f = fmap (decode f)
 
 decideFoldable :: (Foldable f, Encoding a) => Solution -> f a -> Bool
-decideFoldable f = Foldable.all (decide f) 
+decideFoldable f = Foldable.all (decide f)
 
 instance Encoding a => Encoding [a] where
     type Decoded [a] = [Decoded a]

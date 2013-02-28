@@ -89,7 +89,7 @@ if you plan to display source code on your wiki.
 Highlighting support requires the [pcre][] library, so make sure that
 is installed before continuing.
 
-[pcre]:  http://www.pcre.org/ 
+[pcre]:  http://www.pcre.org/
 
 To install gitit with highlighting support, first ensure that pandoc
 is compiled with highlighting support, then install gitit as above:
@@ -202,7 +202,7 @@ support (see above), you can get highlighted source code by using
     ~~~ {.haskell .numberLines}
     qsort []     = []
     qsort (x:xs) = qsort (filter (< x) xs) ++ [x] ++
-                   qsort (filter (>= x) xs) 
+                   qsort (filter (>= x) xs)
     ~~~
 
 To see what languages your pandoc was compiled to highlight:
@@ -432,21 +432,21 @@ loaded, and set up a virtual host with the following configuration:
         RewriteEngine On
         ProxyPreserveHost On
         ProxyRequests Off
-    
+
         <Proxy *>
            Order deny,allow
            Allow from all
         </Proxy>
-    
+
         ProxyPassReverse /    http://127.0.0.1:5001
         RewriteRule ^(.*) http://127.0.0.1:5001$1 [P]
-    
+
         ErrorLog /var/log/apache2/error.log
         LogLevel warn
-    
+
         CustomLog /var/log/apache2/access.log combined
         ServerSignature On
-    
+
     </VirtualHost>
 
 Reload your apache configuration and you should be all set.

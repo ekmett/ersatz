@@ -10,7 +10,7 @@ import Data.Ix
 import Data.Logic.Ersatz.Internal.Problem
 import Data.IntMap (IntMap)
 
-type Solution = IntMap Bool 
+type Solution = IntMap Bool
 
 data Result
     = Unsolved

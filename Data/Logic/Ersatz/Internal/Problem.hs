@@ -3,7 +3,7 @@ module Data.Logic.Ersatz.Internal.Problem
     ( QBF(qbfLastAtom, qbfClauses, qbfUniversals), emptyQBF
     , Clause(..), clauseLiterals
     , Clauses
-    , Literal(literalId), negateLiteral 
+    , Literal(literalId), negateLiteral
     , Lit(..), lit, negateLit, litExists, litForall
     , QDIMACS(..)
     , SAT(..)
@@ -59,7 +59,7 @@ negateLiteral :: Literal -> Literal
 negateLiteral = Literal . negate . literalId
 
 -- | Literals with partial evaluation
-data Lit 
+data Lit
     = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
     | Bool { getValue :: !Bool }
 
@@ -83,7 +83,7 @@ negateLit (Bool b) = Bool (not b)
 negateLit (Lit l) = Lit (negateLiteral l)
 
 -- type Solver t m = forall b. t b -> m (Solution b)
--- newtype Solution b = Solution { solutionMap :: IntMap Bool } 
+-- newtype Solution b = Solution { solutionMap :: IntMap Bool }
 
 newtype Clause = Clause { clauseSet :: IntSet } deriving (Eq, Ord, Monoid)
 
@@ -95,13 +95,13 @@ clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
 type Clauses = Map Clause (Maybe String)
 
-data QBF = QBF 
+data QBF = QBF
     { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
     , qbfClauses    :: !Clauses                 -- ^ a map of clauses to assert to names
     , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
     , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
 --  , qbfNameMap    :: !(IntMap String)         -- ^ a map of literals to given names
-    } 
+    }
 
 -- provided for convenience
 instance Show QBF where
@@ -112,14 +112,14 @@ emptyQBF = QBF 0 Map.empty IntSet.empty IntMap.empty
 
 {-
 class Annotated t where
-    (<?>) :: t -> String -> t 
+    (<?>) :: t -> String -> t
 
-instance Annotated (SAT Literal) where 
+instance Annotated (SAT Literal) where
     m <?> name = SAT $ do
         modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
 -}
 
-newtype SAT a = SAT { runSAT :: StateT QBF IO a } 
+newtype SAT a = SAT { runSAT :: StateT QBF IO a }
     deriving (Functor,Monad)
 
 -- We can't rely on having an Applicative instance for StateT st (ST s)
@@ -136,33 +136,33 @@ class (Monad m, Applicative m) => MonadSAT m where
 
 instance MonadSAT SAT where
     literalExists = SAT $ do
-        qbf <- get 
+        qbf <- get
         let qbfLastAtom' = qbfLastAtom qbf + 1
             qbf' = qbf { qbfLastAtom = qbfLastAtom' }
         put qbf'
         return (Literal qbfLastAtom')
 
     assertClause clause name = SAT $ do
-        modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) } 
+        modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) }
 
     insertDyn k v = SAT $ modify $
         \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
 
-    lookupDyn k = SAT $ lookupDynStableMap k <$> gets qbfLitMap 
+    lookupDyn k = SAT $ lookupDynStableMap k <$> gets qbfLitMap
 
     literalForall = SAT $ do
-        qbf <- get 
+        qbf <- get
         let qbfLastAtom' = qbfLastAtom qbf + 1
             qbf' = qbf { qbfLastAtom = qbfLastAtom'
-                       , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf) 
+                       , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
                        }
         put qbf'
         return (Literal qbfLastAtom')
-    
+
 class Variable t where
     known  :: t -> Bool
     exists :: MonadSAT m => m t
-    forall :: MonadSAT m => m t 
+    forall :: MonadSAT m => m t
 
 instance Variable Literal where
     known _ = False
@@ -175,7 +175,7 @@ instance (Variable f, Variable g) => Variable (f, g) where
     forall = (,) <$> forall <*> forall
 
 assertLits :: MonadSAT m => [Lit] -> m ()
-assertLits lits 
+assertLits lits
     | any getValue knowns = return ()
     | otherwise = assertClause (Clause literalSet) Nothing
     where (knowns, unknowns) = List.partition known lits
@@ -190,18 +190,18 @@ assertNamedLits lits name
 
 {-
 assume :: IntMap Bool -> Clauses b -> Clauses b
-assume knowns map = IntMap.fromListWith mplus $ do 
+assume knowns map = IntMap.fromListWith mplus $ do
         (k,v) <- assocs map
         let k' = IntSet.fromAscList $ go knowns [] $ IntSet.toDescList k
         return (k',v)
-    where 
-        -- reverse the list into an accumulating parameter. 
+    where
+        -- reverse the list into an accumulating parameter.
         -- and filter elements that are known and for which the literal evaluates
         -- to to true. if anyfalsehoods are found, the whole conjunct fails.
         -- so we map it to the empty conjunct
         go :: IntMap Bool -> [Int] -> [Int] -> [Int]
         go _ acc [] = acc
-        go ks acc (n:xs) 
+        go ks acc (n:xs)
             | n < 0 = case IntMap.lookup (negate n) ks of
                 Nothing -> go ks (n:acc) xs -- keep it
                 Just True -> []             -- destroy the earth
@@ -217,7 +217,7 @@ assume knowns map = IntMap.fromListWith mplus $ do
 reifyLit :: (MonadSAT s m, MuRef f) => f s -> m (Lit s)
 reifyLit a = a `seq` do
         k <- liftST $ makeDynStableName root
-        l <- lookupDyn k 
+        l <- lookupDyn k
         case l of
             Nothing -> do
                 v <- exists -- Lit
@@ -239,7 +239,7 @@ instance QDIMACS QBF where
       where
         -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
         padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
-                | otherwise                                   = 0 
+                | otherwise                                   = 0
                       -- no universals means we are a plan DIMACS file
         quantGroups | IntSet.null qs = []
                       -- otherwise, skip to the first universal and show runs

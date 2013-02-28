@@ -1,4 +1,4 @@
-# Ersatz 
+# Ersatz
 
 Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad. It takes care of generating the normal form, encoding your problem, marshaling the data to an external solver, and parsing and interpreting the result into Haskell types.
 
@@ -41,11 +41,11 @@ This enables you to use the a much richer subset of Haskell than the purely mona
 
 To allocate fresh existentially or universally quantified variables or to assert that a Bit is true and add the attendant circuit with sharing to the current problem you use the SAT monad.
 
-~~~ { .haskell } 
-        verify_currying :: SAT b () 
+~~~ { .haskell }
+        verify_currying :: SAT b ()
         verify_currying = do
             x <- forall
-            y <- forall 
+            y <- forall
             z <- forall
             assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ~~~

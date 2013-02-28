@@ -1,11 +1,11 @@
 {-# LANGUAGE TypeFamilies, Rank2Types #-}
 -- a mishmash of features taken from Data.Reify
-module Data.Logic.Ersatz.Internal.Reify 
+module Data.Logic.Ersatz.Internal.Reify
     ( MuRef(..)
     , DynStableName(..)
     , hashDynStableName
     , makeDynStableName
-    , DynStableMap 
+    , DynStableMap
     , insertDynStableMap
     , lookupDynStableMap
     ) where
@@ -31,7 +31,7 @@ makeDynStableName a = DynStableName . unsafeCoerce <$> makeStableName a
 
 type DynStableMap t = IntMap [(DynStableName, t)]
 
-insertDynStableMap :: DynStableName -> t -> DynStableMap t -> DynStableMap t 
+insertDynStableMap :: DynStableName -> t -> DynStableMap t -> DynStableMap t
 insertDynStableMap k v = IntMap.insertWith (++) (hashDynStableName k) [(k,v)]
 
 lookupDynStableMap :: DynStableName -> DynStableMap t -> Maybe t
@@ -59,10 +59,10 @@ reifyGraph m = do rt1 <- newMVar M.empty
                   return (Graph pairs root)
 
 
-findNodes :: (MuRef s) 
+findNodes :: (MuRef s)
           => MVar (IntMap [(StableName s,Unique)])   -- Dynamic of StableNames
-          -> MVar [(Unique,DeRef s Unique)] 
-          -> s 
+          -> MVar [(Unique,DeRef s Unique)]
+          -> s
           -> IO Unique
 findNodes rt1 rt2 j | j `seq` True = do
         st <- makeDynStableName j
@@ -70,7 +70,7 @@ findNodes rt1 rt2 j | j `seq` True = do
         case mylookup st tab of
           Just var -> do putMVar rt1 tab
                          return $ var
-          Nothing -> 
+          Nothing ->
                     do var <- newUnique
                        putMVar rt1 $ M.insertWith (++) (hashDynStableName st) [(st,var)] tab
                        res <- mapDeRef (findNodes rt1 rt2) j

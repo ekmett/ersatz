@@ -21,13 +21,13 @@ import Data.Reify
 infix  4 ===, /==
 infixr 3 &&
 infixr 2 ||
-infixr 0 ==> 
+infixr 0 ==>
 
 class Boolean t where
     bool :: Bool -> t
     true :: t
     false :: t
-    (&&) :: t -> t -> t 
+    (&&) :: t -> t -> t
     (||) :: t -> t -> t
     (==>) :: t -> t -> t
     not :: t -> t
@@ -39,7 +39,7 @@ class Boolean t where
 
     -- map a 2x2 multiplexor over the functor
     choose :: Functor f => t -> f (t,t) -> f t
-    choose s = fmap (\(a,b) -> (a && not s) || (b && s)) 
+    choose s = fmap (\(a,b) -> (a && not s) || (b && s))
 
     x ==> y = not x || y
     nand = not . and
@@ -47,7 +47,7 @@ class Boolean t where
 
 bit :: Bool -> Bit
 bit = bool
-    
+
 instance Boolean Bool where
     bool = id
     true = True
@@ -87,20 +87,20 @@ instance Encoding Bit where
         Or cs   -> any (decode f) cs
         Xor x y -> xor (decode f x) (decode f y)
         Not c'   -> not (decode f c')
-        Var l   -> decode f l 
+        Var l   -> decode f l
 
     decide f (Bit c) = case c of
         And cs -> let (knowns, unknowns) = partition (decide f) cs
                   in not (all (decode f) knowns) || null unknowns
-        Or cs  -> let (knowns, unknowns) = partition (decide f) cs 
+        Or cs  -> let (knowns, unknowns) = partition (decide f) cs
                   in any (decode f) knowns || null unknowns
         Xor x y -> decide f x && decide f y
         Not c'  -> decide f c'
         Var l   -> decide f l
-                  
+
 instance Boolean Bit where
     -- improve the stablemap this way
-    bool t | t = true 
+    bool t | t = true
            | otherwise = false
     true  = Bit (Var (lit True))
     false = Bit (Var (lit False))
@@ -133,10 +133,10 @@ instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e) => Eq
 
 instance Equatable [Bit] where
     as === bs = bool (length as == length bs) && and (zipWith (===) as bs)
-    
+
 instance Variable Bit where
     known (Bit b) = case b of
-        And xs ->  all known xs 
+        And xs ->  all known xs
         Or xs -> any known xs
         Not c -> known c
         Xor c d -> known c && known d
@@ -161,7 +161,7 @@ instance Exists a => Exists (Bit -> a) where
 
 instance MuRef Bit where
     type DeRef Bit = Circuit
-    mapDeRef f (Bit b) = case b of 
+    mapDeRef f (Bit b) = case b of
         And xs -> And <$> traverse f xs
         Or xs -> Or <$> traverse f xs
         Not x -> Not <$> f x
@@ -174,7 +174,7 @@ data Graph e b = Graph [(Plan b, e Plan b)] (Plan b)
 reifyLit :: (MonadSAT s m, MuRef f) => Bit s -> m ((Lit s, [ ] )
 reifyLit a = a `seq` do
         k <- liftST $ makeDynStableName root
-        l <- lookupDyn k 
+        l <- lookupDyn k
         case l of
             Nothing -> do
                 v <- exists -- Lit
