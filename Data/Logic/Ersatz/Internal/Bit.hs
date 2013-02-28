@@ -142,22 +142,7 @@ instance Variable Bit where
         Xor c d -> known c && known d
         Var n -> known n
     exists = Bit . Var <$> exists
-    forall = Bit . Var <$> litForall
-
-class ForAll t where
-    forall :: t -> Bit
-    forall = ForAll
-
-instance ForAll a => ForAll (Bit -> a) where
-    forall x = Forall $ \f -> forall (f x)
-
-class Exists t where
-    exists :: t -> Bit
-    exists = Exists
-
-instance Exists a => Exists (Bit -> a) where
-    exists x = Exists $ \f -> exists (f x)
-
+    forall = Bit . Var <$> forall
 
 instance MuRef Bit where
     type DeRef Bit = Circuit
