@@ -43,9 +43,6 @@ To allocate fresh existentially or universally quantified variables or to assert
 
 ```haskell
 verify_currying :: SAT b ()
-verify_currying = do
-    x <- forall
-    y <- forall
-    z <- forall
-    assert $ ((x && y) ==> z) === (x ==> y ==> z)
+verify_currying = forall $ \x y z -> do
+  assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ```
