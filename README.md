@@ -9,8 +9,8 @@ For instance to define a full adder:
 ```haskell
 full_adder :: Bit -> Bit -> Bit -> (Bit, Bit)
 full_adder a b cin = (s2, c1 || c2)
-    where (s1,c1) = half_adder a b
-          (s2,c2) = half_adder s1 cin
+  where (s1,c1) = half_adder a b
+        (s2,c2) = half_adder s1 cin
 
 half_adder :: Bit -> Bit -> (Bit, Bit)
 half_adder a b = (a `xor` b, a && b)
@@ -21,20 +21,20 @@ as opposed to the following code in [satchmo](http://dfa.imn.htwk-leipzig.de/sat
 
 ```haskell
 full_adder :: Boolean -> Boolean -> Boolean
-          -> SAT ( Boolean, Boolean )
+           -> SAT ( Boolean, Boolean )
 full_adder a b c = do
-    let s x y z = sum $ map fromEnum [x,y,z]
-    r <- fun3 ( \ x y z -> odd $ s x y z ) a b c
-    d <- fun3 ( \ x y z -> 1   < s x y z ) a b c
-    return ( r, d )
+  let s x y z = sum $ map fromEnum [x,y,z]
+  r <- fun3 ( \ x y z -> odd $ s x y z ) a b c
+  d <- fun3 ( \ x y z -> 1   < s x y z ) a b c
+  return ( r, d )
 
 half_adder :: Boolean -> Boolean
            -> SAT ( Boolean, Boolean )
 half_adder a b = do
-    let s x y = sum $ map fromEnum [x,y]
-    r <- fun2 ( \ x y -> odd $ s x y ) a b
-    d <- fun2 ( \ x y -> 1   < s x y ) a b
-    return ( r, d )
+  let s x y = sum $ map fromEnum [x,y]
+  r <- fun2 ( \ x y -> odd $ s x y ) a b
+  d <- fun2 ( \ x y -> 1   < s x y ) a b
+  return ( r, d )
 ```
 
 This enables you to use the a much richer subset of Haskell than the purely monadic meta-language, and it becomes much easier to see that the resulting encoding is correct.
