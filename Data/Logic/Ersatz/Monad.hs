@@ -1,11 +1,11 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Data.Logic.Ersatz.Monad
-    ( SAT
-    , MonadSAT(..)
-    , satToIO
-    , showSAT
-    ) where
+  ( SAT
+  , MonadSAT(..)
+  , satToIO
+  , showSAT
+  ) where
 
 import Control.Monad.State (runStateT)
 -- import Control.Monad.Trans (MonadIO(..))
@@ -29,7 +29,7 @@ withIO (m, k) = do (a, qbf) <- stToIO (satToST m)
 
 solveWith :: MonadIO m => Solver m -> (forall s. (SAT s a, Witness s a -> m r)) -> m r
 solveWith solve (m, k) = do
-    (a, qbf) <- liftIO $ stToIO (satToST m)
-    (result, certificate) <- solve qbf
-    k (Witness result certificate a)
+  (a, qbf) <- liftIO $ stToIO (satToST m)
+  (result, certificate) <- solve qbf
+  k (Witness result certificate a)
 -}

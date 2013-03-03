@@ -1,14 +1,14 @@
 {-# LANGUAGE TypeFamilies, Rank2Types #-}
 -- a mishmash of features taken from Data.Reify
 module Data.Logic.Ersatz.Internal.Reify
-    ( MuRef(..)
-    , DynStableName(..)
-    , hashDynStableName
-    , makeDynStableName
-    , DynStableMap
-    , insertDynStableMap
-    , lookupDynStableMap
-    ) where
+  ( MuRef(..)
+  , DynStableName(..)
+  , hashDynStableName
+  , makeDynStableName
+  , DynStableMap
+  , insertDynStableMap
+  , lookupDynStableMap
+  ) where
 
 import Control.Applicative ((<$>))
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
@@ -24,7 +24,7 @@ hashDynStableName :: DynStableName -> Int
 hashDynStableName (DynStableName sn) = hashStableName sn
 
 instance Eq DynStableName where
-    DynStableName sn1 == DynStableName sn2 = sn1 == sn2
+  DynStableName sn1 == DynStableName sn2 = sn1 == sn2
 
 makeDynStableName :: t -> IO DynStableName
 makeDynStableName a = DynStableName . unsafeCoerce <$> makeStableName a
@@ -36,8 +36,8 @@ insertDynStableMap k v = IntMap.insertWith (++) (hashDynStableName k) [(k,v)]
 
 lookupDynStableMap :: DynStableName -> DynStableMap t -> Maybe t
 lookupDynStableMap k m = do
-    pairs <- IntMap.lookup (hashDynStableName k) m
-    Prelude.lookup k pairs
+  pairs <- IntMap.lookup (hashDynStableName k) m
+  Prelude.lookup k pairs
 
 {-
 data Graph e = Graph [(Unique,e Unique)] Unique
@@ -65,21 +65,22 @@ findNodes :: (MuRef s)
           -> s
           -> IO Unique
 findNodes rt1 rt2 j | j `seq` True = do
-        st <- makeDynStableName j
-        tab <- takeMVar rt1
-        case mylookup st tab of
-          Just var -> do putMVar rt1 tab
-                         return $ var
-          Nothing ->
-                    do var <- newUnique
-                       putMVar rt1 $ M.insertWith (++) (hashDynStableName st) [(st,var)] tab
-                       res <- mapDeRef (findNodes rt1 rt2) j
-                       tab' <- takeMVar rt2
-                       putMVar rt2 $ (var,res) : tab'
-                       return var
-   where
-        mylookup h tab =
-           case M.lookup (hashStableName h) tab of
-             Just tab2 -> Prelude.lookup h tab2
-             Nothing ->  Nothing
+  st <- makeDynStableName j
+  tab <- takeMVar rt1
+  case mylookup st tab of
+    Just var -> do
+      putMVar rt1 tab
+      return $ var
+    Nothing -> do
+      var <- newUnique
+      putMVar rt1 $ M.insertWith (++) (hashDynStableName st) [(st,var)] tab
+      res <- mapDeRef (findNodes rt1 rt2) j
+      tab' <- takeMVar rt2
+      putMVar rt2 $ (var,res) : tab'
+      return var
+  where
+    mylookup h tab =
+      case M.lookup (hashStableName h) tab of
+        Just tab2 -> Prelude.lookup h tab2
+        Nothing ->  Nothing
 -}

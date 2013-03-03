@@ -1,18 +1,18 @@
 {-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards #-}
 module Data.Logic.Ersatz.Internal.Problem
-    ( QBF(qbfLastAtom, qbfClauses, qbfUniversals), emptyQBF
-    , Clause(..), clauseLiterals
-    , Clauses
-    , Literal(literalId), negateLiteral
-    , Lit(..), lit, negateLit, litExists, litForall
-    , QDIMACS(..)
-    , SAT(..)
-    , MonadSAT(..)
-    , Variable(..)
-    , assertLits, assertNamedLits
-    -- , assume
-    -- , reifyLit
-    ) where
+  ( QBF(qbfLastAtom, qbfClauses, qbfUniversals), emptyQBF
+  , Clause(..), clauseLiterals
+  , Clauses
+  , Literal(literalId), negateLiteral
+  , Lit(..), lit, negateLit, litExists, litForall
+  , QDIMACS(..)
+  , SAT(..)
+  , MonadSAT(..)
+  , Variable(..)
+  , assertLits, assertNamedLits
+  -- , assume
+  -- , reifyLit
+  ) where
 
 import Control.Applicative
 -- import Control.Monad (ap)
@@ -42,32 +42,32 @@ import Data.Monoid
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
-    qdimacs :: t -> String
+  qdimacs :: t -> String
 
 instance QDIMACS Literal where
-    qdimacs (Literal n) = show n
+  qdimacs (Literal n) = show n
 
 -- | A naked possibly-negated Atom, present in the target solver.
 newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord)
 
 instance Show Literal where
-    showsPrec i = showsPrec i . literalId
-    show = show . literalId
-    showList = showList . map literalId
+  showsPrec i = showsPrec i . literalId
+  show = show . literalId
+  showList = showList . map literalId
 
 negateLiteral :: Literal -> Literal
 negateLiteral = Literal . negate . literalId
 
 -- | Literals with partial evaluation
 data Lit
-    = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
-    | Bool { getValue :: !Bool }
+  = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
+  | Bool { getValue :: !Bool }
 
 instance Variable Lit where
-    known Bool{} = True
-    known _      = False
-    exists = litExists
-    forall = litForall
+  known Bool{} = True
+  known _      = False
+  exists = litExists
+  forall = litForall
 
 litExists :: MonadSAT m => m Lit
 litExists = Lit <$> exists
@@ -88,7 +88,7 @@ negateLit (Lit l) = Lit (negateLiteral l)
 newtype Clause = Clause { clauseSet :: IntSet } deriving (Eq, Ord, Monoid)
 
 instance QDIMACS Clause where
-    qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
+  qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
 
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
@@ -96,135 +96,135 @@ clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 type Clauses = Map Clause (Maybe String)
 
 data QBF = QBF
-    { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
-    , qbfClauses    :: !Clauses                 -- ^ a map of clauses to assert to names
-    , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-    , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
---  , qbfNameMap    :: !(IntMap String)         -- ^ a map of literals to given names
-    }
+  { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
+  , qbfClauses    :: !Clauses                 -- ^ a map of clauses to assert to names
+  , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
+  , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
+  -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
+  }
 
 -- provided for convenience
 instance Show QBF where
-    show = qdimacs
+  show = qdimacs
 
 emptyQBF :: QBF
 emptyQBF = QBF 0 Map.empty IntSet.empty IntMap.empty
 
 {-
 class Annotated t where
-    (<?>) :: t -> String -> t
+  (<?>) :: t -> String -> t
 
 instance Annotated (SAT Literal) where
-    m <?> name = SAT $ do
-        modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
+  m <?> name = SAT $ do
+      modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
 -}
 
 newtype SAT a = SAT { runSAT :: StateT QBF IO a }
-    deriving (Functor,Monad)
+  deriving (Functor,Monad)
 
 -- We can't rely on having an Applicative instance for StateT st (ST s)
 instance Applicative SAT where
-    pure = return
-    (<*>) = ap
+  pure = return
+  (<*>) = ap
 
 class (Monad m, Applicative m) => MonadSAT m where
-    literalExists :: m Literal
-    literalForall :: m Literal
-    assertClause  :: Clause -> Maybe String -> m ()
-    insertDyn     :: DynStableName -> Lit -> m ()
-    lookupDyn     :: DynStableName -> m (Maybe Lit)
+  literalExists :: m Literal
+  literalForall :: m Literal
+  assertClause  :: Clause -> Maybe String -> m ()
+  insertDyn     :: DynStableName -> Lit -> m ()
+  lookupDyn     :: DynStableName -> m (Maybe Lit)
 
 instance MonadSAT SAT where
-    literalExists = SAT $ do
-        qbf <- get
-        let qbfLastAtom' = qbfLastAtom qbf + 1
-            qbf' = qbf { qbfLastAtom = qbfLastAtom' }
-        put qbf'
-        return (Literal qbfLastAtom')
+  literalExists = SAT $ do
+    qbf <- get
+    let qbfLastAtom' = qbfLastAtom qbf + 1
+        qbf' = qbf { qbfLastAtom = qbfLastAtom' }
+    put qbf'
+    return (Literal qbfLastAtom')
 
-    assertClause clause name = SAT $ do
-        modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) }
+  assertClause clause name = SAT $ do
+    modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) }
 
-    insertDyn k v = SAT $ modify $
-        \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
+  insertDyn k v = SAT $ modify $
+    \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
 
-    lookupDyn k = SAT $ lookupDynStableMap k <$> gets qbfLitMap
+  lookupDyn k = SAT $ lookupDynStableMap k <$> gets qbfLitMap
 
-    literalForall = SAT $ do
-        qbf <- get
-        let qbfLastAtom' = qbfLastAtom qbf + 1
-            qbf' = qbf { qbfLastAtom = qbfLastAtom'
-                       , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
-                       }
-        put qbf'
-        return (Literal qbfLastAtom')
+  literalForall = SAT $ do
+    qbf <- get
+    let qbfLastAtom' = qbfLastAtom qbf + 1
+        qbf' = qbf { qbfLastAtom = qbfLastAtom'
+                   , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
+                   }
+    put qbf'
+    return (Literal qbfLastAtom')
 
 class Variable t where
-    known  :: t -> Bool
-    exists :: MonadSAT m => m t
-    forall :: MonadSAT m => m t
+  known  :: t -> Bool
+  exists :: MonadSAT m => m t
+  forall :: MonadSAT m => m t
 
 instance Variable Literal where
-    known _ = False
-    exists = literalExists
-    forall = literalForall
+  known _ = False
+  exists = literalExists
+  forall = literalForall
 
 instance (Variable f, Variable g) => Variable (f, g) where
-    known (f, g) = known f && known g
-    exists = (,) <$> exists <*> exists
-    forall = (,) <$> forall <*> forall
+  known (f, g) = known f && known g
+  exists = (,) <$> exists <*> exists
+  forall = (,) <$> forall <*> forall
 
 assertLits :: MonadSAT m => [Lit] -> m ()
 assertLits lits
-    | any getValue knowns = return ()
-    | otherwise = assertClause (Clause literalSet) Nothing
-    where (knowns, unknowns) = List.partition known lits
-          literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
+  | any getValue knowns = return ()
+  | otherwise = assertClause (Clause literalSet) Nothing
+  where (knowns, unknowns) = List.partition known lits
+        literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
 
 assertNamedLits :: MonadSAT m => [Lit] -> String -> m ()
 assertNamedLits lits name
-    | any getValue knowns = return ()
-    | otherwise = assertClause (Clause literalSet) (Just name)
-    where (knowns, unknowns) = List.partition known lits
-          literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
+  | any getValue knowns = return ()
+  | otherwise = assertClause (Clause literalSet) (Just name)
+  where (knowns, unknowns) = List.partition known lits
+        literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
 
 {-
 assume :: IntMap Bool -> Clauses b -> Clauses b
 assume knowns map = IntMap.fromListWith mplus $ do
-        (k,v) <- assocs map
-        let k' = IntSet.fromAscList $ go knowns [] $ IntSet.toDescList k
-        return (k',v)
-    where
-        -- reverse the list into an accumulating parameter.
-        -- and filter elements that are known and for which the literal evaluates
-        -- to to true. if anyfalsehoods are found, the whole conjunct fails.
-        -- so we map it to the empty conjunct
-        go :: IntMap Bool -> [Int] -> [Int] -> [Int]
-        go _ acc [] = acc
-        go ks acc (n:xs)
-            | n < 0 = case IntMap.lookup (negate n) ks of
-                Nothing -> go ks (n:acc) xs -- keep it
-                Just True -> []             -- destroy the earth
-                Just False -> go ks acc xs  -- filter it
-            | otherwise = case IntMap.lookup n ks of
-                Nothing -> go ks (n:acc) xs -- keep it
-                Just True -> go ks acc xs   -- filter it
-                Just False -> []            -- destroy the earth
+  (k,v) <- assocs map
+  let k' = IntSet.fromAscList $ go knowns [] $ IntSet.toDescList k
+  return (k',v)
+  where
+    -- reverse the list into an accumulating parameter.
+    -- and filter elements that are known and for which the literal evaluates
+    -- to to true. if anyfalsehoods are found, the whole conjunct fails.
+    -- so we map it to the empty conjunct
+    go :: IntMap Bool -> [Int] -> [Int] -> [Int]
+    go _ acc [] = acc
+    go ks acc (n:xs)
+      | n < 0 = case IntMap.lookup (negate n) ks of
+          Nothing -> go ks (n:acc) xs -- keep it
+          Just True -> []             -- destroy the earth
+          Just False -> go ks acc xs  -- filter it
+      | otherwise = case IntMap.lookup n ks of
+          Nothing -> go ks (n:acc) xs -- keep it
+          Just True -> go ks acc xs   -- filter it
+          Just False -> []            -- destroy the earth
 -}
 
 -- this allocates too many literals
 {-
 reifyLit :: (MonadSAT s m, MuRef f) => f s -> m (Lit s)
 reifyLit a = a `seq` do
-        k <- liftST $ makeDynStableName root
-        l <- lookupDyn k
-        case l of
-            Nothing -> do
-                v <- exists -- Lit
-                insertDyn k v
-                mapDeRef reifyLit a
-                return v
-            Just v -> return v
+  k <- liftST $ makeDynStableName root
+  l <- lookupDyn k
+  case l of
+    Nothing -> do
+      v <- exists -- Lit
+      insertDyn k v
+      mapDeRef reifyLit a
+      return v
+    Just v -> return v
 -}
 
 
@@ -232,36 +232,36 @@ data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
            | Forall { getQuant :: {-# UNPACK #-} !Int }
 
 instance QDIMACS QBF where
-    qdimacs (QBF vars cs qs _) = unlines  $
-        unwords ["p","cnf", show (vars + padding), show (Map.size cs) ] :
-        map showGroup quantGroups ++
-        map qdimacs (Map.keys cs)
-      where
-        -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
-        padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
-                | otherwise                                   = 0
-                      -- no universals means we are a plan DIMACS file
-        quantGroups | IntSet.null qs = []
-                      -- otherwise, skip to the first universal and show runs
-                    | otherwise = List.groupBy eqQuant $ quants [head qlist..vars] qlist
-            where qlist = IntSet.toAscList qs
+  qdimacs (QBF vars cs qs _) = unlines  $
+    unwords ["p","cnf", show (vars + padding), show (Map.size cs) ] :
+    map showGroup quantGroups ++
+    map qdimacs (Map.keys cs)
+    where
+      -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
+      padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
+              | otherwise                                   = 0
+                    -- no universals means we are a plan DIMACS file
+      quantGroups | IntSet.null qs = []
+                    -- otherwise, skip to the first universal and show runs
+                  | otherwise = List.groupBy eqQuant $ quants [head qlist..vars] qlist
+        where qlist = IntSet.toAscList qs
 
-        showGroup :: [Quant] -> String
-        showGroup xs = unwords $ q (head xs) : map (show . getQuant) xs
+      showGroup :: [Quant] -> String
+      showGroup xs = unwords $ q (head xs) : map (show . getQuant) xs
 
-        eqQuant :: Quant -> Quant -> Bool
-        eqQuant Exists{} Exists{} = True
-        eqQuant Forall{} Forall{} = True
-        eqQuant _ _ = False
+      eqQuant :: Quant -> Quant -> Bool
+      eqQuant Exists{} Exists{} = True
+      eqQuant Forall{} Forall{} = True
+      eqQuant _ _ = False
 
-        q :: Quant -> String
-        q Exists{} = "e"
-        q Forall{} = "a"
+      q :: Quant -> String
+      q Exists{} = "e"
+      q Forall{} = "a"
 
-        quants :: [Int] -> [Int] -> [Quant]
-        quants [] _ = []
-        quants (i:is) []     = Exists i : quants is []
-        quants (i:is) jjs@(j:js)
-            | i == j    = Forall i : quants is js
-            | otherwise = Exists i : quants is jjs
+      quants :: [Int] -> [Int] -> [Quant]
+      quants [] _ = []
+      quants (i:is) []     = Exists i : quants is []
+      quants (i:is) jjs@(j:js)
+        | i == j    = Forall i : quants is js
+        | otherwise = Exists i : quants is jjs
 
