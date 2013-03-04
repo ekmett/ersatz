@@ -12,7 +12,7 @@ module Data.Logic.Ersatz.Internal.Reify
 
 import Control.Applicative ((<$>))
 import System.Mem.StableName (StableName, makeStableName, hashStableName)
-import Data.IntMap as IntMap
+import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap)
 -- import Data.Unique
 import Data.Reify (MuRef(..))

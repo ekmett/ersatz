@@ -6,9 +6,6 @@ module Data.Logic.Ersatz.Encoding
 
 import Data.Logic.Ersatz.Solution
 import Data.Array
-import Data.Ix
-import qualified Data.Foldable as Foldable
-import Data.Foldable (Foldable)
 import Data.Logic.Ersatz.Internal.Problem
 import qualified Data.IntMap as IntMap
 import Data.Traversable (Traversable, traverse)

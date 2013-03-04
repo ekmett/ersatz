@@ -34,7 +34,7 @@ import qualified Data.Set as Set
 
 -- import Data.Maybe (maybeToList)
 
-import qualified Data.List as List (groupBy, partition)
+import qualified Data.List as List (groupBy)
 
 import Data.Logic.Ersatz.Internal.Reify
 

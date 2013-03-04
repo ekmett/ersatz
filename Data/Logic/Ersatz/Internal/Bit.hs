@@ -11,7 +11,6 @@ module Data.Logic.Ersatz.Internal.Bit
 import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 import Control.Applicative
-import Data.List (partition)
 import Data.Traversable (Traversable,traverse)
 import Data.Logic.Ersatz.Encoding (Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
