@@ -120,8 +120,14 @@ instance Boolean Bit where
          | otherwise = false
   true  = Bit (Var (lit True))
   false = Bit (Var (lit False))
-  a && b = Bit (And [a,b])
-  a || b = Bit (Or [a,b])
+  Bit (And as) && Bit (And bs) = and (as ++ bs)
+  Bit (And as) && b            = and (as ++ [b])
+  a            && Bit (And bs) = and (a : bs)
+  a            && b            = and [a,b]
+  Bit (Or as) || Bit (Or bs) = or (as ++ bs)
+  Bit (Or as) || b           = or (as ++ [b])
+  a           || Bit (Or bs) = or (a : bs)
+  a           || b           = or [a,b]
   not (Bit (Not c)) = c
   not (Bit (Var b)) = Bit (Var (negateLit b))
   not c     = Bit (Not c)
