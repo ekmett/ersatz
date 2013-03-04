@@ -11,7 +11,7 @@ module Data.Logic.Ersatz.Internal.Problem
   -- , assertLits, assertNamedLits
   -- , assume
   -- , reifyLit
-  , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
+  , formulaAssert, formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   ) where
 
 import Control.Applicative
@@ -271,6 +271,10 @@ instance QDIMACS QBF where
         | otherwise = Exists i : quants is jjs
 
 -- Primitives to build a Formula.
+
+-- | Assert a literal
+formulaAssert :: Int -> Formula
+formulaAssert l = formulaFromList [[l]]
 
 -- | The boolean /not/ operation
 formulaNot :: Int  -- ^ Output
