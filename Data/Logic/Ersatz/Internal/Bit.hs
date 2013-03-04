@@ -73,6 +73,7 @@ data Circuit c
   = And [c]
   | Or [c]
   | Xor c c
+  | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
   | Not c
   | Var !Lit
 
@@ -86,6 +87,8 @@ instance Encoding Bit where
     And cs  -> andMaybeBools (map (decode f) cs)
     Or cs   -> orMaybeBools (map (decode f) cs)
     Xor x y -> xor <$> decode f x <*> decode f y
+    Mux cf ct cp -> do p <- decode f cp
+                       decode f (if p then ct else cf)
     Not c'  -> not <$> decode f c'
     Var l   -> decode f l
     where
@@ -125,6 +128,7 @@ instance Boolean Bit where
   a `xor` b = Bit (Xor a b)
   and xs  = Bit (And xs)
   or xs   = Bit (Or xs)
+  choose s = fmap (\(a,b) -> Bit (Mux a b s))
 
 class Equatable t where
   (===) :: t -> t -> Bit
@@ -158,6 +162,7 @@ instance MuRef Bit where
     Or xs -> Or <$> traverse f xs
     Not x -> Not <$> f x
     Xor x y -> Xor <$> f x <*> f y
+    Mux x y p -> Mux <$> f x <*> f y <*> f p
     Var n -> pure $ Var n
 
 {-
