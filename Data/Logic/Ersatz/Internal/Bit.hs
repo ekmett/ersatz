@@ -76,9 +76,11 @@ data Circuit c
   | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
   | Not c
   | Var !Lit
+  deriving Show
 
 -- does this have to be data?
 newtype Bit = Bit (Circuit Bit)
+  deriving Show
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Encoding Bit where

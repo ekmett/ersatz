@@ -62,6 +62,7 @@ negateLiteral = Literal . negate . literalId
 data Lit
   = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
   | Bool { getValue :: !Bool }
+  deriving Show
 
 instance Variable Lit where
   exists = litExists
