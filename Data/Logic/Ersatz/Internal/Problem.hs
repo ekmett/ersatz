@@ -11,21 +11,21 @@ module Data.Logic.Ersatz.Internal.Problem
   -- , assertLits, assertNamedLits
   -- , assume
   -- , reifyLit
-  , formulaAssert, formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
+  , formulaEmpty, formulaLiteral
+  , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   ) where
 
 import Control.Applicative
 import Control.Monad.State
--- import Data.IntMap (IntMap)
+import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
+import Data.Reify (Unique)
 import Data.Set (Set)
 import qualified Data.Set as Set
-
-import Data.Logic.Ersatz.Internal.Reify
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
@@ -100,7 +100,7 @@ data QBF = QBF
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
   , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
   , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-  , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
+  , qbfLitMap     :: !(IntMap Literal)        -- ^ a mapping used during 'Bit' expansion
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
   }
 
@@ -122,7 +122,7 @@ instance Annotated (SAT Literal) where
 -}
 
 newtype SAT a = SAT { runSAT :: StateT QBF IO a }
-  deriving (Functor,Monad)
+  deriving (Functor, Monad, MonadIO)
 
 -- We can't rely on having an Applicative instance for StateT st (ST s)
 instance Applicative SAT where
@@ -130,11 +130,10 @@ instance Applicative SAT where
   (<*>) = ap
 
 class (Monad m, Applicative m) => MonadSAT m where
-  literalExists :: m Literal
-  literalForall :: m Literal
-  assertFormula :: Formula -> m ()
-  insertDyn     :: DynStableName -> Lit -> m ()
-  lookupDyn     :: DynStableName -> m (Maybe Lit)
+  literalExists   :: m Literal
+  literalForall   :: m Literal
+  assertFormula   :: Formula -> m ()
+  uniqueToLiteral :: Unique -> m Literal
 
 instance MonadSAT SAT where
   literalExists = SAT $ do
@@ -147,10 +146,14 @@ instance MonadSAT SAT where
   assertFormula formula = SAT $ do
     modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
 
-  insertDyn k v = SAT $ modify $
-    \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
-
-  lookupDyn k = SAT $ lookupDynStableMap k <$> gets qbfLitMap
+  uniqueToLiteral u = SAT $ do
+    maybeLit <- IntMap.lookup u <$> gets qbfLitMap
+    case maybeLit of
+      Just l  -> return l
+      Nothing -> do
+        l <- runSAT literalExists
+        modify $ \qbf -> qbf { qbfLitMap = IntMap.insert u l (qbfLitMap qbf) }
+        return l
 
   literalForall = SAT $ do
     qbf <- get
@@ -270,15 +273,20 @@ instance QDIMACS QBF where
 
 -- Primitives to build a Formula.
 
+-- | A formula with no clauses
+formulaEmpty :: Formula
+formulaEmpty = Formula Set.empty
+
 -- | Assert a literal
-formulaAssert :: Int -> Formula
-formulaAssert l = formulaFromList [[l]]
+formulaLiteral :: Literal -> Formula
+formulaLiteral (Literal l) =
+  Formula (Set.singleton (Clause (IntSet.singleton l)))
 
 -- | The boolean /not/ operation
-formulaNot :: Int  -- ^ Output
-           -> Int  -- ^ Input
+formulaNot :: Literal  -- ^ Output
+           -> Literal  -- ^ Input
            -> Formula
-formulaNot out inp = formulaFromList cls
+formulaNot (Literal out) (Literal inp) = formulaFromList cls
   where
     -- O ≡ ¬A
     -- (O → ¬A) & (¬O → A)
@@ -286,10 +294,10 @@ formulaNot out inp = formulaFromList cls
     cls = [ [-out, -inp], [out, inp] ]
 
 -- | The boolean /and/ operation
-formulaAnd :: Int    -- ^ Output
-           -> [Int]  -- ^ Inputs
+formulaAnd :: Literal    -- ^ Output
+           -> [Literal]  -- ^ Inputs
            -> Formula
-formulaAnd out inps = formulaFromList cls
+formulaAnd (Literal out) inpLs = formulaFromList cls
   where
     -- O ≡ (A & B & C)
     -- (O → (A & B & C)) & (¬O → ¬(A & B & C))
@@ -297,12 +305,13 @@ formulaAnd out inps = formulaFromList cls
     -- (¬O | A) & (¬O | B) & (¬O | C) & (O | ¬A | ¬B | ¬C)
     cls = (out : map negate inps)
         : map (\inp -> [-out, inp]) inps
+    inps = map literalId inpLs
 
 -- | The boolean /or/ operation
-formulaOr :: Int    -- ^ Output
-          -> [Int]  -- ^ Inputs
+formulaOr :: Literal    -- ^ Output
+          -> [Literal]  -- ^ Inputs
           -> Formula
-formulaOr out inps = formulaFromList cls
+formulaOr (Literal out) inpLs = formulaFromList cls
   where
     -- O ≡ (A | B | C)
     -- (O → (A | B | C)) & (¬O → ¬(A | B | C))
@@ -311,13 +320,14 @@ formulaOr out inps = formulaFromList cls
     -- (¬O | A | B | C) & (O | ¬A) & (O | ¬B) & (O | ¬C)
     cls = (-out : inps)
         : map (\inp -> [out, -inp]) inps
+    inps = map literalId inpLs
 
 -- | The boolean /xor/ operation
-formulaXor :: Int  -- ^ Output
-           -> Int  -- ^ Input
-           -> Int  -- ^ Input
+formulaXor :: Literal  -- ^ Output
+           -> Literal  -- ^ Input
+           -> Literal  -- ^ Input
            -> Formula
-formulaXor out inpA inpB = formulaFromList cls
+formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
   where
     -- O ≡ A ⊕ B
     -- O ≡ ((¬A & B) | (A & ¬B))
@@ -346,12 +356,13 @@ formulaXor out inpA inpB = formulaFromList cls
           ]
 
 -- | The boolean /else-then-if/ or /mux/ operation
-formulaMux :: Int  -- ^ Output
-           -> Int  -- ^ False branch
-           -> Int  -- ^ True branch
-           -> Int  -- ^ Predicate/selector
+formulaMux :: Literal  -- ^ Output
+           -> Literal  -- ^ False branch
+           -> Literal  -- ^ True branch
+           -> Literal  -- ^ Predicate/selector
            -> Formula
-formulaMux out inpF inpT inpP = formulaFromList cls
+formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
+  formulaFromList cls
   where
     -- O ≡ (F & ¬P) | (T & P)
     -- (O → ((F & ¬P) | (T & P))) & (¬O → ¬((F & ¬P) | (T & P)))

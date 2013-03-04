@@ -5,13 +5,16 @@ module Data.Logic.Ersatz.Internal.Bit
   , Bit(..)
   , bit
   , Circuit(..)
-  -- , assertBit
+  , assert
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 
 import Control.Applicative
+import Control.Monad (forM)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import Data.Monoid
 import Data.Reify
 -- import Data.Reify.Graph -- Logic.Ersatz.Internal.Reify
 import Data.Traversable (Traversable,traverse)
@@ -173,6 +176,27 @@ instance MuRef Bit where
     Xor x y -> Xor <$> f x <*> f y
     Mux x y p -> Mux <$> f x <*> f y <*> f p
     Var n -> pure $ Var n
+
+assert :: (MonadSAT m, MonadIO m) => Bit -> m ()
+assert b = do
+  Graph graph rootU <- liftIO (reifyGraph b)
+  root <- uniqueToLiteral rootU
+
+  formulas <- fmap mconcat . forM graph $ \(outU, circuit) -> do
+    out <- uniqueToLiteral outU
+    case circuit of
+      And inpUs    -> formulaAnd out <$> mapM uniqueToLiteral inpUs
+      Or inpUs     -> formulaOr  out <$> mapM uniqueToLiteral inpUs
+      Not inpU     -> formulaNot out <$> uniqueToLiteral inpU
+      Xor xU yU    -> formulaXor out <$> uniqueToLiteral xU
+                                     <*> uniqueToLiteral yU
+      Mux xU yU pU -> formulaMux out <$> uniqueToLiteral xU
+                                     <*> uniqueToLiteral yU
+                                     <*> uniqueToLiteral pU
+      Var (Lit _)      -> return formulaEmpty
+      Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
+      Var (Bool True)  -> return $ formulaLiteral out
+  assertFormula (formulas <> formulaLiteral root)
 
 {-
 data Graph e b = Graph [(Plan b, e Plan b)] (Plan b)

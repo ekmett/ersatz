@@ -20,6 +20,7 @@ library
   build-depends:
     base >= 4 && < 6,
     mtl >= 1.1 && < 2.2,
+    transformers == 0.3.*,
     containers >= 0.2.0.1,
     array >= 0.2 && < 0.5,
     data-reify >= 0.5 && < 0.7
@@ -42,6 +43,7 @@ test-suite test-ersatz
     ersatz,
     base >= 4 && < 6,
     mtl >= 1.1 && < 2.2,
+    transformers == 0.3.*,
     containers >= 0.2.0.1,
     array >= 0.2 && < 0.5,
     data-reify >= 0.5 && < 0.7,
