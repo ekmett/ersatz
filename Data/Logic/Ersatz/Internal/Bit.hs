@@ -10,12 +10,14 @@ module Data.Logic.Ersatz.Internal.Bit
 
 import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
+
 import Control.Applicative
-import Data.Traversable (Traversable,traverse)
-import Data.Logic.Ersatz.Encoding (Encoding(..))
-import Data.Logic.Ersatz.Internal.Problem
 import Data.Reify
 -- import Data.Reify.Graph -- Logic.Ersatz.Internal.Reify
+import Data.Traversable (Traversable,traverse)
+
+import Data.Logic.Ersatz.Encoding (Encoding(..))
+import Data.Logic.Ersatz.Internal.Problem
 
 infix  4 ===, /==
 infixr 3 &&

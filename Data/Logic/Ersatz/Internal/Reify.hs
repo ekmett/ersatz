@@ -11,11 +11,11 @@ module Data.Logic.Ersatz.Internal.Reify
   ) where
 
 import Control.Applicative ((<$>))
-import System.Mem.StableName (StableName, makeStableName, hashStableName)
-import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap)
--- import Data.Unique
+import qualified Data.IntMap as IntMap
 import Data.Reify (MuRef(..))
+-- import Data.Unique
+import System.Mem.StableName (StableName, makeStableName, hashStableName)
 import Unsafe.Coerce (unsafeCoerce)
 
 newtype DynStableName = DynStableName (StableName ())

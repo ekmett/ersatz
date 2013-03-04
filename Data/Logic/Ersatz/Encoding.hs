@@ -4,12 +4,13 @@ module Data.Logic.Ersatz.Encoding
   , decodeTraversable
   ) where
 
-import Data.Logic.Ersatz.Solution
+import Control.Applicative
 import Data.Array
-import Data.Logic.Ersatz.Internal.Problem
 import qualified Data.IntMap as IntMap
 import Data.Traversable (Traversable, traverse)
-import Control.Applicative
+
+import Data.Logic.Ersatz.Internal.Problem
+import Data.Logic.Ersatz.Solution
 
 class Encoding a where
   type Decoded a :: *

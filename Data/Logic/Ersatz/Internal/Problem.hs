@@ -15,30 +15,17 @@ module Data.Logic.Ersatz.Internal.Problem
   ) where
 
 import Control.Applicative
--- import Control.Monad (ap)
 import Control.Monad.State
--- import qualified Data.Sequence as Seq
--- import Data.Sequence (Seq)
 -- import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
-
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-
+import qualified Data.List as List (groupBy)
+import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-
--- import Data.Set (Set)
--- import qualified Data.Set as Set
-
--- import Data.Maybe (maybeToList)
-
-import qualified Data.List as List (groupBy)
-
 import Data.Logic.Ersatz.Internal.Reify
-
-import Data.Monoid
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where

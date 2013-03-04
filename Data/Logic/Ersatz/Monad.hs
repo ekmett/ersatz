@@ -11,6 +11,7 @@ import Control.Monad.State (runStateT)
 -- import Control.Monad.Trans (MonadIO(..))
 import Data.Logic.Ersatz.Internal.Problem
 import System.IO.Unsafe
+
 -- import Data.Logic.Ersatz.Solution
 
 showSAT :: SAT a -> String

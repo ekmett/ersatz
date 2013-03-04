@@ -6,9 +6,9 @@ module Data.Logic.Ersatz.Solution
   , Witness(..)
   ) where
 
+import Data.IntMap (IntMap)
 import Data.Ix
 import Data.Logic.Ersatz.Internal.Problem
-import Data.IntMap (IntMap)
 
 type Solution = IntMap Bool
 
