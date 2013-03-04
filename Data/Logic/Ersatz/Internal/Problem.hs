@@ -9,7 +9,7 @@ module Data.Logic.Ersatz.Internal.Problem
   , SAT(..)
   , MonadSAT(..)
   , Variable(..)
-  , assertLits, assertNamedLits
+  -- , assertLits, assertNamedLits
   -- , assume
   -- , reifyLit
   ) where
@@ -64,8 +64,6 @@ data Lit
   | Bool { getValue :: !Bool }
 
 instance Variable Lit where
-  known Bool{} = True
-  known _      = False
   exists = litExists
   forall = litForall
 
@@ -160,33 +158,34 @@ instance MonadSAT SAT where
     return (Literal qbfLastAtom')
 
 class Variable t where
-  known  :: t -> Bool
   exists :: MonadSAT m => m t
   forall :: MonadSAT m => m t
 
 instance Variable Literal where
-  known _ = False
   exists = literalExists
   forall = literalForall
 
 instance (Variable f, Variable g) => Variable (f, g) where
-  known (f, g) = known f && known g
   exists = (,) <$> exists <*> exists
   forall = (,) <$> forall <*> forall
 
+{-
 assertLits :: MonadSAT m => [Lit] -> m ()
 assertLits lits
   | any getValue knowns = return ()
   | otherwise = assertClause (Clause literalSet) Nothing
   where (knowns, unknowns) = List.partition known lits
         literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
+-}
 
+{-
 assertNamedLits :: MonadSAT m => [Lit] -> String -> m ()
 assertNamedLits lits name
   | any getValue knowns = return ()
   | otherwise = assertClause (Clause literalSet) (Just name)
   where (knowns, unknowns) = List.partition known lits
         literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
+-}
 
 {-
 assume :: IntMap Bool -> Clauses b -> Clauses b

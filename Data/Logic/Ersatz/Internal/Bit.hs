@@ -83,20 +83,33 @@ newtype Bit = Bit (Circuit Bit)
 instance Encoding Bit where
   type Decoded Bit = Bool
   decode f (Bit c) = case c of
-    And cs  -> all (decode f) cs
-    Or cs   -> any (decode f) cs
-    Xor x y -> xor (decode f x) (decode f y)
-    Not c'   -> not (decode f c')
+    And cs  -> andMaybeBools (map (decode f) cs)
+    Or cs   -> orMaybeBools (map (decode f) cs)
+    Xor x y -> xor <$> decode f x <*> decode f y
+    Not c'  -> not <$> decode f c'
     Var l   -> decode f l
+    where
+      andMaybeBools :: [Maybe Bool] -> Maybe Bool
+      andMaybeBools mbs
+        | any not knowns = Just False  -- One is known to be false.
+        | null unknowns  = Just True   -- All are known to be true.
+        | otherwise      = Nothing     -- Unknown.
+        where
+          (unknowns, knowns) = partitionMaybes mbs
 
-  decide f (Bit c) = case c of
-    And cs -> let (knowns, unknowns) = partition (decide f) cs
-              in not (all (decode f) knowns) || null unknowns
-    Or cs  -> let (knowns, unknowns) = partition (decide f) cs
-              in any (decode f) knowns || null unknowns
-    Xor x y -> decide f x && decide f y
-    Not c'  -> decide f c'
-    Var l   -> decide f l
+      orMaybeBools :: [Maybe Bool] -> Maybe Bool
+      orMaybeBools mbs
+        | or knowns     = Just True   -- One is known to be true.
+        | null unknowns = Just False  -- All are known to be false.
+        | otherwise     = Nothing     -- Unknown.
+        where
+          (unknowns, knowns) = partitionMaybes mbs
+
+      partitionMaybes :: [Maybe a] -> ([()], [a])
+      partitionMaybes = foldr (maybe nothing just) ([],[])
+        where
+          nothing ~(ns, js) = (():ns, js)
+          just a  ~(ns, js) = (ns,    a:js)
 
 instance Boolean Bit where
   -- improve the stablemap this way
@@ -135,12 +148,6 @@ instance Equatable [Bit] where
   as === bs = bool (length as == length bs) && and (zipWith (===) as bs)
 
 instance Variable Bit where
-  known (Bit b) = case b of
-    And xs ->  all known xs
-    Or xs -> any known xs
-    Not c -> known c
-    Xor c d -> known c && known d
-    Var n -> known n
   exists = Bit . Var <$> exists
   forall = Bit . Var <$> forall
 

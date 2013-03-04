@@ -27,7 +27,7 @@ tests =
       [ showSAT (return ()) @?= "p cnf 0 0\n"
       , showSAT (ignore litExists) @?= "p cnf 1 0\n"
       , showSAT (ignore litForall) @?= "p cnf 2 0\na 1\n"
-      , showSAT (do x <- forall; y <- exists; assertLits [x,y]) @?= "p cnf 2 1\na 1\ne 2\n1 2 0\n"
+      -- , showSAT (do x <- forall; y <- exists; assertLits [x,y]) @?= "p cnf 2 1\na 1\ne 2\n1 2 0\n"
       ]
   ]
 
