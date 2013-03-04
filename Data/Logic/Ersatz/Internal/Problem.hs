@@ -20,7 +20,7 @@ import Control.Monad.State
 import qualified Data.IntMap as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import qualified Data.List as List (groupBy)
+import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -77,6 +77,16 @@ newtype Formula = Formula { formulaSet :: Set Clause }
 newtype Clause = Clause { clauseSet :: IntSet }
   deriving (Eq, Ord, Monoid)
 
+instance Show Formula where
+  showsPrec p = showParen (p > 2) . foldr (.) id
+              . List.intersperse (showString " & ") . map (showsPrec 3)
+              . Set.toList . formulaSet
+
+instance Show Clause where
+  showsPrec p = showParen (p > 1) . foldr (.) id
+              . List.intersperse (showString " | ") . map (showsPrec 2)
+              . IntSet.toList . clauseSet
+
 instance QDIMACS Formula where
   qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
 
@@ -96,7 +106,8 @@ data QBF = QBF
 
 -- provided for convenience
 instance Show QBF where
-  show = qdimacs
+  showsPrec p qbf = showParen (p > 10)
+                  $ showString "QBF " . showsPrec 11 (qbfFormula qbf)
 
 emptyQBF :: QBF
 emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty IntMap.empty
