@@ -160,7 +160,7 @@ instance (Equatable a, Equatable b, Equatable c, Equatable d) => Equatable (a,b,
 instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e) => Equatable (a,b,c,d,e) where
   (a,b,c,d,e) === (a',b',c',d',e') = a === a' && b === b' && c === c' && d === d' && e === e'
 
-instance Equatable [Bit] where
+instance (a ~ Bit) => Equatable [a] where
   as === bs = bool (length as == length bs) && and (zipWith (===) as bs)
 
 instance Variable Bit where
