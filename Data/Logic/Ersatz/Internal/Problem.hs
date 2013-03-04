@@ -11,6 +11,7 @@ module Data.Logic.Ersatz.Internal.Problem
   -- , assertLits, assertNamedLits
   -- , assume
   -- , reifyLit
+  , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   ) where
 
 import Control.Applicative
@@ -269,3 +270,112 @@ instance QDIMACS QBF where
         | i == j    = Forall i : quants is js
         | otherwise = Exists i : quants is jjs
 
+-- Primitives to build a Formula.
+
+-- | The boolean /not/ operation
+formulaNot :: Int  -- ^ Output
+           -> Int  -- ^ Input
+           -> Formula
+formulaNot out inp = formulaFromList cls
+  where
+    -- O ≡ ¬A
+    -- (O → ¬A) & (¬O → A)
+    -- (¬O | ¬A) & (O | A)
+    cls = [ [-out, -inp], [out, inp] ]
+
+-- | The boolean /and/ operation
+formulaAnd :: Int    -- ^ Output
+           -> [Int]  -- ^ Inputs
+           -> Formula
+formulaAnd out inps = formulaFromList cls
+  where
+    -- O ≡ (A & B & C)
+    -- (O → (A & B & C)) & (¬O → ¬(A & B & C))
+    -- (¬O | (A & B & C)) & (O | ¬(A & B & C))
+    -- (¬O | A) & (¬O | B) & (¬O | C) & (O | ¬A | ¬B | ¬C)
+    cls = (out : map negate inps)
+        : map (\inp -> [-out, inp]) inps
+
+-- | The boolean /or/ operation
+formulaOr :: Int    -- ^ Output
+          -> [Int]  -- ^ Inputs
+          -> Formula
+formulaOr out inps = formulaFromList cls
+  where
+    -- O ≡ (A | B | C)
+    -- (O → (A | B | C)) & (¬O → ¬(A | B | C))
+    -- (¬O | (A | B | C)) & (O | ¬(A | B | C))
+    -- (¬O | A | B | C) & (O | (¬A & ¬B & ¬C))
+    -- (¬O | A | B | C) & (O | ¬A) & (O | ¬B) & (O | ¬C)
+    cls = (-out : inps)
+        : map (\inp -> [out, -inp]) inps
+
+-- | The boolean /xor/ operation
+formulaXor :: Int  -- ^ Output
+           -> Int  -- ^ Input
+           -> Int  -- ^ Input
+           -> Formula
+formulaXor out inpA inpB = formulaFromList cls
+  where
+    -- O ≡ A ⊕ B
+    -- O ≡ ((¬A & B) | (A & ¬B))
+    -- (O → ((¬A & B) | (A & ¬B))) & (¬O → ¬((¬A & B) | (A & ¬B)))
+    --
+    -- Left hand side:
+    -- O → ((¬A & B) | (A & ¬B))
+    -- ¬O | ((¬A & B) | (A & ¬B))
+    -- ¬O | ((¬A | A) & (¬A | ¬B) & (A | B) & (¬B | B))
+    -- ¬O | ((¬A | ¬B) & (A | B))
+    -- (¬O | ¬A | ¬B) & (¬O | A | B)
+    --
+    -- Right hand side:
+    -- ¬O → ¬((¬A & B) | (A & ¬B))
+    -- O | ¬((¬A & B) | (A & ¬B))
+    -- O | (¬(¬A & B) & ¬(A & ¬B))
+    -- O | ((A | ¬B) & (¬A | B))
+    -- (O | ¬A | B) & (O | A | ¬B)
+    --
+    -- Result:
+    -- (¬O | ¬A | ¬B) & (¬O | A | B) & (O | ¬A | B) & (O | A | ¬B)
+    cls = [ [-out, -inpA, -inpB]
+          , [-out,  inpA,  inpB]
+          , [ out, -inpA,  inpB]
+          , [ out,  inpA, -inpB]
+          ]
+
+-- | The boolean /else-then-if/ or /mux/ operation
+formulaMux :: Int  -- ^ Output
+           -> Int  -- ^ False branch
+           -> Int  -- ^ True branch
+           -> Int  -- ^ Predicate/selector
+           -> Formula
+formulaMux out inpF inpT inpP = formulaFromList cls
+  where
+    -- O ≡ (F & ¬P) | (T & P)
+    -- (O → ((F & ¬P) | (T & P))) & (¬O → ¬((F & ¬P) | (T & P)))
+    --
+    -- Left hand side:
+    -- O → ((F & ¬P) | (T & P))
+    -- ¬O | ((F & ¬P) | (T & P))
+    -- ¬O | ((F | T) & (F | P) & (T | ¬P) & (¬P | P))
+    -- ¬O | ((F | T) & (F | P) & (T | ¬P))
+    -- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P)
+    --
+    -- Right hand side:
+    -- ¬O → ¬((F & ¬P) | (T & P))
+    -- O | ¬((F & ¬P) | (T & P))
+    -- O | (¬(F & ¬P) & ¬(T & P))
+    -- O | ((¬F | P) & (¬T | ¬P))
+    -- (O | ¬F | P) & (O | ¬T | ¬P)
+    --
+    -- Result:
+    -- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P) & (O | ¬F | P) & (O | ¬T | ¬P)
+    cls = [ [-out,  inpF,  inpT]
+          , [-out,  inpF,  inpP]
+          , [-out,  inpT, -inpP]
+          , [ out, -inpF,  inpP]
+          , [ out, -inpT, -inpP]
+          ]
+
+formulaFromList :: [[Int]] -> Formula
+formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
