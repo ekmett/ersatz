@@ -1,8 +1,7 @@
 {-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards #-}
 module Data.Logic.Ersatz.Internal.Problem
-  ( QBF(qbfLastAtom, qbfClauses, qbfUniversals), emptyQBF
-  , Clause(..), clauseLiterals
-  , Clauses
+  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
+  , Formula(..), Clause(..), clauseLiterals
   , Literal(literalId), negateLiteral
   , Lit(..), lit, negateLit, litExists, litForall
   , QDIMACS(..)
@@ -25,8 +24,8 @@ import qualified Data.IntMap as IntMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 
-import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 
 -- import Data.Set (Set)
@@ -84,7 +83,14 @@ negateLit (Lit l) = Lit (negateLiteral l)
 -- type Solver t m = forall b. t b -> m (Solution b)
 -- newtype Solution b = Solution { solutionMap :: IntMap Bool }
 
-newtype Clause = Clause { clauseSet :: IntSet } deriving (Eq, Ord, Monoid)
+newtype Formula = Formula { formulaSet :: Set Clause }
+  deriving (Eq, Ord, Monoid)
+
+newtype Clause = Clause { clauseSet :: IntSet }
+  deriving (Eq, Ord, Monoid)
+
+instance QDIMACS Formula where
+  qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
 
 instance QDIMACS Clause where
   qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
@@ -92,11 +98,9 @@ instance QDIMACS Clause where
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
-type Clauses = Map Clause (Maybe String)
-
 data QBF = QBF
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
-  , qbfClauses    :: !Clauses                 -- ^ a map of clauses to assert to names
+  , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
   , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
   , qbfLitMap     :: !(DynStableMap Lit)      -- ^ a mapping used during 'Bit' expansion
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
@@ -107,7 +111,7 @@ instance Show QBF where
   show = qdimacs
 
 emptyQBF :: QBF
-emptyQBF = QBF 0 Map.empty IntSet.empty IntMap.empty
+emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty IntMap.empty
 
 {-
 class Annotated t where
@@ -129,7 +133,7 @@ instance Applicative SAT where
 class (Monad m, Applicative m) => MonadSAT m where
   literalExists :: m Literal
   literalForall :: m Literal
-  assertClause  :: Clause -> Maybe String -> m ()
+  assertFormula :: Formula -> m ()
   insertDyn     :: DynStableName -> Lit -> m ()
   lookupDyn     :: DynStableName -> m (Maybe Lit)
 
@@ -141,8 +145,8 @@ instance MonadSAT SAT where
     put qbf'
     return (Literal qbfLastAtom')
 
-  assertClause clause name = SAT $ do
-    modify $ \ qbf -> qbf { qbfClauses = Map.insertWith mplus clause name (qbfClauses qbf) }
+  assertFormula formula = SAT $ do
+    modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
 
   insertDyn k v = SAT $ modify $
     \qbf -> qbf { qbfLitMap = insertDynStableMap k v (qbfLitMap qbf) }
@@ -232,11 +236,11 @@ data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
            | Forall { getQuant :: {-# UNPACK #-} !Int }
 
 instance QDIMACS QBF where
-  qdimacs (QBF vars cs qs _) = unlines  $
-    unwords ["p","cnf", show (vars + padding), show (Map.size cs) ] :
-    map showGroup quantGroups ++
-    map qdimacs (Map.keys cs)
+  qdimacs (QBF vars formula@(Formula cs) qs _) =
+    unlines (header : map showGroup quantGroups) ++ qdimacs formula
     where
+      header = unwords ["p", "cnf", show (vars + padding), show (Set.size cs) ]
+
       -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
       padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
               | otherwise                                   = 0

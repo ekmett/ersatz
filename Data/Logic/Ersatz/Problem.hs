@@ -1,7 +1,6 @@
 module Data.Logic.Ersatz.Problem
-  ( QBF(qbfLastAtom, qbfClauses, qbfUniversals), emptyQBF
-  , Clause, clauseLiterals
-  , Clauses
+  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
+  , Formula, Clause, clauseLiterals
   , Literal(literalId), negateLiteral -- literalForall, literalExists
   , Lit, lit, negateLit, litForall, litExists
   , QDIMACS(..)
