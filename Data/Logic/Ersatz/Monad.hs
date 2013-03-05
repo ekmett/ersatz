@@ -10,10 +10,9 @@ module Data.Logic.Ersatz.Monad
 import Control.Monad.State (runStateT)
 -- import Control.Monad.Trans (MonadIO(..))
 import Data.Logic.Ersatz.Internal.Problem
-import System.IO.Unsafe
 
-showSAT :: SAT a -> String
-showSAT = qdimacs . snd . unsafePerformIO . satToIO
+showSAT :: SAT a -> IO String
+showSAT = fmap (show . snd) . satToIO
 
 satToIO :: SAT a -> IO (a, QBF)
 satToIO m = runStateT (runSAT m) emptyQBF
