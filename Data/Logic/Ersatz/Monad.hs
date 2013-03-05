@@ -12,8 +12,6 @@ import Control.Monad.State (runStateT)
 import Data.Logic.Ersatz.Internal.Problem
 import System.IO.Unsafe
 
--- import Data.Logic.Ersatz.Solution
-
 showSAT :: SAT a -> String
 showSAT = qdimacs . snd . unsafePerformIO . satToIO
 

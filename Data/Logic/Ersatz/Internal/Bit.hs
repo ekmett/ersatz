@@ -16,7 +16,6 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Monoid
 import Data.Reify
--- import Data.Reify.Graph -- Logic.Ersatz.Internal.Reify
 import Data.Traversable (Traversable,traverse)
 
 import Data.Logic.Ersatz.Encoding (Encoding(..))
@@ -197,19 +196,3 @@ assert b = do
       Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
       Var (Bool True)  -> return $ formulaLiteral out
   assertFormula (formulas <> formulaLiteral root)
-
-{-
-data Graph e b = Graph [(Plan b, e Plan b)] (Plan b)
-
-reifyLit :: (MonadSAT s m, MuRef f) => Bit s -> m ((Lit s, [ ] )
-reifyLit a = a `seq` do
-  k <- liftST $ makeDynStableName root
-  l <- lookupDyn k
-  case l of
-    Nothing -> do
-      v <- exists -- Lit
-      insertDyn k v
-      mapDeRef reifyLit a
-      return v
-    Just v -> return v
--}

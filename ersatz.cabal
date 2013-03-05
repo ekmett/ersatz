@@ -34,7 +34,6 @@ library
     Data.Logic.Ersatz.Solution
     Data.Logic.Ersatz.Internal.Bit
     Data.Logic.Ersatz.Internal.Problem
-    Data.Logic.Ersatz.Internal.Reify
 
 test-suite test-ersatz
   type: exitcode-stdio-1.0

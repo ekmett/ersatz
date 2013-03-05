@@ -8,9 +8,6 @@ module Data.Logic.Ersatz.Internal.Problem
   , SAT(..)
   , MonadSAT(..)
   , Variable(..)
-  -- , assertLits, assertNamedLits
-  -- , assume
-  -- , reifyLit
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   ) where
@@ -67,9 +64,6 @@ lit = Bool
 negateLit :: Lit -> Lit
 negateLit (Bool b) = Bool (not b)
 negateLit (Lit l) = Lit (negateLiteral l)
-
--- type Solver t m = forall b. t b -> m (Solution b)
--- newtype Solution b = Solution { solutionMap :: IntMap Bool }
 
 newtype Formula = Formula { formulaSet :: Set Clause }
   deriving (Eq, Ord, Monoid)
@@ -175,64 +169,6 @@ instance Variable Literal where
 instance (Variable f, Variable g) => Variable (f, g) where
   exists = (,) <$> exists <*> exists
   forall = (,) <$> forall <*> forall
-
-{-
-assertLits :: MonadSAT m => [Lit] -> m ()
-assertLits lits
-  | any getValue knowns = return ()
-  | otherwise = assertClause (Clause literalSet) Nothing
-  where (knowns, unknowns) = List.partition known lits
-        literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
--}
-
-{-
-assertNamedLits :: MonadSAT m => [Lit] -> String -> m ()
-assertNamedLits lits name
-  | any getValue knowns = return ()
-  | otherwise = assertClause (Clause literalSet) (Just name)
-  where (knowns, unknowns) = List.partition known lits
-        literalSet = IntSet.fromList $ map (literalId . getLiteral) unknowns
--}
-
-{-
-assume :: IntMap Bool -> Clauses b -> Clauses b
-assume knowns map = IntMap.fromListWith mplus $ do
-  (k,v) <- assocs map
-  let k' = IntSet.fromAscList $ go knowns [] $ IntSet.toDescList k
-  return (k',v)
-  where
-    -- reverse the list into an accumulating parameter.
-    -- and filter elements that are known and for which the literal evaluates
-    -- to to true. if anyfalsehoods are found, the whole conjunct fails.
-    -- so we map it to the empty conjunct
-    go :: IntMap Bool -> [Int] -> [Int] -> [Int]
-    go _ acc [] = acc
-    go ks acc (n:xs)
-      | n < 0 = case IntMap.lookup (negate n) ks of
-          Nothing -> go ks (n:acc) xs -- keep it
-          Just True -> []             -- destroy the earth
-          Just False -> go ks acc xs  -- filter it
-      | otherwise = case IntMap.lookup n ks of
-          Nothing -> go ks (n:acc) xs -- keep it
-          Just True -> go ks acc xs   -- filter it
-          Just False -> []            -- destroy the earth
--}
-
--- this allocates too many literals
-{-
-reifyLit :: (MonadSAT s m, MuRef f) => f s -> m (Lit s)
-reifyLit a = a `seq` do
-  k <- liftST $ makeDynStableName root
-  l <- lookupDyn k
-  case l of
-    Nothing -> do
-      v <- exists -- Lit
-      insertDyn k v
-      mapDeRef reifyLit a
-      return v
-    Just v -> return v
--}
-
 
 data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
            | Forall { getQuant :: {-# UNPACK #-} !Int }
