@@ -20,7 +20,7 @@ import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
-import Data.Reify (Unique)
+import Data.Reify
 import Data.Set (Set)
 import qualified Data.Set as Set
 
@@ -115,8 +115,9 @@ instance Annotated (SAT Literal) where
       modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
 -}
 
+-- Let's not provide MonadIO, the IO should only be used for reifyGraph.
 newtype SAT a = SAT { runSAT :: StateT QBF IO a }
-  deriving (Functor, Monad, MonadIO)
+  deriving (Functor, Monad)
 
 -- We can't rely on having an Applicative instance for StateT st (ST s)
 instance Applicative SAT where
@@ -128,6 +129,7 @@ class (Monad m, Applicative m) => MonadSAT m where
   literalForall   :: m Literal
   assertFormula   :: Formula -> m ()
   uniqueToLiteral :: Unique -> m Literal
+  reifyGraphSAT   :: MuRef s => s -> m (Graph (DeRef s))
 
 instance MonadSAT SAT where
   literalExists = SAT $ do
@@ -157,6 +159,8 @@ instance MonadSAT SAT where
                    }
     put qbf'
     return (Literal qbfLastAtom')
+
+  reifyGraphSAT = SAT . liftIO . reifyGraph
 
 class Variable t where
   exists :: MonadSAT m => m t

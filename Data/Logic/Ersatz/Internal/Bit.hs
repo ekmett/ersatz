@@ -13,7 +13,6 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad (forM)
-import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Monoid
 import Data.Reify
 import Data.Traversable (Traversable,traverse)
@@ -176,9 +175,9 @@ instance MuRef Bit where
     Mux x y p -> Mux <$> f x <*> f y <*> f p
     Var n -> pure $ Var n
 
-assert :: (MonadSAT m, MonadIO m) => Bit -> m ()
+assert :: MonadSAT m => Bit -> m ()
 assert b = do
-  Graph graph rootU <- liftIO (reifyGraph b)
+  Graph graph rootU <- reifyGraphSAT b
   root <- uniqueToLiteral rootU
 
   formulas <- fmap mconcat . forM graph $ \(outU, circuit) -> do
