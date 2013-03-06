@@ -14,15 +14,16 @@ module Data.Logic.Ersatz.Internal.Problem
 
 import Control.Applicative
 import Control.Monad.State
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
+import Data.HashMap.Lazy (HashMap)
+import qualified Data.HashMap.Lazy as HashMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
-import Data.Reify
 import Data.Set (Set)
 import qualified Data.Set as Set
+import System.Mem.StableName (StableName, makeStableName)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
@@ -94,7 +95,7 @@ data QBF = QBF
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
   , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
   , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-  , qbfLitMap     :: !(IntMap Literal)        -- ^ a mapping used during 'Bit' expansion
+  , qbfSNMap      :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
   }
 
@@ -104,7 +105,7 @@ instance Show QBF where
                   $ showString "QBF " . showsPrec 11 (qbfFormula qbf)
 
 emptyQBF :: QBF
-emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty IntMap.empty
+emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
 
 {-
 class Annotated t where
@@ -128,8 +129,7 @@ class (Monad m, Applicative m) => MonadSAT m where
   literalExists   :: m Literal
   literalForall   :: m Literal
   assertFormula   :: Formula -> m ()
-  uniqueToLiteral :: Unique -> m Literal
-  reifyGraphSAT   :: MuRef s => s -> m (Graph (DeRef s))
+  generateLiteral :: a -> (Literal -> m ()) -> m Literal
 
 instance MonadSAT SAT where
   literalExists = SAT $ do
@@ -142,14 +142,19 @@ instance MonadSAT SAT where
   assertFormula formula = SAT $ do
     modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
 
-  uniqueToLiteral u = SAT $ do
-    maybeLit <- IntMap.lookup u <$> gets qbfLitMap
+  generateLiteral a f = SAT $ do
+    sn <- a `seq` liftIO (coerceStableName <$> makeStableName a)
+    maybeLit <- HashMap.lookup sn <$> gets qbfSNMap
     case maybeLit of
       Just l  -> return l
       Nothing -> do
         l <- runSAT literalExists
-        modify $ \qbf -> qbf { qbfLitMap = IntMap.insert u l (qbfLitMap qbf) }
+        modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
+        runSAT (f l)
         return l
+    where
+      coerceStableName :: StableName a -> StableName ()
+      coerceStableName = unsafeCoerce
 
   literalForall = SAT $ do
     qbf <- get
@@ -159,8 +164,6 @@ instance MonadSAT SAT where
                    }
     put qbf'
     return (Literal qbfLastAtom')
-
-  reifyGraphSAT = SAT . liftIO . reifyGraph
 
 class Variable t where
   exists :: MonadSAT m => m t

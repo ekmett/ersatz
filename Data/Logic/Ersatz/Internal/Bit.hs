@@ -12,11 +12,8 @@ import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 
 import Control.Applicative
-import Control.Monad (forM)
 import Data.Foldable (Foldable)
-import Data.Monoid
-import Data.Reify
-import Data.Traversable (Traversable,traverse)
+import Data.Traversable (Traversable, traverse)
 
 import Data.Logic.Ersatz.Encoding (Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
@@ -166,27 +163,23 @@ instance Variable Bit where
   exists = Bit . Var <$> exists
   forall = Bit . Var <$> forall
 
-instance MuRef Bit where
-  type DeRef Bit = Circuit
-  mapDeRef f (Bit b) = traverse f b
-
 assert :: MonadSAT m => Bit -> m ()
 assert b = do
-  Graph graph rootU <- reifyGraphSAT b
-  root <- uniqueToLiteral rootU
+  l <- runBit b
+  assertFormula (formulaLiteral l)
 
-  formulas <- fmap mconcat . forM graph $ \(outU, circuit) -> do
-    out <- uniqueToLiteral outU
-    case circuit of
-      And inpUs    -> formulaAnd out <$> mapM uniqueToLiteral inpUs
-      Or inpUs     -> formulaOr  out <$> mapM uniqueToLiteral inpUs
-      Not inpU     -> formulaNot out <$> uniqueToLiteral inpU
-      Xor xU yU    -> formulaXor out <$> uniqueToLiteral xU
-                                     <*> uniqueToLiteral yU
-      Mux xU yU pU -> formulaMux out <$> uniqueToLiteral xU
-                                     <*> uniqueToLiteral yU
-                                     <*> uniqueToLiteral pU
-      Var (Lit _)      -> return formulaEmpty
-      Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
-      Var (Bool True)  -> return $ formulaLiteral out
-  assertFormula (formulas <> formulaLiteral root)
+runBit :: MonadSAT m => Bit -> m Literal
+runBit (Bit (Not c)) = negateLiteral <$> runBit c
+runBit (Bit (Var (Lit l))) = return l
+runBit b@(Bit c) = generateLiteral b $ \out ->
+  assertFormula =<< case c of
+    And bs    -> formulaAnd out <$> traverse runBit bs
+    Or  bs    -> formulaOr  out <$> traverse runBit bs
+    Xor x y   -> formulaXor out <$> runBit x <*> runBit y
+    Mux x y p -> formulaMux out <$> runBit x <*> runBit y <*> runBit p
+    Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
+    Var (Bool True)  -> return $ formulaLiteral out
+
+    -- Already handled above but GHC doesn't realize it.
+    Not _       -> error "Unreachable"
+    Var (Lit _) -> error "Unreachable"
