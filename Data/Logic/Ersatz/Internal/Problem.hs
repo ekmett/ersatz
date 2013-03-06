@@ -47,7 +47,12 @@ negateLiteral = Literal . negate . literalId
 data Lit
   = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
   | Bool { getValue :: !Bool }
-  deriving Show
+
+instance Show Lit where
+  showsPrec p (Lit l)  = showParen (p > 10)
+                       $ showString "Lit " . showsPrec 11 l
+  showsPrec p (Bool b) = showParen (p > 10)
+                       $ showString "Bool " . showsPrec 11 b
 
 instance Variable Lit where
   exists = litExists
