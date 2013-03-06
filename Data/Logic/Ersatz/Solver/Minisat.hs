@@ -6,6 +6,7 @@ module Data.Logic.Ersatz.Solver.Minisat
 
 import Control.Applicative
 import Control.Exception (IOException, handle)
+import Control.Monad
 import qualified Data.IntMap as IntMap
 import System.Exit (ExitCode(..))
 import System.IO.Temp (withSystemTempDirectory)
@@ -61,10 +62,14 @@ solution = do
 
 values :: Parser Char [(Int, Bool)]
 values  = (value `sepBy` token ' ')
+       <* string " 0"
        <* (() <$ token '\n' <|> eof)
 
 value :: Parser Char (Int, Bool)
-value = toPair <$> integer
+value = do
+  i <- integer
+  guard (i /= 0)
+  return (toPair i)
   where
     toPair n | n >= 0    = ( n, True)
              | otherwise = (-n, False)
