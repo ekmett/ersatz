@@ -40,6 +40,7 @@ library
 
   other-modules:
     Data.Logic.Ersatz.Internal.TrivialParser
+    Data.Logic.Ersatz.Internal.StableName
 
 test-suite test-ersatz
   type: exitcode-stdio-1.0

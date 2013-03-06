@@ -7,6 +7,7 @@ module Data.Logic.Ersatz.Solver.Minisat
 import Control.Applicative
 import Control.Exception (IOException, handle)
 import Control.Monad
+import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import System.Exit (ExitCode(..))
 import System.IO.Temp (withSystemTempDirectory)
@@ -42,20 +43,20 @@ resultOf (ExitFailure 10) = Satisfied
 resultOf (ExitFailure 20) = Unsatisfied
 resultOf _                = Unsolved
 
-parseSolutionFile :: FilePath -> IO Solution
+parseSolutionFile :: FilePath -> IO (IntMap Bool)
 parseSolutionFile path = handle handler $ do
   parseSolution <$> readFile path
   where
-    handler :: IOException -> IO Solution
+    handler :: IOException -> IO (IntMap Bool)
     handler _ = return IntMap.empty
 
-parseSolution :: String -> Solution
+parseSolution :: String -> (IntMap Bool)
 parseSolution input =
   case runParser solution input of
     (s:_) -> s
     _     -> IntMap.empty
 
-solution :: Parser Char Solution
+solution :: Parser Char (IntMap Bool)
 solution = do
   _ <- string "SAT\n"
   IntMap.fromList <$> values

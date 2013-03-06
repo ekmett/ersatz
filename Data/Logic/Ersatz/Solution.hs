@@ -1,16 +1,21 @@
 {-# LANGUAGE Rank2Types, ImpredicativeTypes #-}
 module Data.Logic.Ersatz.Solution
-  ( Solution -- (..)
+  ( Solution(..)
   , Result(..)
   , Solver
   , Witness(..)
   ) where
 
+import Data.HashMap.Lazy (HashMap)
 import Data.IntMap (IntMap)
 import Data.Ix
+import System.Mem.StableName (StableName)
+
 import Data.Logic.Ersatz.Internal.Problem
 
-type Solution = IntMap Bool
+data Solution = Solution { solLitMap :: IntMap Bool
+                         , solSNMap  :: HashMap (StableName ()) Bool
+                         }
 
 data Result
   = Unsolved
@@ -32,7 +37,7 @@ instance Bounded Result where
   minBound = Unsolved
   maxBound = Satisfied
 
-type Solver m = QBF -> m (Result, Solution)
+type Solver m = QBF -> m (Result, IntMap Bool)
 
 data Witness a = Witness
   { witnessResult   :: !Result

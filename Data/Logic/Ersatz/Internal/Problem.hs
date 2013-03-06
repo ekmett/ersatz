@@ -1,6 +1,6 @@
 {-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards #-}
 module Data.Logic.Ersatz.Internal.Problem
-  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
+  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
   , Formula(..), Clause(..), clauseLiterals
   , Literal(literalId), negateLiteral
   , Lit(..), lit, negateLit, litExists, litForall
@@ -22,8 +22,8 @@ import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
-import System.Mem.StableName (StableName, makeStableName)
-import Unsafe.Coerce (unsafeCoerce)
+
+import Data.Logic.Ersatz.Internal.StableName
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
@@ -143,7 +143,7 @@ instance MonadSAT SAT where
     modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
 
   generateLiteral a f = SAT $ do
-    sn <- a `seq` liftIO (coerceStableName <$> makeStableName a)
+    sn <- liftIO (makeStableName' a)
     maybeLit <- HashMap.lookup sn <$> gets qbfSNMap
     case maybeLit of
       Just l  -> return l
@@ -152,9 +152,6 @@ instance MonadSAT SAT where
         modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
         runSAT (f l)
         return l
-    where
-      coerceStableName :: StableName a -> StableName ()
-      coerceStableName = unsafeCoerce
 
   literalForall = SAT $ do
     qbf <- get

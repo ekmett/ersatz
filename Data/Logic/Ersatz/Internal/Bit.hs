@@ -13,10 +13,13 @@ import qualified Prelude
 
 import Control.Applicative
 import Data.Foldable (Foldable)
+import qualified Data.HashMap.Lazy as HashMap
 import Data.Traversable (Traversable, traverse)
 
 import Data.Logic.Ersatz.Encoding (Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
+import Data.Logic.Ersatz.Internal.StableName
+import Data.Logic.Ersatz.Solution
 
 infix  4 ===, /==
 infixr 3 &&
@@ -85,14 +88,22 @@ newtype Bit = Bit (Circuit Bit)
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Encoding Bit where
   type Decoded Bit = Bool
-  decode f (Bit c) = case c of
-    And cs  -> andMaybeBools (map (decode f) cs)
-    Or cs   -> orMaybeBools (map (decode f) cs)
-    Xor x y -> xor <$> decode f x <*> decode f y
-    Mux cf ct cp -> do p <- decode f cp
-                       decode f (if p then ct else cf)
-    Not c'  -> not <$> decode f c'
-    Var l   -> decode f l
+  decode sol b@(Bit c) = do
+    sn <- makeStableName' b
+    case HashMap.lookup sn (solSNMap sol) of
+      v@(Just _) -> return v
+      Nothing ->
+        case c of
+          And cs  -> andMaybeBools <$> traverse (decode sol) cs
+          Or cs   -> orMaybeBools  <$> traverse (decode sol) cs
+          Xor x y -> liftA2 xor <$> decode sol x <*> decode sol y
+          Mux cf ct cp -> do mp <- decode sol cp
+                             case mp of
+                               Just p  -> decode sol (if p then ct else cf)
+                               Nothing -> return Nothing
+          Not c'  -> fmap not <$> decode sol c'
+          Var l   -> decode sol l
+
     where
       andMaybeBools :: [Maybe Bool] -> Maybe Bool
       andMaybeBools mbs
