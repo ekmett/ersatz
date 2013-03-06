@@ -19,8 +19,8 @@ class Encoding a where
 
 instance Encoding Literal where
   type Decoded Literal = Bool
-  decode m l  =  True  <$ IntMap.lookup i m
-             <|> False <$ IntMap.lookup (negate i) m
+  decode m l | i >= 0    = IntMap.lookup i m
+             | otherwise = not <$> IntMap.lookup (negate i) m
     where i = literalId l
 
 instance Encoding Lit where
