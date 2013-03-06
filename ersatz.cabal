@@ -23,7 +23,9 @@ library
     transformers == 0.3.*,
     containers >= 0.2.0.1,
     array >= 0.2 && < 0.5,
-    data-reify >= 0.5 && < 0.7
+    data-reify >= 0.5 && < 0.7,
+    process == 1.1.*,
+    temporary == 1.1.*
 
   exposed-modules:
     Data.Logic.Ersatz
@@ -32,8 +34,12 @@ library
     Data.Logic.Ersatz.Monad
     Data.Logic.Ersatz.Problem
     Data.Logic.Ersatz.Solution
+    Data.Logic.Ersatz.Solver.Minisat
     Data.Logic.Ersatz.Internal.Bit
     Data.Logic.Ersatz.Internal.Problem
+
+  other-modules:
+    Data.Logic.Ersatz.Internal.TrivialParser
 
 test-suite test-ersatz
   type: exitcode-stdio-1.0
