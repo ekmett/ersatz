@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Data.Logic.Ersatz.Internal.Bit
   ( Boolean(..)
   , Equatable(..)
@@ -13,6 +13,7 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad (forM)
+import Data.Foldable (Foldable)
 import Data.Monoid
 import Data.Reify
 import Data.Traversable (Traversable,traverse)
@@ -78,7 +79,7 @@ data Circuit c
   | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
   | Not c
   | Var !Lit
-  deriving Show
+  deriving (Show, Functor, Foldable, Traversable)
 
 -- does this have to be data?
 newtype Bit = Bit (Circuit Bit)
@@ -167,13 +168,7 @@ instance Variable Bit where
 
 instance MuRef Bit where
   type DeRef Bit = Circuit
-  mapDeRef f (Bit b) = case b of
-    And xs -> And <$> traverse f xs
-    Or xs -> Or <$> traverse f xs
-    Not x -> Not <$> f x
-    Xor x y -> Xor <$> f x <*> f y
-    Mux x y p -> Mux <$> f x <*> f y <*> f p
-    Var n -> pure $ Var n
+  mapDeRef f (Bit b) = traverse f b
 
 assert :: MonadSAT m => Bit -> m ()
 assert b = do
