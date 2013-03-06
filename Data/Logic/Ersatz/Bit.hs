@@ -3,7 +3,7 @@ module Data.Logic.Ersatz.Bit
   , Equatable(..)
   , Bit
   , bit
-  -- , assertBit
+  , assert
   ) where
 
 import Data.Logic.Ersatz.Internal.Bit
