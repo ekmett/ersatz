@@ -1,3 +1,4 @@
+{-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013

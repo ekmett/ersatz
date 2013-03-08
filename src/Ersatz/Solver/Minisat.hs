@@ -18,13 +18,13 @@ import Control.Exception (IOException, handle)
 import Control.Monad
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import Ersatz.Internal.Parser
+import Ersatz.Internal.Problem (qdimacs)
+import Ersatz.Solution
 import System.Exit (ExitCode(..))
 import System.IO.Temp (withSystemTempDirectory)
 import System.Process (readProcessWithExitCode)
 
-import Ersatz.Internal.Problem (qdimacs)
-import Ersatz.Internal.TrivialParser
-import Ersatz.Solution
 
 minisat :: Solver IO
 minisat = minisatPath "minisat"

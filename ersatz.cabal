@@ -43,7 +43,7 @@ library
     Ersatz.Internal.Problem
 
   other-modules:
-    Ersatz.Internal.TrivialParser
+    Ersatz.Internal.Parser
     Ersatz.Internal.StableName
 
 test-suite properties
