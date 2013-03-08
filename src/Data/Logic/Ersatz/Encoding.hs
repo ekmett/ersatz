@@ -32,7 +32,7 @@ class Encoding a where
 
 instance Encoding Literal where
   type Decoded Literal = Bool
-  decode s l = return (solLookupLiteral s l)
+  decode s l = return (solutionLiteral s l)
 
 instance Encoding Lit where
   type Decoded Lit = Bool

@@ -81,7 +81,7 @@ instance Encoding Bit where
   type Decoded Bit = Bool
   decode sol b@(Bit c) = do
     sn <- makeStableName' b
-    case solLookupSN sol sn of
+    case solutionStableName sol sn of
       v@(Just _) -> return v
       Nothing ->
         -- The StableName didn’t have an associated literal with a solution,

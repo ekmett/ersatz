@@ -23,9 +23,10 @@ import System.Mem.StableName (StableName)
 
 import Data.Logic.Ersatz.Internal.Problem
 
-data Solution = Solution { solLookupLiteral :: Literal -> Maybe Bool
-                         , solLookupSN      :: StableName () -> Maybe Bool
-                         }
+data Solution = Solution
+  { solutionLiteral    :: Literal -> Maybe Bool
+  , solutionStableName :: StableName () -> Maybe Bool
+  }
 
 solutionFrom :: IntMap Bool -> QBF -> Solution
 solutionFrom litMap qbf = Solution lookupLit lookupSN
