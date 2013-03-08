@@ -169,8 +169,9 @@ instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equat
 instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equatable f, Equatable g, Equatable h) => Equatable (a,b,c,d,e,f,g,h) where
   (a,b,c,d,e,f,g,h) === (a',b',c',d',e',f',g',h') = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g' && h === h'
 
-instance (a ~ Bit) => Equatable [a] where
-  as === bs = bool (length as == length bs) && and (zipWith (===) as bs)
+instance Equatable a => Equatable [a] where
+  as === bs | length as /= length bs = false
+            | otherwise              = and (zipWith (===) as bs)
 
 instance Variable Bit where
   exists = Bit . Var <$> exists
