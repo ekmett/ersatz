@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Bits
+module Ersatz.Bits
   ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..)
   , Bit8(..)
   , encodeBit1, encodeBit2, encodeBit3, encodeBit4, encodeBit5, encodeBit6
@@ -23,10 +23,10 @@ import Data.List (foldl', unzip4, unzip5, unzip6, unzip7)
 import Data.Typeable
 import Data.Word (Word8)
 
-import Data.Logic.Ersatz.Bit
-import Data.Logic.Ersatz.Decoding
-import Data.Logic.Ersatz.Encoding
-import Data.Logic.Ersatz.Problem
+import Ersatz.Bit
+import Ersatz.Decoding
+import Ersatz.Encoding
+import Ersatz.Problem
 
 newtype Bit1 = Bit1 Bit deriving (Show,Typeable)
 data Bit2 = Bit2 Bit Bit deriving (Show,Typeable)

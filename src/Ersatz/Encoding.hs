@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Encoding
+module Ersatz.Encoding
   ( Encoding(..)
   ) where
 
@@ -19,7 +19,7 @@ import Data.Map (Map)
 import Data.Sequence (Seq)
 import Data.Tree (Tree)
 
-import Data.Logic.Ersatz.Internal.Problem
+import Ersatz.Internal.Problem
 
 class Encoding a where
   type Encoded a :: *

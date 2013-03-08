@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Solution
+module Ersatz.Solution
   ( Solution(..), solutionFrom
   , Result(..)
   , Solver
@@ -21,7 +21,7 @@ import Data.Ix
 import Control.Applicative
 import System.Mem.StableName (StableName)
 
-import Data.Logic.Ersatz.Internal.Problem
+import Ersatz.Internal.Problem
 
 data Solution = Solution
   { solutionLiteral    :: Literal -> Maybe Bool
@@ -53,7 +53,7 @@ instance Enum Result where
   toEnum (-1) = Unsolved
   toEnum 0 = Unsatisfied
   toEnum 1 = Satisfied
-  toEnum _ = error "Enum.toEnum {Data.Logic.Ersatz.Solution.Result}: argument of out range"
+  toEnum _ = error "Enum.toEnum {Ersatz.Solution.Result}: argument of out range"
 
 instance Bounded Result where
   minBound = Unsolved

@@ -7,7 +7,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Internal.StableName
+module Ersatz.Internal.StableName
   ( StableName
   , makeStableName'
   ) where

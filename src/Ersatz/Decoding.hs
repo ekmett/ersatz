@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Decoding
+module Ersatz.Decoding
   ( Decoding(..)
   ) where
 
@@ -21,8 +21,8 @@ import Data.Sequence (Seq)
 import Data.Traversable
 import Data.Tree (Tree)
 
-import Data.Logic.Ersatz.Internal.Problem
-import Data.Logic.Ersatz.Solution
+import Ersatz.Internal.Problem
+import Ersatz.Solution
 
 class Decoding a where
   type Decoded a :: *

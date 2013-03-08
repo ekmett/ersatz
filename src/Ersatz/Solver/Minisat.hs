@@ -7,7 +7,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Solver.Minisat
+module Ersatz.Solver.Minisat
   ( minisat
   , cryptominisat
   , minisatPath
@@ -22,9 +22,9 @@ import System.Exit (ExitCode(..))
 import System.IO.Temp (withSystemTempDirectory)
 import System.Process (readProcessWithExitCode)
 
-import Data.Logic.Ersatz.Internal.Problem (qdimacs)
-import Data.Logic.Ersatz.Internal.TrivialParser
-import Data.Logic.Ersatz.Solution
+import Ersatz.Internal.Problem (qdimacs)
+import Ersatz.Internal.TrivialParser
+import Ersatz.Solution
 
 minisat :: Solver IO
 minisat = minisatPath "minisat"

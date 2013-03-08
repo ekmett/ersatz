@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Internal.Bit
+module Ersatz.Internal.Bit
   ( Bit(..)
   , Circuit(..)
   , assert
@@ -24,11 +24,11 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Traversable (Traversable, traverse)
 import Data.Typeable
-import Data.Logic.Ersatz.Decoding
-import Data.Logic.Ersatz.Encoding
-import Data.Logic.Ersatz.Internal.Problem
-import Data.Logic.Ersatz.Internal.StableName
-import Data.Logic.Ersatz.Solution
+import Ersatz.Decoding
+import Ersatz.Encoding
+import Ersatz.Internal.Problem
+import Ersatz.Internal.StableName
+import Ersatz.Solution
 import System.IO.Unsafe
 
 infix  4 ===, /==

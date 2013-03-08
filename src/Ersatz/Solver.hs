@@ -7,15 +7,15 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Solver
-  ( module Data.Logic.Ersatz.Solver.Minisat
+module Ersatz.Solver
+  ( module Ersatz.Solver.Minisat
   , solveWith
   ) where
 
-import Data.Logic.Ersatz.Decoding
-import Data.Logic.Ersatz.Problem
-import Data.Logic.Ersatz.Solution
-import Data.Logic.Ersatz.Solver.Minisat
+import Ersatz.Decoding
+import Ersatz.Problem
+import Ersatz.Solution
+import Ersatz.Solver.Minisat
 
 solveWith :: Decoding a => Solver IO -> SAT a -> IO (Result, Maybe (Decoded a))
 solveWith solver sat = do

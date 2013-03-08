@@ -9,7 +9,7 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit hiding (Test)
 -- import Test.QuickCheck hiding ((==>))
 
-import Data.Logic.Ersatz
+import Ersatz
 
 main :: IO ()
 main = defaultMain tests

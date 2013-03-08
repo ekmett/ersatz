@@ -8,7 +8,7 @@
 --
 -- A trivial, inefficient parser with no support for error reporting.
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Internal.TrivialParser
+module Ersatz.Internal.TrivialParser
   ( Parser
   , runParser
   , sepBy, sepBy1

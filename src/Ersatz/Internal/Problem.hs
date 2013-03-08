@@ -8,7 +8,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Data.Logic.Ersatz.Internal.Problem
+module Ersatz.Internal.Problem
   ( QDIMACS(..)
   , Literal(literalId), negateLiteral
   , Lit(..), lit, negateLit
@@ -33,7 +33,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
 
-import Data.Logic.Ersatz.Internal.StableName
+import Ersatz.Internal.StableName
 
 -- | (Q)QDIMACS file format pretty printer
 class QDIMACS t where
