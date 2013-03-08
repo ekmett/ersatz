@@ -23,7 +23,7 @@ import Control.Applicative
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable, traverse)
 
-import Data.Logic.Ersatz.Encoding (Decode(..), Encode(..))
+import Data.Logic.Ersatz.Encoding (Decoding(..), Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
 import Data.Logic.Ersatz.Internal.StableName
 import Data.Logic.Ersatz.Solution
@@ -77,7 +77,7 @@ instance Variable Bit where
   forall = Bit . Var <$> forall
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
-instance Decode Bit where
+instance Decoding Bit where
   type Decoded Bit = Bool
   decode sol b@(Bit c) = do
     sn <- makeStableName' b
@@ -120,7 +120,7 @@ instance Decode Bit where
           go Nothing  ~(ns, js) = (():ns, js)
           go (Just a) ~(ns, js) = (ns,    a:js)
 
-instance Encode Bit where
+instance Encoding Bit where
   type Encoded Bit = Bool
   encode = bool
 

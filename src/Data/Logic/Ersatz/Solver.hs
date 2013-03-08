@@ -19,7 +19,7 @@ import Data.Logic.Ersatz.Problem
 import Data.Logic.Ersatz.Solution
 import Data.Logic.Ersatz.Solver.Minisat
 
-solveWith :: Decode a => Solver IO -> SAT a -> IO (Result, Maybe (Decoded a))
+solveWith :: Decoding a => Solver IO -> SAT a -> IO (Result, Maybe (Decoded a))
 solveWith solver sat = do
   (a, qbf) <- satToIO sat
   (res, litMap) <- solver qbf
