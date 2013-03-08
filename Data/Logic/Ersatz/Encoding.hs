@@ -42,10 +42,28 @@ instance (Encoding a, Encoding b, Encoding c) => Encoding (a,b,c) where
 
 instance (Encoding a, Encoding b, Encoding c, Encoding d) => Encoding (a,b,c,d) where
   type Decoded (a,b,c,d) = (Decoded a, Decoded b, Decoded c, Decoded d)
-  decode s (a,b,c,d) = liftA4 (,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d
+  decode s (a,b,c,d) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d
+    where go a' b' c' d' = (,,,) <$> a' <*> b' <*> c' <*> d'
 
-liftA4 :: Applicative f => (a -> b -> c -> d -> e) -> f a -> f b -> f c -> f d -> f e
-liftA4 f a b c d = f <$> a <*> b <*> c <*> d
+instance (Encoding a, Encoding b, Encoding c, Encoding d, Encoding e) => Encoding (a,b,c,d,e) where
+  type Decoded (a,b,c,d,e) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e)
+  decode s (a,b,c,d,e) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
+    where go a' b' c' d' e' = (,,,,) <$> a' <*> b' <*> c' <*> d' <*> e'
+
+instance (Encoding a, Encoding b, Encoding c, Encoding d, Encoding e, Encoding f) => Encoding (a,b,c,d,e,f) where
+  type Decoded (a,b,c,d,e,f) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f)
+  decode s (a,b,c,d,e,f) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
+    where go a' b' c' d' e' f' = (,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f'
+
+instance (Encoding a, Encoding b, Encoding c, Encoding d, Encoding e, Encoding f, Encoding g) => Encoding (a,b,c,d,e,f,g) where
+  type Decoded (a,b,c,d,e,f,g) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f, Decoded g)
+  decode s (a,b,c,d,e,f,g) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
+    where go a' b' c' d' e' f' g' = (,,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g'
+
+instance (Encoding a, Encoding b, Encoding c, Encoding d, Encoding e, Encoding f, Encoding g, Encoding h) => Encoding (a,b,c,d,e,f,g,h) where
+  type Decoded (a,b,c,d,e,f,g,h) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f, Decoded g, Decoded h)
+  decode s (a,b,c,d,e,f,g,h) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
+    where go a' b' c' d' e' f' g' h' = (,,,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g' <*> h'
 
 instance (Encoding a, Encoding b) => Encoding (Either a b) where
   type Decoded (Either a b) = Either (Decoded a) (Decoded b)
