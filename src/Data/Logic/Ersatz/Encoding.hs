@@ -10,9 +10,7 @@
 --------------------------------------------------------------------
 module Data.Logic.Ersatz.Encoding
   ( Decoding(..)
-  , decodeTraversable
   , Encoding(..)
-  , encodeFunctor
   ) where
 
 import Control.Applicative
@@ -75,11 +73,11 @@ instance (Decoding a, Decoding b, Decoding c, Decoding d, Decoding e, Decoding f
 
 instance Decoding a => Decoding [a] where
   type Decoded [a] = [Decoded a]
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance (Ix i, Decoding e) => Decoding (Array i e) where
   type Decoded (Array i e) = Array i (Decoded e)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance (Decoding a, Decoding b) => Decoding (Either a b) where
   type Decoded (Either a b) = Either (Decoded a) (Decoded b)
@@ -88,30 +86,27 @@ instance (Decoding a, Decoding b) => Decoding (Either a b) where
 
 instance Decoding a => Decoding (HashMap k a) where
   type Decoded (HashMap k a) = HashMap k (Decoded a)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance Decoding a => Decoding (IntMap a) where
   type Decoded (IntMap a) = IntMap (Decoded a)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance Decoding a => Decoding (Map k a) where
   type Decoded (Map k a) = Map k (Decoded a)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance Decoding a => Decoding (Maybe a) where
   type Decoded (Maybe a) = Maybe (Decoded a)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance Decoding a => Decoding (Seq a) where
   type Decoded (Seq a) = Seq (Decoded a)
-  decode = decodeTraversable
+  decode = traverse . decode
 
 instance Decoding a => Decoding (Tree a) where
   type Decoded (Tree a) = Tree (Decoded a)
-  decode = decodeTraversable
-
-decodeTraversable :: (Traversable f, Decoding a) => Solution -> f a -> Maybe (f (Decoded a))
-decodeTraversable s = traverse (decode s)
+  decode = traverse . decode
 
 class Encoding a where
   type Encoded a :: *
@@ -155,11 +150,11 @@ instance (Encoding a, Encoding b, Encoding c, Encoding d, Encoding e, Encoding f
 
 instance Encoding a => Encoding [a] where
   type Encoded [a] = [Encoded a]
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance (Ix i, Encoding e) => Encoding (Array i e) where
   type Encoded (Array i e) = Array i (Encoded e)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance (Encoding a, Encoding b) => Encoding (Either a b) where
   type Encoded (Either a b) = Either (Encoded a) (Encoded b)
@@ -168,27 +163,24 @@ instance (Encoding a, Encoding b) => Encoding (Either a b) where
 
 instance Encoding a => Encoding (HashMap k a) where
   type Encoded (HashMap k a) = HashMap k (Encoded a)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance Encoding a => Encoding (IntMap a) where
   type Encoded (IntMap a) = IntMap (Encoded a)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance Encoding a => Encoding (Map k a) where
   type Encoded (Map k a) = Map k (Encoded a)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance Encoding a => Encoding (Maybe a) where
   type Encoded (Maybe a) = Maybe (Encoded a)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance Encoding a => Encoding (Seq a) where
   type Encoded (Seq a) = Seq (Encoded a)
-  encode = encodeFunctor
+  encode = fmap encode
 
 instance Encoding a => Encoding (Tree a) where
   type Encoded (Tree a) = Tree (Encoded a)
-  encode = encodeFunctor
-
-encodeFunctor :: (Functor f, Encoding a) => f (Encoded a) -> f a
-encodeFunctor = fmap encode
+  encode = fmap encode
