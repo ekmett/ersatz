@@ -2,14 +2,14 @@ name:           ersatz
 version:        0.1
 license:        BSD3
 license-file:   LICENSE
-author:         Edward A. Kmett
+author:         Edward A. Kmett, Johan Kiviniemi
 maintainer:     Edward A. Kmett <ekmett@gmail.com>
 stability:      experimental
 homepage:       http://comonad.com/reader
 category:       Logic, Algorithms
 synopsis:       A monad for expressing SAT or QSAT problems using observable sharing.
 description:    A monad for expressing SAT or QSAT problems using observable sharing.
-copyright:      (c) 2010 Edward A. Kmett
+copyright:      (c) 2010-2013 Edward Kmett, (c) 2013 Johan Kiviniemi
 build-type:     Custom
 cabal-version:  >= 1.10
 tested-with:    GHC == 7.6.2
