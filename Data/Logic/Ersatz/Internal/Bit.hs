@@ -40,8 +40,8 @@ data Circuit c
 
 instance Boolean Bit where
   -- improve the stablemap this way
-  bool t | t = true
-         | otherwise = false
+  bool True  = true
+  bool False = false
   true  = Bit (Var (lit True))
   false = Bit (Var (lit False))
   Bit (And as) && Bit (And bs) = and (as ++ bs)
