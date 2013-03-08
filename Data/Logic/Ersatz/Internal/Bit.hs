@@ -106,10 +106,10 @@ instance Encoding Bit where
           (unknowns, knowns) = partitionMaybes mbs
 
       partitionMaybes :: [Maybe a] -> ([()], [a])
-      partitionMaybes = foldr (maybe nothing just) ([],[])
+      partitionMaybes = foldr go ([],[])
         where
-          nothing ~(ns, js) = (():ns, js)
-          just a  ~(ns, js) = (ns,    a:js)
+          go Nothing  ~(ns, js) = (():ns, js)
+          go (Just a) ~(ns, js) = (ns,    a:js)
 
 assert :: MonadSAT m => Bit -> m ()
 assert b = do
