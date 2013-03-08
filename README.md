@@ -1,5 +1,7 @@
 # Ersatz
 
+[![Build Status](https://secure.travis-ci.org/ekmett/ersatz.png)](http://travis-ci.org/ekmett/ersatz)
+
 Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad. It takes care of generating the normal form, encoding your problem, marshaling the data to an external solver, and parsing and interpreting the result into Haskell types.
 
 What differentiates Ersatz is the use of observable sharing in the API.
@@ -46,3 +48,14 @@ verify_currying :: SAT ()
 verify_currying = forall $ \x y z ->
   assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ```
+
+
+Contact Information
+-------------------
+
+Contributions and bug reports are welcome!
+
+Please feel free to contact me through github or on the #haskell IRC channel on irc.freenode.net.
+
+-Edward Kmett
+
