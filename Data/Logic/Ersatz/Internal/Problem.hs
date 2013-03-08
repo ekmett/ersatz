@@ -175,9 +175,27 @@ instance Variable Literal where
   exists = literalExists
   forall = literalForall
 
-instance (Variable f, Variable g) => Variable (f, g) where
+instance (Variable a, Variable b) => Variable (a,b) where
   exists = (,) <$> exists <*> exists
   forall = (,) <$> forall <*> forall
+instance (Variable a, Variable b, Variable c) => Variable (a,b,c) where
+  exists = (,,) <$> exists <*> exists <*> exists
+  forall = (,,) <$> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d) => Variable (a,b,c,d) where
+  exists = (,,,) <$> exists <*> exists <*> exists <*> exists
+  forall = (,,,) <$> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e) => Variable (a,b,c,d,e) where
+  exists = (,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f) => Variable (a,b,c,d,e,f) where
+  exists = (,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g) => Variable (a,b,c,d,e,f,g) where
+  exists = (,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g, Variable h) => Variable (a,b,c,d,e,f,g,h) where
+  exists = (,,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
 
 data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
            | Forall { getQuant :: {-# UNPACK #-} !Int }
