@@ -30,6 +30,7 @@ library
   exposed-modules:
     Data.Logic.Ersatz
     Data.Logic.Ersatz.Bit
+    Data.Logic.Ersatz.Bits
     Data.Logic.Ersatz.Encoding
     Data.Logic.Ersatz.Problem
     Data.Logic.Ersatz.Solution
