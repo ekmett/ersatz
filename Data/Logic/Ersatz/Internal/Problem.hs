@@ -8,7 +8,7 @@ module Data.Logic.Ersatz.Internal.Problem
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   , MonadSAT(..)
-  , SAT(..)
+  , SAT(..), satToIO
   , Variable(..)
   ) where
 
@@ -322,6 +322,9 @@ instance MonadSAT SAT where
         modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
         runSAT (f l)
         return l
+
+satToIO :: SAT a -> IO (a, QBF)
+satToIO m = runStateT (runSAT m) emptyQBF
 
 -- Variable
 

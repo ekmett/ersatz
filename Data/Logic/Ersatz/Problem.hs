@@ -4,6 +4,8 @@ module Data.Logic.Ersatz.Problem
   , Lit, lit, negateLit
   , QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
   , Formula, Clause, clauseLiterals
+  , MonadSAT(..)
+  , SAT, satToIO
   , Variable(..)
   ) where
 
