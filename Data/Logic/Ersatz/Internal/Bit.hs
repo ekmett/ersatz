@@ -58,7 +58,7 @@ instance Boolean Bit where
   a `xor` b = Bit (Xor a b)
   and xs  = Bit (And xs)
   or xs   = Bit (Or xs)
-  choose s = fmap (\(a,b) -> Bit (Mux a b s))
+  choose f t s = Bit (Mux f t s)
 
 instance Equatable Bit where
   (/==) = xor
@@ -148,9 +148,11 @@ class Boolean t where
   nor :: [t] -> t
   xor :: t -> t -> t
 
-  -- map a 2x2 multiplexor over the functor
-  choose :: Functor f => t -> f (t,t) -> f t
-  choose s = fmap (\(a,b) -> (a && not s) || (b && s))
+  choose :: t  -- ^ False branch
+         -> t  -- ^ True branch
+         -> t  -- ^ Predicate/selector branch
+         -> t
+  choose f t s = (f && not s) || (t && s)
 
   x ==> y = not x || y
   nand = not . and
@@ -174,8 +176,8 @@ instance Boolean Bool where
   True `xor` False  = True
   True `xor` True   = False
 
-  choose False = fmap fst
-  choose True = fmap snd
+  choose f _ False = f
+  choose _ t True  = t
 
 -- Equatable
 
