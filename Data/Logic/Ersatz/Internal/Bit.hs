@@ -75,6 +75,8 @@ instance Encoding Bit where
     case solLookupSN sol sn of
       v@(Just _) -> return v
       Nothing ->
+        -- The StableName didn’t have an associated literal with a solution,
+        -- recurse to compute the value.
         case c of
           And cs  -> andMaybeBools <$> traverse (decode sol) cs
           Or cs   -> orMaybeBools  <$> traverse (decode sol) cs
