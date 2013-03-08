@@ -11,7 +11,7 @@ synopsis:       A monad for expressing SAT or QSAT problems using observable sha
 description:    A monad for expressing SAT or QSAT problems using observable sharing.
 copyright:      (c) 2010 Edward A. Kmett
 build-type:     Custom
-cabal-version:  >= 1.8
+cabal-version:  >= 1.10
 tested-with:    GHC == 7.6.2
 
 library
