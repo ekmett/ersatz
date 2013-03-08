@@ -70,9 +70,6 @@ instance (Encoding a, Encoding b) => Encoding (Either a b) where
   decode s (Left  a) = fmap Left  <$> decode s a
   decode s (Right b) = fmap Right <$> decode s b
 
-decodeTraversable :: (Traversable f, Encoding a) => Solution -> f a -> IO (Maybe (f (Decoded a)))
-decodeTraversable s a = sequenceA <$> traverse (decode s) a
-
 instance Encoding a => Encoding [a] where
   type Decoded [a] = [Decoded a]
   decode = decodeTraversable
@@ -84,3 +81,6 @@ instance Encoding a => Encoding (Maybe a) where
 instance (Ix i, Encoding e) => Encoding (Array i e) where
   type Decoded (Array i e) = Array i (Decoded e)
   decode = decodeTraversable
+
+decodeTraversable :: (Traversable f, Encoding a) => Solution -> f a -> IO (Maybe (f (Decoded a)))
+decodeTraversable s a = sequenceA <$> traverse (decode s) a

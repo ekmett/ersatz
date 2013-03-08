@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module Data.Logic.Ersatz.Internal.Bit
-  ( Boolean(..)
-  , Equatable(..)
-  , Bit(..)
+  ( Bit(..)
   , Circuit(..)
   , assert
+  , Boolean(..)
+  , Equatable(..)
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or)
@@ -24,6 +24,114 @@ infix  4 ===, /==
 infixr 3 &&
 infixr 2 ||
 infixr 0 ==>
+
+-- Bit
+
+newtype Bit = Bit (Circuit Bit)
+  deriving Show
+
+data Circuit c
+  = And [c]
+  | Or [c]
+  | Xor c c
+  | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
+  | Not c
+  | Var !Lit
+  deriving (Show, Functor, Foldable, Traversable)
+
+instance Boolean Bit where
+  -- improve the stablemap this way
+  bool t | t = true
+         | otherwise = false
+  true  = Bit (Var (lit True))
+  false = Bit (Var (lit False))
+  Bit (And as) && Bit (And bs) = and (as ++ bs)
+  Bit (And as) && b            = and (as ++ [b])
+  a            && Bit (And bs) = and (a : bs)
+  a            && b            = and [a,b]
+  Bit (Or as) || Bit (Or bs) = or (as ++ bs)
+  Bit (Or as) || b           = or (as ++ [b])
+  a           || Bit (Or bs) = or (a : bs)
+  a           || b           = or [a,b]
+  not (Bit (Not c)) = c
+  not (Bit (Var b)) = Bit (Var (negateLit b))
+  not c     = Bit (Not c)
+  a `xor` b = Bit (Xor a b)
+  and xs  = Bit (And xs)
+  or xs   = Bit (Or xs)
+  choose s = fmap (\(a,b) -> Bit (Mux a b s))
+
+instance Equatable Bit where
+  (/==) = xor
+
+instance Variable Bit where
+  exists = Bit . Var <$> exists
+  forall = Bit . Var <$> forall
+
+-- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
+instance Encoding Bit where
+  type Decoded Bit = Bool
+  decode sol b@(Bit c) = do
+    sn <- makeStableName' b
+    case HashMap.lookup sn (solSNMap sol) of
+      v@(Just _) -> return v
+      Nothing ->
+        case c of
+          And cs  -> andMaybeBools <$> traverse (decode sol) cs
+          Or cs   -> orMaybeBools  <$> traverse (decode sol) cs
+          Xor x y -> liftA2 xor <$> decode sol x <*> decode sol y
+          Mux cf ct cp -> do mp <- decode sol cp
+                             case mp of
+                               Just p  -> decode sol (if p then ct else cf)
+                               Nothing -> return Nothing
+          Not c'  -> fmap not <$> decode sol c'
+          Var l   -> decode sol l
+
+    where
+      andMaybeBools :: [Maybe Bool] -> Maybe Bool
+      andMaybeBools mbs
+        | any not knowns = Just False  -- One is known to be false.
+        | null unknowns  = Just True   -- All are known to be true.
+        | otherwise      = Nothing     -- Unknown.
+        where
+          (unknowns, knowns) = partitionMaybes mbs
+
+      orMaybeBools :: [Maybe Bool] -> Maybe Bool
+      orMaybeBools mbs
+        | or knowns     = Just True   -- One is known to be true.
+        | null unknowns = Just False  -- All are known to be false.
+        | otherwise     = Nothing     -- Unknown.
+        where
+          (unknowns, knowns) = partitionMaybes mbs
+
+      partitionMaybes :: [Maybe a] -> ([()], [a])
+      partitionMaybes = foldr (maybe nothing just) ([],[])
+        where
+          nothing ~(ns, js) = (():ns, js)
+          just a  ~(ns, js) = (ns,    a:js)
+
+assert :: MonadSAT m => Bit -> m ()
+assert b = do
+  l <- runBit b
+  assertFormula (formulaLiteral l)
+
+runBit :: MonadSAT m => Bit -> m Literal
+runBit (Bit (Not c)) = negateLiteral <$> runBit c
+runBit (Bit (Var (Lit l))) = return l
+runBit b@(Bit c) = generateLiteral b $ \out ->
+  assertFormula =<< case c of
+    And bs    -> formulaAnd out <$> traverse runBit bs
+    Or  bs    -> formulaOr  out <$> traverse runBit bs
+    Xor x y   -> formulaXor out <$> runBit x <*> runBit y
+    Mux x y p -> formulaMux out <$> runBit x <*> runBit y <*> runBit p
+    Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
+    Var (Bool True)  -> return $ formulaLiteral out
+
+    -- Already handled above but GHC doesn't realize it.
+    Not _       -> error "Unreachable"
+    Var (Lit _) -> error "Unreachable"
+
+-- Boolean
 
 class Boolean t where
   bool :: Bool -> t
@@ -68,82 +176,7 @@ instance Boolean Bool where
   choose False = fmap fst
   choose True = fmap snd
 
-data Circuit c
-  = And [c]
-  | Or [c]
-  | Xor c c
-  | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
-  | Not c
-  | Var !Lit
-  deriving (Show, Functor, Foldable, Traversable)
-
--- does this have to be data?
-newtype Bit = Bit (Circuit Bit)
-  deriving Show
-
--- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
-instance Encoding Bit where
-  type Decoded Bit = Bool
-  decode sol b@(Bit c) = do
-    sn <- makeStableName' b
-    case HashMap.lookup sn (solSNMap sol) of
-      v@(Just _) -> return v
-      Nothing ->
-        case c of
-          And cs  -> andMaybeBools <$> traverse (decode sol) cs
-          Or cs   -> orMaybeBools  <$> traverse (decode sol) cs
-          Xor x y -> liftA2 xor <$> decode sol x <*> decode sol y
-          Mux cf ct cp -> do mp <- decode sol cp
-                             case mp of
-                               Just p  -> decode sol (if p then ct else cf)
-                               Nothing -> return Nothing
-          Not c'  -> fmap not <$> decode sol c'
-          Var l   -> decode sol l
-
-    where
-      andMaybeBools :: [Maybe Bool] -> Maybe Bool
-      andMaybeBools mbs
-        | any not knowns = Just False  -- One is known to be false.
-        | null unknowns  = Just True   -- All are known to be true.
-        | otherwise      = Nothing     -- Unknown.
-        where
-          (unknowns, knowns) = partitionMaybes mbs
-
-      orMaybeBools :: [Maybe Bool] -> Maybe Bool
-      orMaybeBools mbs
-        | or knowns     = Just True   -- One is known to be true.
-        | null unknowns = Just False  -- All are known to be false.
-        | otherwise     = Nothing     -- Unknown.
-        where
-          (unknowns, knowns) = partitionMaybes mbs
-
-      partitionMaybes :: [Maybe a] -> ([()], [a])
-      partitionMaybes = foldr (maybe nothing just) ([],[])
-        where
-          nothing ~(ns, js) = (():ns, js)
-          just a  ~(ns, js) = (ns,    a:js)
-
-instance Boolean Bit where
-  -- improve the stablemap this way
-  bool t | t = true
-         | otherwise = false
-  true  = Bit (Var (lit True))
-  false = Bit (Var (lit False))
-  Bit (And as) && Bit (And bs) = and (as ++ bs)
-  Bit (And as) && b            = and (as ++ [b])
-  a            && Bit (And bs) = and (a : bs)
-  a            && b            = and [a,b]
-  Bit (Or as) || Bit (Or bs) = or (as ++ bs)
-  Bit (Or as) || b           = or (as ++ [b])
-  a           || Bit (Or bs) = or (a : bs)
-  a           || b           = or [a,b]
-  not (Bit (Not c)) = c
-  not (Bit (Var b)) = Bit (Var (negateLit b))
-  not c     = Bit (Not c)
-  a `xor` b = Bit (Xor a b)
-  and xs  = Bit (And xs)
-  or xs   = Bit (Or xs)
-  choose s = fmap (\(a,b) -> Bit (Mux a b s))
+-- Equatable
 
 class Equatable t where
   (===) :: t -> t -> Bit
@@ -152,8 +185,6 @@ class Equatable t where
   a === b = not (a /== b)
   a /== b = not (a === b)
 
-instance Equatable Bit where
-  (/==) = xor
 instance (Equatable a, Equatable b) => Equatable (a,b) where
   (a,b) === (a',b') = a === a' && b === b'
 instance (Equatable a, Equatable b, Equatable c) => Equatable (a,b,c) where
@@ -172,28 +203,3 @@ instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equat
 instance Equatable a => Equatable [a] where
   as === bs | length as /= length bs = false
             | otherwise              = and (zipWith (===) as bs)
-
-instance Variable Bit where
-  exists = Bit . Var <$> exists
-  forall = Bit . Var <$> forall
-
-assert :: MonadSAT m => Bit -> m ()
-assert b = do
-  l <- runBit b
-  assertFormula (formulaLiteral l)
-
-runBit :: MonadSAT m => Bit -> m Literal
-runBit (Bit (Not c)) = negateLiteral <$> runBit c
-runBit (Bit (Var (Lit l))) = return l
-runBit b@(Bit c) = generateLiteral b $ \out ->
-  assertFormula =<< case c of
-    And bs    -> formulaAnd out <$> traverse runBit bs
-    Or  bs    -> formulaOr  out <$> traverse runBit bs
-    Xor x y   -> formulaXor out <$> runBit x <*> runBit y
-    Mux x y p -> formulaMux out <$> runBit x <*> runBit y <*> runBit p
-    Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
-    Var (Bool True)  -> return $ formulaLiteral out
-
-    -- Already handled above but GHC doesn't realize it.
-    Not _       -> error "Unreachable"
-    Var (Lit _) -> error "Unreachable"

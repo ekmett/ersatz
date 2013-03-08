@@ -1,13 +1,10 @@
 module Data.Logic.Ersatz.Problem
-  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
-  , Formula, Clause, clauseLiterals
-  , Literal(literalId), negateLiteral -- literalForall, literalExists
+  ( QDIMACS(..)
+  , Literal(literalId), negateLiteral
   , Lit, lit, negateLit, litForall, litExists
-  , QDIMACS(..)
+  , QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
+  , Formula, Clause, clauseLiterals
   , Variable(..)
-  -- , assertLits
-  -- , assume
-  -- , reifyLit
   ) where
 
 import Data.Logic.Ersatz.Internal.Problem

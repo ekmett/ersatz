@@ -1,15 +1,15 @@
 {-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards #-}
 module Data.Logic.Ersatz.Internal.Problem
-  ( QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
-  , Formula(..), Clause(..), clauseLiterals
+  ( QDIMACS(..)
   , Literal(literalId), negateLiteral
   , Lit(..), lit, negateLit, litExists, litForall
-  , QDIMACS(..)
-  , SAT(..)
-  , MonadSAT(..)
-  , Variable(..)
+  , QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
+  , Formula(..), Clause(..), clauseLiterals
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
+  , MonadSAT(..)
+  , SAT(..)
+  , Variable(..)
   ) where
 
 import Control.Applicative
@@ -29,8 +29,7 @@ import Data.Logic.Ersatz.Internal.StableName
 class QDIMACS t where
   qdimacs :: t -> String
 
-instance QDIMACS Literal where
-  qdimacs (Literal n) = show n
+-- Literal, Lit
 
 -- | A naked possibly-negated Atom, present in the target solver.
 newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord)
@@ -39,6 +38,9 @@ instance Show Literal where
   showsPrec i = showsPrec i . literalId
   show = show . literalId
   showList = showList . map literalId
+
+instance QDIMACS Literal where
+  qdimacs (Literal n) = show n
 
 negateLiteral :: Literal -> Literal
 negateLiteral = Literal . negate . literalId
@@ -71,11 +73,28 @@ negateLit :: Lit -> Lit
 negateLit (Bool b) = Bool (not b)
 negateLit (Lit l) = Lit (negateLiteral l)
 
+-- QBF, Formula
+
+data QBF = QBF
+  { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
+  , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
+  , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
+  , qbfSNMap      :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
+  -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
+  }
+
+emptyQBF :: QBF
+emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
+
 newtype Formula = Formula { formulaSet :: Set Clause }
   deriving (Eq, Ord, Monoid)
 
 newtype Clause = Clause { clauseSet :: IntSet }
   deriving (Eq, Ord, Monoid)
+
+instance Show QBF where
+  showsPrec p qbf = showParen (p > 10)
+                  $ showString "QBF " . showsPrec 11 (qbfFormula qbf)
 
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id
@@ -86,119 +105,6 @@ instance Show Clause where
   showsPrec p = showParen (p > 1) . foldr (.) id
               . List.intersperse (showString " | ") . map (showsPrec 2)
               . IntSet.toList . clauseSet
-
-instance QDIMACS Formula where
-  qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
-
-instance QDIMACS Clause where
-  qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
-
-clauseLiterals :: Clause -> [Literal]
-clauseLiterals (Clause is) = Literal <$> IntSet.toList is
-
-data QBF = QBF
-  { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
-  , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
-  , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-  , qbfSNMap      :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
-  -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
-  }
-
--- provided for convenience
-instance Show QBF where
-  showsPrec p qbf = showParen (p > 10)
-                  $ showString "QBF " . showsPrec 11 (qbfFormula qbf)
-
-emptyQBF :: QBF
-emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
-
-{-
-class Annotated t where
-  (<?>) :: t -> String -> t
-
-instance Annotated (SAT Literal) where
-  m <?> name = SAT $ do
-      modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
--}
-
--- Let's not provide MonadIO, the IO should only be used for reifyGraph.
-newtype SAT a = SAT { runSAT :: StateT QBF IO a }
-  deriving (Functor, Monad)
-
--- We can't rely on having an Applicative instance for StateT st (ST s)
-instance Applicative SAT where
-  pure = return
-  (<*>) = ap
-
-class (Monad m, Applicative m) => MonadSAT m where
-  literalExists   :: m Literal
-  literalForall   :: m Literal
-  assertFormula   :: Formula -> m ()
-  generateLiteral :: a -> (Literal -> m ()) -> m Literal
-
-instance MonadSAT SAT where
-  literalExists = SAT $ do
-    qbf <- get
-    let qbfLastAtom' = qbfLastAtom qbf + 1
-        qbf' = qbf { qbfLastAtom = qbfLastAtom' }
-    put qbf'
-    return (Literal qbfLastAtom')
-
-  assertFormula formula = SAT $ do
-    modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
-
-  generateLiteral a f = SAT $ do
-    sn <- liftIO (makeStableName' a)
-    maybeLit <- HashMap.lookup sn <$> gets qbfSNMap
-    case maybeLit of
-      Just l  -> return l
-      Nothing -> do
-        l <- runSAT literalExists
-        modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
-        runSAT (f l)
-        return l
-
-  literalForall = SAT $ do
-    qbf <- get
-    let qbfLastAtom' = qbfLastAtom qbf + 1
-        qbf' = qbf { qbfLastAtom = qbfLastAtom'
-                   , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
-                   }
-    put qbf'
-    return (Literal qbfLastAtom')
-
-class Variable t where
-  exists :: MonadSAT m => m t
-  forall :: MonadSAT m => m t
-
-instance Variable Literal where
-  exists = literalExists
-  forall = literalForall
-
-instance (Variable a, Variable b) => Variable (a,b) where
-  exists = (,) <$> exists <*> exists
-  forall = (,) <$> forall <*> forall
-instance (Variable a, Variable b, Variable c) => Variable (a,b,c) where
-  exists = (,,) <$> exists <*> exists <*> exists
-  forall = (,,) <$> forall <*> forall <*> forall
-instance (Variable a, Variable b, Variable c, Variable d) => Variable (a,b,c,d) where
-  exists = (,,,) <$> exists <*> exists <*> exists <*> exists
-  forall = (,,,) <$> forall <*> forall <*> forall <*> forall
-instance (Variable a, Variable b, Variable c, Variable d, Variable e) => Variable (a,b,c,d,e) where
-  exists = (,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f) => Variable (a,b,c,d,e,f) where
-  exists = (,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g) => Variable (a,b,c,d,e,f,g) where
-  exists = (,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g, Variable h) => Variable (a,b,c,d,e,f,g,h) where
-  exists = (,,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-
-data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
-           | Forall { getQuant :: {-# UNPACK #-} !Int }
 
 instance QDIMACS QBF where
   qdimacs (QBF vars formula@(Formula cs) qs _) =
@@ -234,7 +140,17 @@ instance QDIMACS QBF where
         | i == j    = Forall i : quants is js
         | otherwise = Exists i : quants is jjs
 
--- Primitives to build a Formula.
+data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
+           | Forall { getQuant :: {-# UNPACK #-} !Int }
+
+instance QDIMACS Formula where
+  qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
+
+instance QDIMACS Clause where
+  qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
+
+clauseLiterals :: Clause -> [Literal]
+clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
 -- | A formula with no clauses
 formulaEmpty :: Formula
@@ -355,3 +271,92 @@ formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
 
 formulaFromList :: [[Int]] -> Formula
 formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
+
+-- SAT
+
+{-
+class Annotated t where
+  (<?>) :: t -> String -> t
+
+instance Annotated (SAT Literal) where
+  m <?> name = SAT $ do
+      modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
+-}
+
+class (Monad m, Applicative m) => MonadSAT m where
+  literalExists   :: m Literal
+  literalForall   :: m Literal
+  assertFormula   :: Formula -> m ()
+  generateLiteral :: a -> (Literal -> m ()) -> m Literal
+
+-- Let's not provide MonadIO, the IO should only be used for reifyGraph.
+newtype SAT a = SAT { runSAT :: StateT QBF IO a }
+  deriving (Functor, Monad)
+
+-- We can't rely on having an Applicative instance for StateT st (ST s)
+instance Applicative SAT where
+  pure = return
+  (<*>) = ap
+
+instance MonadSAT SAT where
+  literalExists = SAT $ do
+    qbf <- get
+    let qbfLastAtom' = qbfLastAtom qbf + 1
+        qbf' = qbf { qbfLastAtom = qbfLastAtom' }
+    put qbf'
+    return (Literal qbfLastAtom')
+
+  literalForall = SAT $ do
+    qbf <- get
+    let qbfLastAtom' = qbfLastAtom qbf + 1
+        qbf' = qbf { qbfLastAtom = qbfLastAtom'
+                   , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
+                   }
+    put qbf'
+    return (Literal qbfLastAtom')
+
+  assertFormula formula = SAT $ do
+    modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
+
+  generateLiteral a f = SAT $ do
+    sn <- liftIO (makeStableName' a)
+    maybeLit <- HashMap.lookup sn <$> gets qbfSNMap
+    case maybeLit of
+      Just l  -> return l
+      Nothing -> do
+        l <- runSAT literalExists
+        modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
+        runSAT (f l)
+        return l
+
+-- Variable
+
+class Variable t where
+  exists :: MonadSAT m => m t
+  forall :: MonadSAT m => m t
+
+instance Variable Literal where
+  exists = literalExists
+  forall = literalForall
+
+instance (Variable a, Variable b) => Variable (a,b) where
+  exists = (,) <$> exists <*> exists
+  forall = (,) <$> forall <*> forall
+instance (Variable a, Variable b, Variable c) => Variable (a,b,c) where
+  exists = (,,) <$> exists <*> exists <*> exists
+  forall = (,,) <$> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d) => Variable (a,b,c,d) where
+  exists = (,,,) <$> exists <*> exists <*> exists <*> exists
+  forall = (,,,) <$> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e) => Variable (a,b,c,d,e) where
+  exists = (,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f) => Variable (a,b,c,d,e,f) where
+  exists = (,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g) => Variable (a,b,c,d,e,f,g) where
+  exists = (,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g, Variable h) => Variable (a,b,c,d,e,f,g,h) where
+  exists = (,,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
+  forall = (,,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall

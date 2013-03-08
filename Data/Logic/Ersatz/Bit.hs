@@ -1,10 +1,8 @@
 module Data.Logic.Ersatz.Bit
-  ( Boolean(..)
-  , Equatable(..)
-  , Bit
+  ( Bit
   , assert
+  , Boolean(..)
+  , Equatable(..)
   ) where
 
 import Data.Logic.Ersatz.Internal.Bit
-
--- assertBit :: MonadSAT b q => Bit b -> m ()
