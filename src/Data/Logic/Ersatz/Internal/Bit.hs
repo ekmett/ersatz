@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -20,9 +20,10 @@ import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 
 import Control.Applicative
-import Data.Foldable (Foldable)
+import Data.Foldable (Foldable, foldMap)
+import Data.Monoid
 import Data.Traversable (Traversable, traverse)
-
+import Data.Typeable
 import Data.Logic.Ersatz.Encoding (Decoding(..), Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
 import Data.Logic.Ersatz.Internal.StableName
@@ -36,7 +37,7 @@ infixr 0 ==>
 -- Bit
 
 newtype Bit = Bit (Circuit Bit)
-  deriving Show
+  deriving (Show, Typeable)
 
 data Circuit c
   = And [c]
@@ -45,7 +46,31 @@ data Circuit c
   | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
   | Not c
   | Var !Lit
-  deriving (Show, Functor, Foldable, Traversable)
+  deriving (Show, Typeable)
+
+instance Functor Circuit where
+  fmap f (And as) = And (map f as)
+  fmap f (Or as) = Or (map f as)
+  fmap f (Xor a b) = Xor (f a) (f b)
+  fmap f (Mux a b c) = Mux (f a) (f b) (f c)
+  fmap f (Not a) = Not (f a)
+  fmap _ (Var l) = Var l
+
+instance Foldable Circuit where
+  foldMap f (And as) = foldMap f as
+  foldMap f (Or as) = foldMap f as
+  foldMap f (Xor a b) = f a <> f b
+  foldMap f (Mux a b c) = f a <> f b <> f c
+  foldMap f (Not a) = f a
+  foldMap _ Var{} = mempty
+
+instance Traversable Circuit where
+  traverse f (And as) = And <$> traverse f as
+  traverse f (Or as) = Or <$> traverse f as
+  traverse f (Xor a b) = Xor <$> f a <*> f b
+  traverse f (Mux a b c) = Mux <$> f a <*> f b <*> f c
+  traverse f (Not a) = Not <$> f a
+  traverse _ (Var l) = pure (Var l)
 
 instance Boolean Bit where
   -- improve the stablemap this way
