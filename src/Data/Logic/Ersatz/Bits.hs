@@ -24,6 +24,7 @@ import Data.Typeable
 import Data.Word (Word8)
 
 import Data.Logic.Ersatz.Bit
+import Data.Logic.Ersatz.Decoding
 import Data.Logic.Ersatz.Encoding
 import Data.Logic.Ersatz.Problem
 

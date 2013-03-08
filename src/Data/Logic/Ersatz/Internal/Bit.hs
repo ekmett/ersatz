@@ -24,7 +24,8 @@ import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
 import Data.Traversable (Traversable, traverse)
 import Data.Typeable
-import Data.Logic.Ersatz.Encoding (Decoding(..), Encoding(..))
+import Data.Logic.Ersatz.Decoding
+import Data.Logic.Ersatz.Encoding
 import Data.Logic.Ersatz.Internal.Problem
 import Data.Logic.Ersatz.Internal.StableName
 import Data.Logic.Ersatz.Solution

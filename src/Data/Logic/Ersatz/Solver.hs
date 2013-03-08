@@ -12,7 +12,7 @@ module Data.Logic.Ersatz.Solver
   , solveWith
   ) where
 
-import Data.Logic.Ersatz.Encoding
+import Data.Logic.Ersatz.Decoding
 import Data.Logic.Ersatz.Problem
 import Data.Logic.Ersatz.Solution
 import Data.Logic.Ersatz.Solver.Minisat
