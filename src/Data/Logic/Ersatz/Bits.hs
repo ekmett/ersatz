@@ -232,42 +232,35 @@ instance Variable Bit8 where
 
 instance Decoding Bit1 where
   type Decoded Bit1 = Word8
-  decode s (Bit1 a) = fmap boolsToNum1 <$> decode s a
+  decode s (Bit1 a) = boolsToNum1 <$> decode s a
 
 instance Decoding Bit2 where
   type Decoded Bit2 = Word8
-  decode s (Bit2 a b) = go <$> decode s a <*> decode s b
-    where go a' b' = boolsToNum2 <$> a' <*> b'
+  decode s (Bit2 a b) = boolsToNum2 <$> decode s a <*> decode s b
 
 instance Decoding Bit3 where
   type Decoded Bit3 = Word8
-  decode s (Bit3 a b c) = go <$> decode s a <*> decode s b <*> decode s c
-    where go a' b' c' = boolsToNum3 <$> a' <*> b' <*> c'
+  decode s (Bit3 a b c) = boolsToNum3 <$> decode s a <*> decode s b <*> decode s c
 
 instance Decoding Bit4 where
   type Decoded Bit4 = Word8
-  decode s (Bit4 a b c d) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d
-    where go a' b' c' d' = boolsToNum4 <$> a' <*> b' <*> c' <*> d'
+  decode s (Bit4 a b c d) = boolsToNum4 <$> decode s a <*> decode s b <*> decode s c <*> decode s d
 
 instance Decoding Bit5 where
   type Decoded Bit5 = Word8
-  decode s (Bit5 a b c d e) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
-    where go a' b' c' d' e' = boolsToNum5 <$> a' <*> b' <*> c' <*> d' <*> e'
+  decode s (Bit5 a b c d e) = boolsToNum5 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
 
 instance Decoding Bit6 where
   type Decoded Bit6 = Word8
-  decode s (Bit6 a b c d e f) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
-    where go a' b' c' d' e' f' = boolsToNum6 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f'
+  decode s (Bit6 a b c d e f) = boolsToNum6 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
 
 instance Decoding Bit7 where
   type Decoded Bit7 = Word8
-  decode s (Bit7 a b c d e f g) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
-    where go a' b' c' d' e' f' g' = boolsToNum7 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g'
+  decode s (Bit7 a b c d e f g) = boolsToNum7 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
 
 instance Decoding Bit8 where
   type Decoded Bit8 = Word8
-  decode s (Bit8 a b c d e f g h) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
-    where go a' b' c' d' e' f' g' h' = boolsToNum8 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g' <*> h'
+  decode s (Bit8 a b c d e f g h) = boolsToNum8 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
 
 instance Encoding Bit1 where
   type Encoded Bit1 = Word8

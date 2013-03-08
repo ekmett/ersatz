@@ -21,7 +21,7 @@ import Data.HashMap.Lazy (HashMap)
 import Data.IntMap (IntMap)
 import Data.Map (Map)
 import Data.Sequence (Seq)
-import Data.Traversable (Traversable, sequenceA, traverse)
+import Data.Traversable
 import Data.Tree (Tree)
 
 import Data.Logic.Ersatz.Internal.Problem
@@ -30,53 +30,48 @@ import Data.Logic.Ersatz.Solution
 class Decoding a where
   type Decoded a :: *
   -- | Return a value based on the solution if one can be determined.
-  decode :: Solution -> a -> IO (Maybe (Decoded a))
+  decode :: Solution -> a -> Maybe (Decoded a)
 
 instance Decoding Literal where
   type Decoded Literal = Bool
-  decode s l = return (solutionLiteral s l)
+  decode s l = solutionLiteral s l
 
 instance Decoding Lit where
   type Decoded Lit = Bool
-  decode _ (Bool b) = return $ Just b
+  decode _ (Bool b) = Just b
   decode s (Lit l)  = decode s l
 
 instance Decoding () where
   type Decoded () = ()
-  decode _ () = return $ Just ()
+  decode _ () = Just ()
 
 instance (Decoding a, Decoding b) => Decoding (a,b) where
   type Decoded (a,b) = (Decoded a, Decoded b)
-  decode s (a,b) = liftA2 (,) <$> decode s a <*> decode s b
+  decode s (a,b) = (,) <$> decode s a <*> decode s b
 
 instance (Decoding a, Decoding b, Decoding c) => Decoding (a,b,c) where
   type Decoded (a,b,c) = (Decoded a, Decoded b, Decoded c)
-  decode s (a,b,c) = liftA3 (,,) <$> decode s a <*> decode s b <*> decode s c
+  decode s (a,b,c) = (,,) <$> decode s a <*> decode s b <*> decode s c
 
 instance (Decoding a, Decoding b, Decoding c, Decoding d) => Decoding (a,b,c,d) where
   type Decoded (a,b,c,d) = (Decoded a, Decoded b, Decoded c, Decoded d)
-  decode s (a,b,c,d) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d
-    where go a' b' c' d' = (,,,) <$> a' <*> b' <*> c' <*> d'
+  decode s (a,b,c,d) = (,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d
 
 instance (Decoding a, Decoding b, Decoding c, Decoding d, Decoding e) => Decoding (a,b,c,d,e) where
   type Decoded (a,b,c,d,e) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e)
-  decode s (a,b,c,d,e) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
-    where go a' b' c' d' e' = (,,,,) <$> a' <*> b' <*> c' <*> d' <*> e'
+  decode s (a,b,c,d,e) = (,,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
 
 instance (Decoding a, Decoding b, Decoding c, Decoding d, Decoding e, Decoding f) => Decoding (a,b,c,d,e,f) where
   type Decoded (a,b,c,d,e,f) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f)
-  decode s (a,b,c,d,e,f) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
-    where go a' b' c' d' e' f' = (,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f'
+  decode s (a,b,c,d,e,f) = (,,,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
 
 instance (Decoding a, Decoding b, Decoding c, Decoding d, Decoding e, Decoding f, Decoding g) => Decoding (a,b,c,d,e,f,g) where
   type Decoded (a,b,c,d,e,f,g) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f, Decoded g)
-  decode s (a,b,c,d,e,f,g) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
-    where go a' b' c' d' e' f' g' = (,,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g'
+  decode s (a,b,c,d,e,f,g) = (,,,,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
 
 instance (Decoding a, Decoding b, Decoding c, Decoding d, Decoding e, Decoding f, Decoding g, Decoding h) => Decoding (a,b,c,d,e,f,g,h) where
   type Decoded (a,b,c,d,e,f,g,h) = (Decoded a, Decoded b, Decoded c, Decoded d, Decoded e, Decoded f, Decoded g, Decoded h)
-  decode s (a,b,c,d,e,f,g,h) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
-    where go a' b' c' d' e' f' g' h' = (,,,,,,,) <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g' <*> h'
+  decode s (a,b,c,d,e,f,g,h) = (,,,,,,,) <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
 
 instance Decoding a => Decoding [a] where
   type Decoded [a] = [Decoded a]
@@ -88,8 +83,8 @@ instance (Ix i, Decoding e) => Decoding (Array i e) where
 
 instance (Decoding a, Decoding b) => Decoding (Either a b) where
   type Decoded (Either a b) = Either (Decoded a) (Decoded b)
-  decode s (Left  a) = fmap Left  <$> decode s a
-  decode s (Right b) = fmap Right <$> decode s b
+  decode s (Left  a) = Left  <$> decode s a
+  decode s (Right b) = Right <$> decode s b
 
 instance Decoding a => Decoding (HashMap k a) where
   type Decoded (HashMap k a) = HashMap k (Decoded a)
@@ -115,8 +110,8 @@ instance Decoding a => Decoding (Tree a) where
   type Decoded (Tree a) = Tree (Decoded a)
   decode = decodeTraversable
 
-decodeTraversable :: (Traversable f, Decoding a) => Solution -> f a -> IO (Maybe (f (Decoded a)))
-decodeTraversable s a = sequenceA <$> traverse (decode s) a
+decodeTraversable :: (Traversable f, Decoding a) => Solution -> f a -> Maybe (f (Decoded a))
+decodeTraversable s = traverse (decode s)
 
 class Encoding a where
   type Encoded a :: *

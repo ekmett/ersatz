@@ -28,6 +28,7 @@ import Data.Logic.Ersatz.Encoding (Decoding(..), Encoding(..))
 import Data.Logic.Ersatz.Internal.Problem
 import Data.Logic.Ersatz.Internal.StableName
 import Data.Logic.Ersatz.Solution
+import System.IO.Unsafe
 
 infix  4 ===, /==
 infixr 3 &&
@@ -104,24 +105,19 @@ instance Variable Bit where
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Decoding Bit where
   type Decoded Bit = Bool
-  decode sol b@(Bit c) = do
-    sn <- makeStableName' b
-    case solutionStableName sol sn of
-      v@(Just _) -> return v
-      Nothing ->
-        -- The StableName didn’t have an associated literal with a solution,
-        -- recurse to compute the value.
-        case c of
-          And cs  -> andMaybeBools <$> traverse (decode sol) cs
-          Or cs   -> orMaybeBools  <$> traverse (decode sol) cs
-          Xor x y -> liftA2 xor <$> decode sol x <*> decode sol y
-          Mux cf ct cp -> do mp <- decode sol cp
-                             case mp of
-                               Just p  -> decode sol (if p then ct else cf)
-                               Nothing -> return Nothing
-          Not c'  -> fmap not <$> decode sol c'
+  decode sol b@(Bit c) 
+      = solutionStableName sol (unsafePerformIO (makeStableName' b))
+     -- The StableName didn’t have an associated literal with a solution,
+     -- recurse to compute the value.
+    <|> case c of
+          And cs  -> andMaybeBools $ decode sol <$> cs
+          Or cs   -> orMaybeBools  $ decode sol <$> cs
+          Xor x y -> xor <$> decode sol x <*> decode sol y
+          Mux cf ct cp -> do
+            p <- decode sol cp
+            decode sol $ if p then ct else cf
+          Not c'  -> not <$> decode sol c'
           Var l   -> decode sol l
-
     where
       andMaybeBools :: [Maybe Bool] -> Maybe Bool
       andMaybeBools mbs
