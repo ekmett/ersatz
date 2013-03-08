@@ -1,8 +1,9 @@
 {-# LANGUAGE TypeFamilies #-}
 module Data.Logic.Ersatz.Bits
-  ( Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
-  , encodeBit2, encodeBit3, encodeBit4, encodeBit5, encodeBit6, encodeBit7
-  , encodeBit8
+  ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..)
+  , Bit8(..)
+  , encodeBit1, encodeBit2, encodeBit3, encodeBit4, encodeBit5, encodeBit6
+  , encodeBit7, encodeBit8
   ) where
 
 import Prelude hiding ((&&), (||), and, or, not)
@@ -16,6 +17,7 @@ import Data.Logic.Ersatz.Bit
 import Data.Logic.Ersatz.Encoding
 import Data.Logic.Ersatz.Problem
 
+newtype Bit1 = Bit1 Bit deriving (Show)
 data Bit2 = Bit2 Bit Bit deriving (Show)
 data Bit3 = Bit3 Bit Bit Bit deriving (Show)
 data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show)
@@ -25,6 +27,22 @@ data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show)
 data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show)
 
 -- Holy boilerplate, Batman!
+
+instance Boolean Bit1 where
+  bool True  = Bit1 true
+  bool False = Bit1 false
+  true       = Bit1 true
+  false      = Bit1 false
+  Bit1 a &&  Bit1 a' = Bit1 (a &&  a')
+  Bit1 a ||  Bit1 a' = Bit1 (a ||  a')
+  Bit1 a ==> Bit1 a' = Bit1 (a ==> a')
+  not (Bit1 a) = Bit1 (not a)
+  and  = listOp1 and
+  or   = listOp1 or
+  nand = listOp1 nand
+  nor  = listOp1 nor
+  xor (Bit1 a) (Bit1 a') = Bit1 (xor a a')
+  choose (Bit1 f) (Bit1 t) (Bit1 s) = Bit1 (choose f t s)
 
 instance Boolean Bit2 where
   bool True  = Bit2 true  true
@@ -138,6 +156,10 @@ instance Boolean Bit8 where
   xor (Bit8 a b c d e f g h) (Bit8 a' b' c' d' e' f' g' h') = Bit8 (xor a a') (xor b b') (xor c c') (xor d d') (xor e e') (xor f f') (xor g g') (xor h h')
   choose (Bit8 fa fb fc fd fe ff fg fh) (Bit8 ta tb tc td te tf tg th) (Bit8 sa sb sc sd se sf sg sh) = Bit8 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd) (choose fe te se) (choose ff tf sf) (choose fg tg sg) (choose fh th sh)
 
+instance Equatable Bit1 where
+  Bit1 a === Bit1 a' = a === a'
+  Bit1 a /== Bit1 a' = a /== a'
+
 instance Equatable Bit2 where
   Bit2 a b === Bit2 a' b' = a === a' && b === b'
   Bit2 a b /== Bit2 a' b' = a /== a' || b /== b'
@@ -166,6 +188,10 @@ instance Equatable Bit8 where
   Bit8 a b c d e f g h === Bit8 a' b' c' d' e' f' g' h' = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g' && h === h'
   Bit8 a b c d e f g h /== Bit8 a' b' c' d' e' f' g' h' = a /== a' || b /== b' || c /== c' || d /== d' || e /== e' || f /== f' || g /== g' || h /== h'
 
+instance Variable Bit1 where
+  exists = Bit1 <$> exists
+  forall = Bit1 <$> forall
+
 instance Variable Bit2 where
   exists = Bit2 <$> exists <*> exists
   forall = Bit2 <$> forall <*> forall
@@ -193,6 +219,10 @@ instance Variable Bit7 where
 instance Variable Bit8 where
   exists = Bit8 <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
   forall = Bit8 <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+
+instance Encoding Bit1 where
+  type Decoded Bit1 = Word8
+  decode s (Bit1 a) = fmap boolsToNum1 <$> decode s a
 
 instance Encoding Bit2 where
   type Decoded Bit2 = Word8
@@ -229,6 +259,9 @@ instance Encoding Bit8 where
   decode s (Bit8 a b c d e f g h) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
     where go a' b' c' d' e' f' g' h' = boolsToNum8 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g' <*> h'
 
+listOp1 :: ([Bit] -> Bit) -> [Bit1] -> Bit1
+listOp1 op = Bit1 . op . map (\(Bit1 a) -> a)
+
 listOp2 :: ([Bit] -> Bit) -> [Bit2] -> Bit2
 listOp2 op = (\(as,bs) -> Bit2 (op as) (op bs))
            . unzip . map (\(Bit2 a b) -> (a,b))
@@ -261,6 +294,9 @@ listOp8 op = (\(as,bs,cs,ds,es,fs,gs,hs) -> Bit8 (op as) (op bs) (op cs) (op ds)
                        (a:as,b:bs,c:cs,d:ds,e:es,f:fs,g:gs,h:hs))
                    ([],[],[],[],[],[],[],[])
 
+encodeBit1 :: Word8 -> Bit1
+encodeBit1 i = Bit1 a where (a:_) = bitsOf i
+
 encodeBit2 :: Word8 -> Bit2
 encodeBit2 i = Bit2 a b where (b:a:_) = bitsOf i
 
@@ -281,6 +317,9 @@ encodeBit7 i = Bit7 a b c d e f g where (g:f:e:d:c:b:a:_) = bitsOf i
 
 encodeBit8 :: Word8 -> Bit8
 encodeBit8 i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
+
+boolsToNum1 :: Bool -> Word8
+boolsToNum1 a = boolToNum a
 
 boolsToNum2 :: Bool -> Bool -> Word8
 boolsToNum2 a b = boolsToNum [a,b]
