@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -31,6 +31,7 @@ import qualified Data.List as List (groupBy, intersperse)
 import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Typeable
 
 import Data.Logic.Ersatz.Internal.StableName
 
@@ -41,7 +42,7 @@ class QDIMACS t where
 -- Literal, Lit
 
 -- | A naked possibly-negated Atom, present in the target solver.
-newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord)
+newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord,Typeable)
 
 instance Show Literal where
   showsPrec i = showsPrec i . literalId
@@ -58,6 +59,7 @@ negateLiteral = Literal . negate . literalId
 data Lit
   = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
   | Bool { getValue :: !Bool }
+  deriving Typeable
 
 instance Show Lit where
   showsPrec p (Lit l)  = showParen (p > 10)
@@ -84,16 +86,16 @@ data QBF = QBF
   , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
   , qbfSNMap      :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
-  }
+  } deriving Typeable
 
 emptyQBF :: QBF
 emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
 
 newtype Formula = Formula { formulaSet :: Set Clause }
-  deriving (Eq, Ord, Monoid)
+  deriving (Eq, Ord, Monoid, Typeable)
 
 newtype Clause = Clause { clauseSet :: IntSet }
-  deriving (Eq, Ord, Monoid)
+  deriving (Eq, Ord, Monoid, Typeable)
 
 instance Show QBF where
   showsPrec p qbf = showParen (p > 10)
@@ -143,8 +145,10 @@ instance QDIMACS QBF where
         | i == j    = Forall i : quants is js
         | otherwise = Exists i : quants is jjs
 
-data Quant = Exists { getQuant :: {-# UNPACK #-} !Int }
-           | Forall { getQuant :: {-# UNPACK #-} !Int }
+data Quant
+  = Exists { getQuant :: {-# UNPACK #-} !Int }
+  | Forall { getQuant :: {-# UNPACK #-} !Int }
+  deriving Typeable
 
 instance QDIMACS Formula where
   qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
@@ -348,21 +352,27 @@ instance Variable Literal where
 instance (Variable a, Variable b) => Variable (a,b) where
   exists = (,) <$> exists <*> exists
   forall = (,) <$> forall <*> forall
+
 instance (Variable a, Variable b, Variable c) => Variable (a,b,c) where
   exists = (,,) <$> exists <*> exists <*> exists
   forall = (,,) <$> forall <*> forall <*> forall
+
 instance (Variable a, Variable b, Variable c, Variable d) => Variable (a,b,c,d) where
   exists = (,,,) <$> exists <*> exists <*> exists <*> exists
   forall = (,,,) <$> forall <*> forall <*> forall <*> forall
+
 instance (Variable a, Variable b, Variable c, Variable d, Variable e) => Variable (a,b,c,d,e) where
   exists = (,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists
   forall = (,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall
+
 instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f) => Variable (a,b,c,d,e,f) where
   exists = (,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
   forall = (,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+
 instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g) => Variable (a,b,c,d,e,f,g) where
   exists = (,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
   forall = (,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+
 instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g, Variable h) => Variable (a,b,c,d,e,f,g,h) where
   exists = (,,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
   forall = (,,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
