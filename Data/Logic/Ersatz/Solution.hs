@@ -3,7 +3,6 @@ module Data.Logic.Ersatz.Solution
   ( Solution(..), solutionFrom
   , Result(..)
   , Solver
-  , Witness(..)
   ) where
 
 import qualified Data.HashMap.Lazy as HashMap
@@ -51,8 +50,3 @@ instance Bounded Result where
   maxBound = Satisfied
 
 type Solver m = QBF -> m (Result, IntMap Bool)
-
-data Witness a = Witness
-  { witnessResult   :: !Result
-  , witnessSolution :: Solution
-  , witnessContents :: a }
