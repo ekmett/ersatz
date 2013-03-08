@@ -16,6 +16,7 @@ tested-with:    GHC == 7.6.2
 
 library
   ghc-options: -Wall
+  hs-source-dirs: src
 
   build-depends:
     base >= 4 && < 6,
