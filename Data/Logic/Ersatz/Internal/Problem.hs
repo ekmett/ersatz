@@ -2,7 +2,7 @@
 module Data.Logic.Ersatz.Internal.Problem
   ( QDIMACS(..)
   , Literal(literalId), negateLiteral
-  , Lit(..), lit, negateLit, litExists, litForall
+  , Lit(..), lit, negateLit
   , QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
   , Formula(..), Clause(..), clauseLiterals
   , formulaEmpty, formulaLiteral
@@ -57,14 +57,8 @@ instance Show Lit where
                        $ showString "Bool " . showsPrec 11 b
 
 instance Variable Lit where
-  exists = litExists
-  forall = litForall
-
-litExists :: MonadSAT m => m Lit
-litExists = Lit <$> exists
-
-litForall  :: MonadSAT m => m Lit
-litForall = Lit <$> forall
+  exists = Lit <$> exists
+  forall = Lit <$> forall
 
 lit :: Bool -> Lit
 lit = Bool
