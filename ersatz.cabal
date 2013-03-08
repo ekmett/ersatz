@@ -17,6 +17,7 @@ tested-with:    GHC == 7.6.2
 library
   ghc-options: -Wall
   hs-source-dirs: src
+  default-language: Haskell2010
 
   build-depends:
     base >= 4 && < 6,
@@ -48,6 +49,7 @@ library
 test-suite properties
   type: exitcode-stdio-1.0
   ghc-options: -Wall
+  default-language: Haskell2010
   build-depends:
     ersatz,
     base >= 4 && < 6,
