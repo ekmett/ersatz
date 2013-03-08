@@ -1,21 +1,34 @@
 {-# LANGUAGE Rank2Types, ImpredicativeTypes #-}
 module Data.Logic.Ersatz.Solution
-  ( Solution(..)
+  ( Solution(..), solutionFrom
   , Result(..)
   , Solver
   , Witness(..)
   ) where
 
-import Data.HashMap.Lazy (HashMap)
+import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 import Data.Ix
+import Control.Applicative
 import System.Mem.StableName (StableName)
 
 import Data.Logic.Ersatz.Internal.Problem
 
-data Solution = Solution { solLitMap :: IntMap Bool
-                         , solSNMap  :: HashMap (StableName ()) Bool
+data Solution = Solution { solLookupLiteral :: Literal -> Maybe Bool
+                         , solLookupSN      :: StableName () -> Maybe Bool
                          }
+
+solutionFrom :: IntMap Bool -> QBF -> Solution
+solutionFrom litMap qbf = Solution lookupLit lookupSN
+  where
+    lookupLit l | i >= 0    = IntMap.lookup i litMap
+                | otherwise = not <$> IntMap.lookup (-i) litMap
+      where i = literalId l
+
+    lookupSN sn = lookupLit =<< HashMap.lookup sn snMap
+
+    snMap = qbfSNMap qbf
 
 data Result
   = Unsolved

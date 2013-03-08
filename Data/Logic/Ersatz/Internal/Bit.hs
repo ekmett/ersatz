@@ -12,7 +12,6 @@ import qualified Prelude
 
 import Control.Applicative
 import Data.Foldable (Foldable)
-import qualified Data.HashMap.Lazy as HashMap
 import Data.Traversable (Traversable, traverse)
 
 import Data.Logic.Ersatz.Encoding (Encoding(..))
@@ -73,7 +72,7 @@ instance Encoding Bit where
   type Decoded Bit = Bool
   decode sol b@(Bit c) = do
     sn <- makeStableName' b
-    case HashMap.lookup sn (solSNMap sol) of
+    case solLookupSN sol sn of
       v@(Just _) -> return v
       Nothing ->
         case c of

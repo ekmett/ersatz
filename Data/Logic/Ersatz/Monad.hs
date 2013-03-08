@@ -10,8 +10,6 @@ module Data.Logic.Ersatz.Monad
 
 import Control.Applicative
 import Control.Monad.State (runStateT)
-import qualified Data.HashMap.Lazy as HashMap
-import qualified Data.IntMap as IntMap
 
 import Data.Logic.Ersatz.Encoding
 import Data.Logic.Ersatz.Internal.Problem
@@ -21,13 +19,7 @@ solveWith :: Encoding a => Solver IO -> SAT a -> IO (Result, Maybe (Decoded a))
 solveWith solver sat = do
   (a, qbf) <- satToIO sat
   (res, litMap) <- solver qbf
-  let snMap = HashMap.map (\v -> let v' = literalId v
-                                 in  if v' >= 0 then litMap IntMap.! v'
-                                                else not (litMap IntMap.! (-v')))
-            . HashMap.filter (\v -> IntMap.member (abs (literalId v)) litMap)
-            $ qbfSNMap qbf
-      sol = Solution litMap snMap
-  (,) res <$> decode sol a
+  (,) res <$> decode (solutionFrom litMap qbf) a
 
 showSAT :: SAT a -> IO String
 showSAT = fmap (show . snd) . satToIO

@@ -6,7 +6,6 @@ module Data.Logic.Ersatz.Encoding
 
 import Control.Applicative
 import Data.Array
-import qualified Data.IntMap as IntMap
 import Data.Traversable (Traversable, sequenceA, traverse)
 
 import Data.Logic.Ersatz.Internal.Problem
@@ -19,9 +18,7 @@ class Encoding a where
 
 instance Encoding Literal where
   type Decoded Literal = Bool
-  decode s l | i >= 0    = return $ IntMap.lookup i (solLitMap s)
-             | otherwise = return $ not <$> IntMap.lookup (-i) (solLitMap s)
-    where i = literalId l
+  decode s l = return (solLookupLiteral s l)
 
 instance Encoding Lit where
   type Decoded Lit = Bool
