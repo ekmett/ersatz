@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies, DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -20,20 +20,21 @@ import Prelude hiding ((&&), (||), and, or, not)
 import Control.Applicative
 import Data.Bits (Bits, (.&.), (.|.), shiftL, shiftR)
 import Data.List (foldl', unzip4, unzip5, unzip6, unzip7)
+import Data.Typeable
 import Data.Word (Word8)
 
 import Data.Logic.Ersatz.Bit
 import Data.Logic.Ersatz.Encoding
 import Data.Logic.Ersatz.Problem
 
-newtype Bit1 = Bit1 Bit deriving (Show)
-data Bit2 = Bit2 Bit Bit deriving (Show)
-data Bit3 = Bit3 Bit Bit Bit deriving (Show)
-data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show)
-data Bit5 = Bit5 Bit Bit Bit Bit Bit deriving (Show)
-data Bit6 = Bit6 Bit Bit Bit Bit Bit Bit deriving (Show)
-data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show)
-data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show)
+newtype Bit1 = Bit1 Bit deriving (Show,Typeable)
+data Bit2 = Bit2 Bit Bit deriving (Show,Typeable)
+data Bit3 = Bit3 Bit Bit Bit deriving (Show,Typeable)
+data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show,Typeable)
+data Bit5 = Bit5 Bit Bit Bit Bit Bit deriving (Show,Typeable)
+data Bit6 = Bit6 Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
+data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
+data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
 
 -- Holy boilerplate, Batman!
 
