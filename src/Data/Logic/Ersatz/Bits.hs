@@ -229,44 +229,76 @@ instance Variable Bit8 where
   exists = Bit8 <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
   forall = Bit8 <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
 
-instance Encoding Bit1 where
+instance Decode Bit1 where
   type Decoded Bit1 = Word8
   decode s (Bit1 a) = fmap boolsToNum1 <$> decode s a
 
-instance Encoding Bit2 where
+instance Decode Bit2 where
   type Decoded Bit2 = Word8
   decode s (Bit2 a b) = go <$> decode s a <*> decode s b
     where go a' b' = boolsToNum2 <$> a' <*> b'
 
-instance Encoding Bit3 where
+instance Decode Bit3 where
   type Decoded Bit3 = Word8
   decode s (Bit3 a b c) = go <$> decode s a <*> decode s b <*> decode s c
     where go a' b' c' = boolsToNum3 <$> a' <*> b' <*> c'
 
-instance Encoding Bit4 where
+instance Decode Bit4 where
   type Decoded Bit4 = Word8
   decode s (Bit4 a b c d) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d
     where go a' b' c' d' = boolsToNum4 <$> a' <*> b' <*> c' <*> d'
 
-instance Encoding Bit5 where
+instance Decode Bit5 where
   type Decoded Bit5 = Word8
   decode s (Bit5 a b c d e) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
     where go a' b' c' d' e' = boolsToNum5 <$> a' <*> b' <*> c' <*> d' <*> e'
 
-instance Encoding Bit6 where
+instance Decode Bit6 where
   type Decoded Bit6 = Word8
   decode s (Bit6 a b c d e f) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
     where go a' b' c' d' e' f' = boolsToNum6 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f'
 
-instance Encoding Bit7 where
+instance Decode Bit7 where
   type Decoded Bit7 = Word8
   decode s (Bit7 a b c d e f g) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
     where go a' b' c' d' e' f' g' = boolsToNum7 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g'
 
-instance Encoding Bit8 where
+instance Decode Bit8 where
   type Decoded Bit8 = Word8
   decode s (Bit8 a b c d e f g h) = go <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
     where go a' b' c' d' e' f' g' h' = boolsToNum8 <$> a' <*> b' <*> c' <*> d' <*> e' <*> f' <*> g' <*> h'
+
+instance Encode Bit1 where
+  type Encoded Bit1 = Word8
+  encode = encodeBit1
+
+instance Encode Bit2 where
+  type Encoded Bit2 = Word8
+  encode = encodeBit2
+
+instance Encode Bit3 where
+  type Encoded Bit3 = Word8
+  encode = encodeBit3
+
+instance Encode Bit4 where
+  type Encoded Bit4 = Word8
+  encode = encodeBit4
+
+instance Encode Bit5 where
+  type Encoded Bit5 = Word8
+  encode = encodeBit5
+
+instance Encode Bit6 where
+  type Encoded Bit6 = Word8
+  encode = encodeBit6
+
+instance Encode Bit7 where
+  type Encoded Bit7 = Word8
+  encode = encodeBit7
+
+instance Encode Bit8 where
+  type Encoded Bit8 = Word8
+  encode = encodeBit8
 
 listOp1 :: ([Bit] -> Bit) -> [Bit1] -> Bit1
 listOp1 op = Bit1 . op . map (\(Bit1 a) -> a)
