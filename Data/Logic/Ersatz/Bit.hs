@@ -2,7 +2,6 @@ module Data.Logic.Ersatz.Bit
   ( Boolean(..)
   , Equatable(..)
   , Bit
-  , bit
   , assert
   ) where
 

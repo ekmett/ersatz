@@ -3,7 +3,6 @@ module Data.Logic.Ersatz.Internal.Bit
   ( Boolean(..)
   , Equatable(..)
   , Bit(..)
-  , bit
   , Circuit(..)
   , assert
   ) where
@@ -47,9 +46,6 @@ class Boolean t where
   x ==> y = not x || y
   nand = not . and
   nor = not . or
-
-bit :: Bool -> Bit
-bit = bool
 
 instance Boolean Bool where
   bool = id
