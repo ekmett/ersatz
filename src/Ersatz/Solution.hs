@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, ImpredicativeTypes #-}
+{-# LANGUAGE Rank2Types, ImpredicativeTypes, DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -14,19 +14,19 @@ module Ersatz.Solution
   , Solver
   ) where
 
+import Control.Applicative
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.Ix
-import Control.Applicative
-import System.Mem.StableName (StableName)
-
+import Data.Typeable
 import Ersatz.Internal.Problem
+import System.Mem.StableName (StableName)
 
 data Solution = Solution
   { solutionLiteral    :: Literal -> Maybe Bool
   , solutionStableName :: StableName () -> Maybe Bool
-  }
+  } deriving Typeable
 
 solutionFrom :: IntMap Bool -> QBF -> Solution
 solutionFrom litMap qbf = Solution lookupLit lookupSN
