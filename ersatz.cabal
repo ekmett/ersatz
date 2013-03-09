@@ -34,6 +34,7 @@ library
     base >= 4 && < 6,
     containers >= 0.2.0.1,
     data-default >= 0.5 && < 0.6,
+    ghc-prim,
     mtl >= 1.1 && < 2.2,
     process == 1.1.*,
     temporary == 1.1.*,
@@ -45,6 +46,7 @@ library
     Ersatz.Bit
     Ersatz.Bits
     Ersatz.Decoding
+    Ersatz.Equatable
     Ersatz.Encoding
     Ersatz.Internal.Circuit
     Ersatz.Internal.Formula

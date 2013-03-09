@@ -13,7 +13,6 @@ module Ersatz.Bit
   ( Bit(..)
   , assert
   , Boolean(..)
-  , Equatable(..)
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or)
@@ -33,7 +32,6 @@ import Ersatz.Solution
 import Ersatz.Variable
 import System.IO.Unsafe
 
-infix  4 ===, /==
 infixr 3 &&
 infixr 2 ||
 infixr 0 ==>
@@ -66,9 +64,6 @@ instance Boolean Bit where
   and xs  = Bit (And xs)
   or xs   = Bit (Or xs)
   choose f t s = Bit (Mux f t s)
-
-instance Equatable Bit where
-  (/==) = xor
 
 instance Variable Bit where
   exists = Bit . Var <$> exists
@@ -217,40 +212,3 @@ instance Boolean Bool where
 
   choose f _ False = f
   choose _ t True  = t
-
--- Equatable
-
-class Equatable t where
-  -- | Compare for equality within the SAT problem.
-  (===) :: t -> t -> Bit
-
-  -- | Compare for inequality within the SAT problem.
-  (/==) :: t -> t -> Bit
-
-  a === b = not (a /== b)
-  a /== b = not (a === b)
-
-instance (Equatable a, Equatable b) => Equatable (a,b) where
-  (a,b) === (a',b') = a === a' && b === b'
-
-instance (Equatable a, Equatable b, Equatable c) => Equatable (a,b,c) where
-  (a,b,c) === (a',b',c') = a === a' && b === b' && c === c'
-
-instance (Equatable a, Equatable b, Equatable c, Equatable d) => Equatable (a,b,c,d) where
-  (a,b,c,d) === (a',b',c',d') = a === a' && b === b' && c === c' && d === d'
-
-instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e) => Equatable (a,b,c,d,e) where
-  (a,b,c,d,e) === (a',b',c',d',e') = a === a' && b === b' && c === c' && d === d' && e === e'
-
-instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equatable f) => Equatable (a,b,c,d,e,f) where
-  (a,b,c,d,e,f) === (a',b',c',d',e',f') = a === a' && b === b' && c === c' && d === d' && e === e' && f === f'
-
-instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equatable f, Equatable g) => Equatable (a,b,c,d,e,f,g) where
-  (a,b,c,d,e,f,g) === (a',b',c',d',e',f',g') = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g'
-
-instance (Equatable a, Equatable b, Equatable c, Equatable d, Equatable e, Equatable f, Equatable g, Equatable h) => Equatable (a,b,c,d,e,f,g,h) where
-  (a,b,c,d,e,f,g,h) === (a',b',c',d',e',f',g',h') = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g' && h === h'
-
-instance Equatable a => Equatable [a] where
-  as === bs | length as /= length bs = false
-            | otherwise              = and (zipWith (===) as bs)

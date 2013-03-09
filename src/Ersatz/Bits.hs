@@ -9,10 +9,7 @@
 --
 --------------------------------------------------------------------
 module Ersatz.Bits
-  ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..)
-  , Bit8(..)
-  , encodeBit1, encodeBit2, encodeBit3, encodeBit4, encodeBit5, encodeBit6
-  , encodeBit7, encodeBit8
+  ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
   ) where
 
 import Prelude hiding ((&&), (||), and, or, not)
@@ -25,6 +22,7 @@ import Data.Word (Word8)
 
 import Ersatz.Bit
 import Ersatz.Decoding
+import Ersatz.Equatable
 import Ersatz.Encoding
 import Ersatz.Variable
 
