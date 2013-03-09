@@ -5,7 +5,8 @@ license-file:   LICENSE
 author:         Edward A. Kmett, Johan Kiviniemi
 maintainer:     Edward A. Kmett <ekmett@gmail.com>
 stability:      experimental
-homepage:       http://comonad.com/reader
+homepage:       http://github.com/ersatz
+bug-reports:    http://github.com/ersatz/issues
 category:       Logic, Algorithms
 synopsis:       A monad for expressing SAT or QSAT problems using observable sharing.
 description:    A monad for expressing SAT or QSAT problems using observable sharing.
@@ -27,6 +28,11 @@ extra-source-files:
   AUTHORS.md
   README.md
   CHANGELOG.md
+
+
+source-repository head
+  type: git
+  location: git://github.com/ekmett/ersatz.git
 
 library
   ghc-options: -Wall
