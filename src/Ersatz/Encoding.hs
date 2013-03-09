@@ -18,7 +18,7 @@ import Data.IntMap (IntMap)
 import Data.Map (Map)
 import Data.Sequence (Seq)
 import Data.Tree (Tree)
-import Ersatz.Internal.Monad
+import Ersatz.Internal.Literal
 
 class Encoding a where
   type Encoded a :: *

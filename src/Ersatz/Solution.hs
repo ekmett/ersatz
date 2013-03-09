@@ -20,7 +20,8 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.Ix
 import Data.Typeable
-import Ersatz.Internal.Monad
+import Ersatz.Internal.Literal
+import Ersatz.Internal.Problem
 import System.Mem.StableName (StableName)
 
 data Solution = Solution
@@ -28,7 +29,7 @@ data Solution = Solution
   , solutionStableName :: StableName () -> Maybe Bool
   } deriving Typeable
 
-solutionFrom :: IntMap Bool -> QBF -> Solution
+solutionFrom :: IntMap Bool -> Problem -> Solution
 solutionFrom litMap qbf = Solution lookupLit lookupSN
   where
     lookupLit l | i >= 0    = IntMap.lookup i litMap
@@ -59,4 +60,4 @@ instance Bounded Result where
   minBound = Unsolved
   maxBound = Satisfied
 
-type Solver m = QBF -> m (Result, IntMap Bool)
+type Solver m = Problem -> m (Result, IntMap Bool)

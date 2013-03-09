@@ -9,21 +9,13 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Ersatz.Internal.Monad
+module Ersatz.Internal.Problem
   (
-  -- * The SAT Monad
-    SAT(..)
-  , MonadSAT(..)
-  , unsat
-  , Variable(..)
   -- * Implementation Details
   -- ** QDIMACS encoding
-  , QDIMACS(..)
-  -- ** Literals
-  , Literal(literalId), negateLiteral
-  , Lit(..), lit, negateLit
+    QDIMACS(..)
   -- ** Formulas
-  , QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
+  , Problem(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyProblem
   , Formula(..), Clause(..), clauseLiterals
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
@@ -41,6 +33,7 @@ import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
+import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
 import System.IO.Unsafe
 
@@ -50,50 +43,11 @@ import System.IO.Unsafe
 class QDIMACS t where
   qdimacs :: t -> String
 
--- Literal, Lit
-
--- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.
-newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord,Typeable)
-
-instance Show Literal where
-  showsPrec i = showsPrec i . literalId
-  show = show . literalId
-  showList = showList . map literalId
-
 instance QDIMACS Literal where
   qdimacs (Literal n) = show n
 
-negateLiteral :: Literal -> Literal
-negateLiteral = Literal . negate . literalId
-
--- | Literals with partial evaluation
-data Lit
-  = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
-  | Bool { getValue :: !Bool }
-  deriving Typeable
-
-instance Show Lit where
-  showsPrec p (Lit l)  = showParen (p > 10)
-                       $ showString "Lit " . showsPrec 11 l
-  showsPrec p (Bool b) = showParen (p > 10)
-                       $ showString "Bool " . showsPrec 11 b
-
-instance Variable Lit where
-  exists = Lit <$> exists
-  forall = Lit <$> forall
-
--- | Lift a 'Bool' to a 'Lit'
-lit :: Bool -> Lit
-lit = Bool
-
-negateLit :: Lit -> Lit
-negateLit (Bool b) = Bool (not b)
-negateLit (Lit l) = Lit (negateLiteral l)
-
--- QBF, Formula
-
 -- | A (quantified) boolean formula.
-data QBF = QBF
+data Problem = Problem
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
   , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
   , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
@@ -101,14 +55,14 @@ data QBF = QBF
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
   } deriving Typeable
 
--- TODO: instance Monoid QBF
+-- TODO: instance Monoid Problem
 
-instance Default QBF where
-  def = emptyQBF
+instance Default Problem where
+  def = emptyProblem
 
 -- | The trivial quantified boolean formula with no constraints.
-emptyQBF :: QBF
-emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
+emptyProblem :: Problem
+emptyProblem = Problem 0 (Formula Set.empty) IntSet.empty HashMap.empty
 
 newtype Formula = Formula { formulaSet :: Set Clause }
   deriving (Eq, Ord, Monoid, Typeable)
@@ -116,9 +70,9 @@ newtype Formula = Formula { formulaSet :: Set Clause }
 newtype Clause = Clause { clauseSet :: IntSet }
   deriving (Eq, Ord, Monoid, Typeable)
 
-instance Show QBF where
+instance Show Problem where
   showsPrec p qbf = showParen (p > 10)
-                  $ showString "QBF " . showsPrec 11 (qbfFormula qbf)
+                  $ showString "Problem " . showsPrec 11 (qbfFormula qbf)
 
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id
@@ -130,8 +84,8 @@ instance Show Clause where
               . List.intersperse (showString " | ") . map (showsPrec 2)
               . IntSet.toList . clauseSet
 
-instance QDIMACS QBF where
-  qdimacs (QBF vars formula@(Formula cs) qs _) =
+instance QDIMACS Problem where
+  qdimacs (Problem vars formula@(Formula cs) qs _) =
     unlines (header : map showGroup quantGroups) ++ qdimacs formula
     where
       header = unwords ["p", "cnf", show (vars + padding), show (Set.size cs) ]
@@ -330,101 +284,3 @@ formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
 
 formulaFromList :: [[Int]] -> Formula
 formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
-
-class (Monad m, Applicative m) => MonadSAT m where
-  literalExists   :: m Literal
-  default literalExists :: (MonadSAT n, MonadTrans t, m ~ t n) => m Literal
-  literalExists = lift literalExists
-
-  literalForall   :: m Literal
-  default literalForall :: (MonadSAT n, MonadTrans t, m ~ t n) => m Literal
-  literalForall = lift literalForall
-
-  assertFormula   :: Formula -> m ()
-  default assertFormula :: (MonadSAT n, MonadTrans t, m ~ t n) => Formula -> m ()
-  assertFormula = lift . assertFormula
-
-  generateLiteral :: a -> (Literal -> SAT ()) -> m Literal
-  default generateLiteral :: (MonadSAT n, MonadTrans t, m ~ t n) => a -> (Literal -> SAT ()) -> m Literal
-  generateLiteral a f = lift $ generateLiteral a f
-
-newtype SAT a = SAT { runSAT :: QBF -> (a, QBF) }
-
-instance Functor SAT where
-  fmap f (SAT m) = SAT $ \s -> case m s of
-    (a, t) -> (f a, t)
-  {-# INLINE fmap #-}
-
-instance Applicative SAT where
-  pure a = SAT $ \s -> (a, s)
-  {-# INLINE pure #-}
-
-  SAT m <*> SAT n = SAT $ \s -> case m s of
-    (f, t) -> case n t of
-      (a, u) -> (f a, u)
-  {-# INLINE (<*>) #-}
-
-instance Monad SAT where
-  return a = SAT $ \s -> (a, s)
-  {-# INLINE return #-}
-
-  SAT m >>= f = SAT $ \s -> case m s of
-    (a, t) -> runSAT (f a) t
-  {-# INLINE (>>=) #-}
-
-instance MonadSAT SAT where
-  literalExists = SAT $ \qbf -> let !qbfLastAtom' = qbfLastAtom qbf + 1 in
-    (Literal qbfLastAtom', qbf { qbfLastAtom = qbfLastAtom' })
-
-  literalForall = SAT $ \qbf -> let !qbfLastAtom' = qbfLastAtom qbf + 1 in
-    ( Literal qbfLastAtom', qbf { qbfLastAtom = qbfLastAtom', qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf) })
-
-  assertFormula formula = SAT $ \qbf -> ((), qbf { qbfFormula = qbfFormula qbf <> formula })
-
-  generateLiteral a f = SAT $ \qbf -> case HashMap.lookup sn (qbfSNMap qbf) of
-      Just l  -> (l, qbf)
-      Nothing | !qbfLastAtom' <- qbfLastAtom qbf + 1, !l <- Literal qbfLastAtom' ->
-        case runSAT (f l) qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf), qbfLastAtom = qbfLastAtom' } of
-           ((), qbf') -> (l, qbf')
-    where sn = unsafePerformIO (makeStableName' a)
-
-unsat :: SAT a -> (a, QBF)
-unsat m = runSAT m def
-
--- Variable
-
-class Variable t where
-  exists :: MonadSAT m => m t
-  forall :: MonadSAT m => m t
-
-instance Variable Literal where
-  exists = literalExists
-  forall = literalForall
-
-instance (Variable a, Variable b) => Variable (a,b) where
-  exists = (,) <$> exists <*> exists
-  forall = (,) <$> forall <*> forall
-
-instance (Variable a, Variable b, Variable c) => Variable (a,b,c) where
-  exists = (,,) <$> exists <*> exists <*> exists
-  forall = (,,) <$> forall <*> forall <*> forall
-
-instance (Variable a, Variable b, Variable c, Variable d) => Variable (a,b,c,d) where
-  exists = (,,,) <$> exists <*> exists <*> exists <*> exists
-  forall = (,,,) <$> forall <*> forall <*> forall <*> forall
-
-instance (Variable a, Variable b, Variable c, Variable d, Variable e) => Variable (a,b,c,d,e) where
-  exists = (,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall
-
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f) => Variable (a,b,c,d,e,f) where
-  exists = (,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g) => Variable (a,b,c,d,e,f,g) where
-  exists = (,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-
-instance (Variable a, Variable b, Variable c, Variable d, Variable e, Variable f, Variable g, Variable h) => Variable (a,b,c,d,e,f,g,h) where
-  exists = (,,,,,,,) <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = (,,,,,,,) <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall

@@ -20,7 +20,7 @@ import Data.Map (Map)
 import Data.Sequence (Seq)
 import Data.Traversable
 import Data.Tree (Tree)
-import Ersatz.Internal.Monad
+import Ersatz.Internal.Literal
 import Ersatz.Solution
 
 class Decoding a where
