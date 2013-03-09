@@ -21,9 +21,10 @@ import Control.Monad.State
 import Data.IntSet as IntSet
 import Data.HashMap.Strict as HashMap
 import Data.Monoid
+import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
-import Ersatz.Internal.Problem
 import Ersatz.Internal.StableName
+import Ersatz.Problem
 import System.IO.Unsafe
 
 newtype SAT a = SAT { runSAT :: Problem -> (a, Problem) }

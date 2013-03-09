@@ -47,9 +47,10 @@ library
     Ersatz.Decoding
     Ersatz.Encoding
     Ersatz.Internal.Bit
+    Ersatz.Internal.Formula
     Ersatz.Internal.Literal
-    Ersatz.Internal.Problem
     Ersatz.Monad
+    Ersatz.Problem
     Ersatz.Solution
     Ersatz.Solver
     Ersatz.Solver.Minisat

@@ -21,7 +21,7 @@ import qualified Data.IntMap as IntMap
 import Data.Ix
 import Data.Typeable
 import Ersatz.Internal.Literal
-import Ersatz.Internal.Problem
+import Ersatz.Problem
 import System.Mem.StableName (StableName)
 
 data Solution = Solution

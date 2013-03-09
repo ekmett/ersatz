@@ -28,8 +28,8 @@ import Data.Typeable
 import Ersatz.Decoding
 import Ersatz.Encoding
 import Ersatz.Monad
+import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
-import Ersatz.Internal.Problem
 import Ersatz.Internal.StableName
 import Ersatz.Solution
 import Ersatz.Variable
