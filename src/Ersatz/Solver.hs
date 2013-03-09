@@ -17,8 +17,8 @@ import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Minisat
 
-solveWith :: Decoding a => Solver IO -> SAT a -> IO (Result, Maybe (Decoded a))
-solveWith solver sat = do
-  (a, qbf) <- satToIO sat
-  (res, litMap) <- solver qbf
-  return (res, decode (solutionFrom litMap qbf) a)
+solveWith :: (Monad m, Decoding a) => Solver m -> SAT a -> m (Result, Maybe (Decoded a))
+solveWith solver sat = case unsat sat of
+  (a, qbf) -> do
+    (res, litMap) <- solver qbf
+    return (res, decode (solutionFrom litMap qbf) a)

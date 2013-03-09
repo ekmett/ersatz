@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable, DefaultSignatures, TypeFamilies, BangPatterns #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -10,20 +10,28 @@
 --
 --------------------------------------------------------------------
 module Ersatz.Internal.Problem
-  ( QDIMACS(..)
+  (
+  -- * The SAT Monad
+    SAT(..)
+  , MonadSAT(..)
+  , unsat
+  , Variable(..)
+  -- * Implementation Details
+  -- ** QDIMACS encoding
+  , QDIMACS(..)
+  -- ** Literals
   , Literal(literalId), negateLiteral
   , Lit(..), lit, negateLit
+  -- ** Formulas
   , QBF(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap), emptyQBF
   , Formula(..), Clause(..), clauseLiterals
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
-  , MonadSAT(..)
-  , SAT(..), satToIO
-  , Variable(..)
   ) where
 
 import Control.Applicative
 import Control.Monad.State
+import Data.Default
 import Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntSet (IntSet)
@@ -33,16 +41,18 @@ import Data.Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
-
 import Ersatz.Internal.StableName
+import System.IO.Unsafe
 
 -- | (Q)QDIMACS file format pretty printer
+--
+-- This is used to generate the problem statement for a given 'SAT' 'Ersatz.Solver.Solver'.
 class QDIMACS t where
   qdimacs :: t -> String
 
 -- Literal, Lit
 
--- | A naked possibly-negated Atom, present in the target solver.
+-- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.
 newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord,Typeable)
 
 instance Show Literal where
@@ -72,6 +82,7 @@ instance Variable Lit where
   exists = Lit <$> exists
   forall = Lit <$> forall
 
+-- | Lift a 'Bool' to a 'Lit'
 lit :: Bool -> Lit
 lit = Bool
 
@@ -81,6 +92,7 @@ negateLit (Lit l) = Lit (negateLiteral l)
 
 -- QBF, Formula
 
+-- | A (quantified) boolean formula.
 data QBF = QBF
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
   , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
@@ -89,6 +101,12 @@ data QBF = QBF
   -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
   } deriving Typeable
 
+-- TODO: instance Monoid QBF
+
+instance Default QBF where
+  def = emptyQBF
+
+-- | The trivial quantified boolean formula with no constraints.
 emptyQBF :: QBF
 emptyQBF = QBF 0 (Formula Set.empty) IntSet.empty HashMap.empty
 
@@ -146,6 +164,7 @@ instance QDIMACS QBF where
         | i == j    = Forall i : quants is js
         | otherwise = Exists i : quants is jjs
 
+-- | An explicit prenex quantifier
 data Quant
   = Exists { getQuant :: {-# UNPACK #-} !Int }
   | Forall { getQuant :: {-# UNPACK #-} !Int }
@@ -157,6 +176,7 @@ instance QDIMACS Formula where
 instance QDIMACS Clause where
   qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
 
+-- | Extract the (possibly negated) atoms referenced by a 'Clause'.
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
@@ -170,72 +190,91 @@ formulaLiteral (Literal l) =
   Formula (Set.singleton (Clause (IntSet.singleton l)))
 
 -- | The boolean /not/ operation
+--
+-- @
+-- O ≡ ¬A
+-- (O → ¬A) & (¬O → A)
+-- (¬O | ¬A) & (O | A)
+-- @
 formulaNot :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Formula
 formulaNot (Literal out) (Literal inp) = formulaFromList cls
   where
-    -- O ≡ ¬A
-    -- (O → ¬A) & (¬O → A)
-    -- (¬O | ¬A) & (O | A)
     cls = [ [-out, -inp], [out, inp] ]
 
 -- | The boolean /and/ operation
+--
+-- @
+-- O ≡ (A & B & C)
+-- (O → (A & B & C)) & (¬O → ¬(A & B & C))
+-- (¬O | (A & B & C)) & (O | ¬(A & B & C))
+-- (¬O | A) & (¬O | B) & (¬O | C) & (O | ¬A | ¬B | ¬C)
+-- @
 formulaAnd :: Literal    -- ^ Output
            -> [Literal]  -- ^ Inputs
            -> Formula
 formulaAnd (Literal out) inpLs = formulaFromList cls
   where
-    -- O ≡ (A & B & C)
-    -- (O → (A & B & C)) & (¬O → ¬(A & B & C))
-    -- (¬O | (A & B & C)) & (O | ¬(A & B & C))
-    -- (¬O | A) & (¬O | B) & (¬O | C) & (O | ¬A | ¬B | ¬C)
-    cls = (out : map negate inps)
-        : map (\inp -> [-out, inp]) inps
+    cls = (out : map negate inps) : map (\inp -> [-out, inp]) inps
     inps = map literalId inpLs
 
 -- | The boolean /or/ operation
+--
+-- @
+-- O ≡ (A | B | C)
+-- (O → (A | B | C)) & (¬O → ¬(A | B | C))
+-- (¬O | (A | B | C)) & (O | ¬(A | B | C))
+-- (¬O | A | B | C) & (O | (¬A & ¬B & ¬C))
+-- (¬O | A | B | C) & (O | ¬A) & (O | ¬B) & (O | ¬C)
+-- @
 formulaOr :: Literal    -- ^ Output
           -> [Literal]  -- ^ Inputs
           -> Formula
 formulaOr (Literal out) inpLs = formulaFromList cls
   where
-    -- O ≡ (A | B | C)
-    -- (O → (A | B | C)) & (¬O → ¬(A | B | C))
-    -- (¬O | (A | B | C)) & (O | ¬(A | B | C))
-    -- (¬O | A | B | C) & (O | (¬A & ¬B & ¬C))
-    -- (¬O | A | B | C) & (O | ¬A) & (O | ¬B) & (O | ¬C)
     cls = (-out : inps)
         : map (\inp -> [out, -inp]) inps
     inps = map literalId inpLs
 
 -- | The boolean /xor/ operation
+--
+-- @
+-- O ≡ A ⊕ B
+-- O ≡ ((¬A & B) | (A & ¬B))
+-- (O → ((¬A & B) | (A & ¬B))) & (¬O → ¬((¬A & B) | (A & ¬B)))
+-- @
+--
+-- Left hand side:
+-- @
+-- O → ((¬A & B) | (A & ¬B))
+-- ¬O | ((¬A & B) | (A & ¬B))
+-- ¬O | ((¬A | A) & (¬A | ¬B) & (A | B) & (¬B | B))
+-- ¬O | ((¬A | ¬B) & (A | B))
+-- (¬O | ¬A | ¬B) & (¬O | A | B)
+-- @
+--
+-- Right hand side:
+--
+-- @
+-- ¬O → ¬((¬A & B) | (A & ¬B))
+-- O | ¬((¬A & B) | (A & ¬B))
+-- O | (¬(¬A & B) & ¬(A & ¬B))
+-- O | ((A | ¬B) & (¬A | B))
+-- (O | ¬A | B) & (O | A | ¬B)
+-- @
+--
+-- Result:
+--
+-- @
+-- (¬O | ¬A | ¬B) & (¬O | A | B) & (O | ¬A | B) & (O | A | ¬B)
+-- @
 formulaXor :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Literal  -- ^ Input
            -> Formula
 formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
   where
-    -- O ≡ A ⊕ B
-    -- O ≡ ((¬A & B) | (A & ¬B))
-    -- (O → ((¬A & B) | (A & ¬B))) & (¬O → ¬((¬A & B) | (A & ¬B)))
-    --
-    -- Left hand side:
-    -- O → ((¬A & B) | (A & ¬B))
-    -- ¬O | ((¬A & B) | (A & ¬B))
-    -- ¬O | ((¬A | A) & (¬A | ¬B) & (A | B) & (¬B | B))
-    -- ¬O | ((¬A | ¬B) & (A | B))
-    -- (¬O | ¬A | ¬B) & (¬O | A | B)
-    --
-    -- Right hand side:
-    -- ¬O → ¬((¬A & B) | (A & ¬B))
-    -- O | ¬((¬A & B) | (A & ¬B))
-    -- O | (¬(¬A & B) & ¬(A & ¬B))
-    -- O | ((A | ¬B) & (¬A | B))
-    -- (O | ¬A | B) & (O | A | ¬B)
-    --
-    -- Result:
-    -- (¬O | ¬A | ¬B) & (¬O | A | B) & (O | ¬A | B) & (O | A | ¬B)
     cls = [ [-out, -inpA, -inpB]
           , [-out,  inpA,  inpB]
           , [ out, -inpA,  inpB]
@@ -243,6 +282,37 @@ formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
           ]
 
 -- | The boolean /else-then-if/ or /mux/ operation
+--
+-- @
+-- O ≡ (F & ¬P) | (T & P)
+-- (O → ((F & ¬P) | (T & P))) & (¬O → ¬((F & ¬P) | (T & P)))
+-- @
+--
+-- Left hand side:
+--
+-- @
+-- O → ((F & ¬P) | (T & P))
+-- ¬O | ((F & ¬P) | (T & P))
+-- ¬O | ((F | T) & (F | P) & (T | ¬P) & (¬P | P))
+-- ¬O | ((F | T) & (F | P) & (T | ¬P))
+-- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P)
+-- @
+--
+-- Right hand side:
+--
+-- @
+-- ¬O → ¬((F & ¬P) | (T & P))
+-- O | ¬((F & ¬P) | (T & P))
+-- O | (¬(F & ¬P) & ¬(T & P))
+-- O | ((¬F | P) & (¬T | ¬P))
+-- (O | ¬F | P) & (O | ¬T | ¬P)
+-- @
+--
+-- Result:
+--
+-- @
+-- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P) & (O | ¬F | P) & (O | ¬T | ¬P)
+-- @
 formulaMux :: Literal  -- ^ Output
            -> Literal  -- ^ False branch
            -> Literal  -- ^ True branch
@@ -251,25 +321,6 @@ formulaMux :: Literal  -- ^ Output
 formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
   formulaFromList cls
   where
-    -- O ≡ (F & ¬P) | (T & P)
-    -- (O → ((F & ¬P) | (T & P))) & (¬O → ¬((F & ¬P) | (T & P)))
-    --
-    -- Left hand side:
-    -- O → ((F & ¬P) | (T & P))
-    -- ¬O | ((F & ¬P) | (T & P))
-    -- ¬O | ((F | T) & (F | P) & (T | ¬P) & (¬P | P))
-    -- ¬O | ((F | T) & (F | P) & (T | ¬P))
-    -- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P)
-    --
-    -- Right hand side:
-    -- ¬O → ¬((F & ¬P) | (T & P))
-    -- O | ¬((F & ¬P) | (T & P))
-    -- O | (¬(F & ¬P) & ¬(T & P))
-    -- O | ((¬F | P) & (¬T | ¬P))
-    -- (O | ¬F | P) & (O | ¬T | ¬P)
-    --
-    -- Result:
-    -- (¬O | F | T) & (¬O | F | P) & (¬O | T | ¬P) & (O | ¬F | P) & (O | ¬T | ¬P)
     cls = [ [-out,  inpF,  inpT]
           , [-out,  inpF,  inpP]
           , [-out,  inpT, -inpP]
@@ -280,65 +331,65 @@ formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
 formulaFromList :: [[Int]] -> Formula
 formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
 
--- SAT
-
-{-
-class Annotated t where
-  (<?>) :: t -> String -> t
-
-instance Annotated (SAT Literal) where
-  m <?> name = SAT $ do
-      modify $ \qbf { qbfNameMap = IntMap.Insert (literalId m) name (qbfNameMap qbf) }
--}
-
 class (Monad m, Applicative m) => MonadSAT m where
   literalExists   :: m Literal
+  default literalExists :: (MonadSAT n, MonadTrans t, m ~ t n) => m Literal
+  literalExists = lift literalExists
+
   literalForall   :: m Literal
+  default literalForall :: (MonadSAT n, MonadTrans t, m ~ t n) => m Literal
+  literalForall = lift literalForall
+
   assertFormula   :: Formula -> m ()
-  generateLiteral :: a -> (Literal -> m ()) -> m Literal
+  default assertFormula :: (MonadSAT n, MonadTrans t, m ~ t n) => Formula -> m ()
+  assertFormula = lift . assertFormula
 
--- Let's not provide MonadIO, the IO should only be used for reifyGraph.
-newtype SAT a = SAT { runSAT :: StateT QBF IO a }
-  deriving (Functor, Monad)
+  generateLiteral :: a -> (Literal -> SAT ()) -> m Literal
+  default generateLiteral :: (MonadSAT n, MonadTrans t, m ~ t n) => a -> (Literal -> SAT ()) -> m Literal
+  generateLiteral a f = lift $ generateLiteral a f
 
--- We can't rely on having an Applicative instance for StateT st (ST s)
+newtype SAT a = SAT { runSAT :: QBF -> (a, QBF) }
+
+instance Functor SAT where
+  fmap f (SAT m) = SAT $ \s -> case m s of
+    (a, t) -> (f a, t)
+  {-# INLINE fmap #-}
+
 instance Applicative SAT where
-  pure = return
-  (<*>) = ap
+  pure a = SAT $ \s -> (a, s)
+  {-# INLINE pure #-}
+
+  SAT m <*> SAT n = SAT $ \s -> case m s of
+    (f, t) -> case n t of
+      (a, u) -> (f a, u)
+  {-# INLINE (<*>) #-}
+
+instance Monad SAT where
+  return a = SAT $ \s -> (a, s)
+  {-# INLINE return #-}
+
+  SAT m >>= f = SAT $ \s -> case m s of
+    (a, t) -> runSAT (f a) t
+  {-# INLINE (>>=) #-}
 
 instance MonadSAT SAT where
-  literalExists = SAT $ do
-    qbf <- get
-    let qbfLastAtom' = qbfLastAtom qbf + 1
-        qbf' = qbf { qbfLastAtom = qbfLastAtom' }
-    put qbf'
-    return (Literal qbfLastAtom')
+  literalExists = SAT $ \qbf -> let !qbfLastAtom' = qbfLastAtom qbf + 1 in
+    (Literal qbfLastAtom', qbf { qbfLastAtom = qbfLastAtom' })
 
-  literalForall = SAT $ do
-    qbf <- get
-    let qbfLastAtom' = qbfLastAtom qbf + 1
-        qbf' = qbf { qbfLastAtom = qbfLastAtom'
-                   , qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf)
-                   }
-    put qbf'
-    return (Literal qbfLastAtom')
+  literalForall = SAT $ \qbf -> let !qbfLastAtom' = qbfLastAtom qbf + 1 in
+    ( Literal qbfLastAtom', qbf { qbfLastAtom = qbfLastAtom', qbfUniversals = IntSet.insert qbfLastAtom' (qbfUniversals qbf) })
 
-  assertFormula formula = SAT $ do
-    modify $ \ qbf -> qbf { qbfFormula = qbfFormula qbf <> formula }
+  assertFormula formula = SAT $ \qbf -> ((), qbf { qbfFormula = qbfFormula qbf <> formula })
 
-  generateLiteral a f = SAT $ do
-    sn <- liftIO (makeStableName' a)
-    maybeLit <- HashMap.lookup sn <$> gets qbfSNMap
-    case maybeLit of
-      Just l  -> return l
-      Nothing -> do
-        l <- runSAT literalExists
-        modify $ \qbf -> qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf) }
-        runSAT (f l)
-        return l
+  generateLiteral a f = SAT $ \qbf -> case HashMap.lookup sn (qbfSNMap qbf) of
+      Just l  -> (l, qbf)
+      Nothing | !qbfLastAtom' <- qbfLastAtom qbf + 1, !l <- Literal qbfLastAtom' ->
+        case runSAT (f l) qbf { qbfSNMap = HashMap.insert sn l (qbfSNMap qbf), qbfLastAtom = qbfLastAtom' } of
+           ((), qbf') -> (l, qbf')
+    where sn = unsafePerformIO (makeStableName' a)
 
-satToIO :: SAT a -> IO (a, QBF)
-satToIO m = runStateT (runSAT m) emptyQBF
+unsat :: SAT a -> (a, QBF)
+unsat m = runSAT m def
 
 -- Variable
 

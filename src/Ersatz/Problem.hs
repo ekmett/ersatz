@@ -8,14 +8,21 @@
 --
 --------------------------------------------------------------------
 module Ersatz.Problem
-  ( QDIMACS(..)
-  , Literal(literalId), negateLiteral
-  , Lit, lit, negateLit
+  (
+  -- * SAT
+    SAT
+  , MonadSAT(..)
+  , unsat
+  , Variable(..)
+  -- * Implementation Details
+  -- ** QDIMACS encoding
+  , QDIMACS(..)
+  -- ** Quantified Boolean Formulas
   , QBF(qbfLastAtom, qbfFormula, qbfUniversals), emptyQBF
   , Formula, Clause, clauseLiterals
-  , MonadSAT(..)
-  , SAT, satToIO
-  , Variable(..)
+  -- ** Literals
+  , Literal(literalId), negateLiteral
+  , Lit, lit, negateLit
   ) where
 
 import Ersatz.Internal.Problem
