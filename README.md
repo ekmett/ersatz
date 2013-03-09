@@ -44,7 +44,7 @@ This enables you to use the a much richer subset of Haskell than the purely mona
 To allocate fresh existentially or universally quantified variables or to assert that a Bit is true and add the attendant circuit with sharing to the current problem you use the SAT monad.
 
 ```haskell
-verify_currying :: SAT ()
+verify_currying :: SAT m ()
 verify_currying = do
   (x::Bit, y::Bit, z::Bit) <- forall
   assert $ ((x && y) ==> z) === (x ==> y ==> z)
