@@ -46,7 +46,7 @@ library
     Ersatz.Bits
     Ersatz.Decoding
     Ersatz.Encoding
-    Ersatz.Internal.Bit
+    Ersatz.Internal.Circuit
     Ersatz.Internal.Formula
     Ersatz.Internal.Literal
     Ersatz.Monad
