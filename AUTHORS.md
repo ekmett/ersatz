@@ -1,4 +1,7 @@
-Lens started as a one man project by [Edward Kmett](mailto:ekmett@gmail.com) [@ekmett](https://github.com/ekmett).
+Authors
+=======
+
+`ersatz` started as a one man project by [Edward Kmett](mailto:ekmett@gmail.com) [@ekmett](https://github.com/ekmett).
 However, it then languished for 3 years after Don Stewart [@donsbot](https://github.com/donsbot) released perfectly adequate bindings for yices.
 
 It revived by [Johan Kiviniemi](mailto:lens@johan.kiviniemi.name) [@ion1](https://github.com/ion1) after he
