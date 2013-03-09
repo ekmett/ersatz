@@ -31,15 +31,9 @@ negateLiteral = Literal . negate . literalId
 
 -- | Literals with partial evaluation
 data Lit
-  = Lit  { getLiteral  :: {-# UNPACK #-} !Literal }
-  | Bool { getValue :: !Bool }
-  deriving Typeable
-
-instance Show Lit where
-  showsPrec p (Lit l)  = showParen (p > 10)
-                       $ showString "Lit " . showsPrec 11 l
-  showsPrec p (Bool b) = showParen (p > 10)
-                       $ showString "Bool " . showsPrec 11 b
+  = Lit  {-# UNPACK #-} !Literal
+  | Bool !Bool
+  deriving (Show, Typeable)
 
 -- | Lift a 'Bool' to a 'Lit'
 lit :: Bool -> Lit
