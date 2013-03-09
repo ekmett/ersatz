@@ -53,37 +53,14 @@ instance Equatable Bit6
 instance Equatable Bit7
 instance Equatable Bit8
 
-instance Variable Bit1 where
-  exists = Bit1 <$> exists
-  forall = Bit1 <$> forall
-
-instance Variable Bit2 where
-  exists = Bit2 <$> exists <*> exists
-  forall = Bit2 <$> forall <*> forall
-
-instance Variable Bit3 where
-  exists = Bit3 <$> exists <*> exists <*> exists
-  forall = Bit3 <$> forall <*> forall <*> forall
-
-instance Variable Bit4 where
-  exists = Bit4 <$> exists <*> exists <*> exists <*> exists
-  forall = Bit4 <$> forall <*> forall <*> forall <*> forall
-
-instance Variable Bit5 where
-  exists = Bit5 <$> exists <*> exists <*> exists <*> exists <*> exists
-  forall = Bit5 <$> forall <*> forall <*> forall <*> forall <*> forall
-
-instance Variable Bit6 where
-  exists = Bit6 <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = Bit6 <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-
-instance Variable Bit7 where
-  exists = Bit7 <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = Bit7 <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
-
-instance Variable Bit8 where
-  exists = Bit8 <$> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists <*> exists
-  forall = Bit8 <$> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall <*> forall
+instance Variable Bit1
+instance Variable Bit2
+instance Variable Bit3
+instance Variable Bit4
+instance Variable Bit5
+instance Variable Bit6
+instance Variable Bit7
+instance Variable Bit8
 
 instance Decoding Bit1 where
   type Decoded Bit1 = Word8
