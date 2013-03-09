@@ -26,7 +26,7 @@ import Data.Word (Word8)
 import Ersatz.Bit
 import Ersatz.Decoding
 import Ersatz.Encoding
-import Ersatz.Problem
+import Ersatz.Monad
 
 newtype Bit1 = Bit1 Bit deriving (Show,Typeable)
 data Bit2 = Bit2 Bit Bit deriving (Show,Typeable)

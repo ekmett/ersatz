@@ -7,7 +7,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Ersatz.Problem
+module Ersatz.Monad
   (
   -- * SAT
     SAT
@@ -25,4 +25,4 @@ module Ersatz.Problem
   , Lit, lit, negateLit
   ) where
 
-import Ersatz.Internal.Problem
+import Ersatz.Internal.Monad

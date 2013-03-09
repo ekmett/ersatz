@@ -13,7 +13,7 @@ module Ersatz.Solver
   ) where
 
 import Ersatz.Decoding
-import Ersatz.Problem
+import Ersatz.Monad
 import Ersatz.Solution
 import Ersatz.Solver.Minisat
 

@@ -46,12 +46,12 @@ library
     Ersatz.Bits
     Ersatz.Decoding
     Ersatz.Encoding
-    Ersatz.Problem
+    Ersatz.Monad
     Ersatz.Solution
     Ersatz.Solver
     Ersatz.Solver.Minisat
     Ersatz.Internal.Bit
-    Ersatz.Internal.Problem
+    Ersatz.Internal.Monad
 
   other-modules:
     Ersatz.Internal.Parser

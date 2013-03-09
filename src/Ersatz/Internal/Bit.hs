@@ -27,7 +27,7 @@ import Data.Traversable (Traversable, traverse)
 import Data.Typeable
 import Ersatz.Decoding
 import Ersatz.Encoding
-import Ersatz.Internal.Problem
+import Ersatz.Internal.Monad
 import Ersatz.Internal.StableName
 import Ersatz.Solution
 import System.IO.Unsafe

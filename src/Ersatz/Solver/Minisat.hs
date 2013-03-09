@@ -19,7 +19,7 @@ import Control.Monad
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Ersatz.Internal.Parser
-import Ersatz.Internal.Problem (qdimacs)
+import Ersatz.Internal.Monad (qdimacs)
 import Ersatz.Solution
 import System.Exit (ExitCode(..))
 import System.IO.Temp (withSystemTempDirectory)

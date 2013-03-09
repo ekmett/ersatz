@@ -9,7 +9,7 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
-module Ersatz.Internal.Problem
+module Ersatz.Internal.Monad
   (
   -- * The SAT Monad
     SAT(..)

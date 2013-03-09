@@ -20,7 +20,7 @@ import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Data.Ix
 import Data.Typeable
-import Ersatz.Internal.Problem
+import Ersatz.Internal.Monad
 import System.Mem.StableName (StableName)
 
 data Solution = Solution
