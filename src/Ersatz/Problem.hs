@@ -29,6 +29,10 @@ import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
 
+------------------------------------------------------------------------------
+-- Problems
+------------------------------------------------------------------------------
+
 -- | A (quantified) boolean formula.
 data Problem = Problem
   { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
@@ -47,7 +51,11 @@ instance Show Problem where
   showsPrec p qbf = showParen (p > 10)
                   $ showString "Problem .. " . showsPrec 11 (qbfFormula qbf) . showString " .."
 
--- | (Q)QDIMACS file format pretty printer
+------------------------------------------------------------------------------
+-- Printing Problems
+------------------------------------------------------------------------------
+
+-- | (Q)DIMACS file format pretty printer
 --
 -- This is used to generate the problem statement for a given 'SAT' 'Ersatz.Solver.Solver'.
 class QDIMACS t where

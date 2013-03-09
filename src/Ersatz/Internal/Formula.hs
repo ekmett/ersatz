@@ -29,12 +29,20 @@ import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Literal
 
+------------------------------------------------------------------------------
+-- Clauses
+------------------------------------------------------------------------------
+
 newtype Clause = Clause { clauseSet :: IntSet }
   deriving (Eq, Ord, Monoid, Typeable)
 
 -- | Extract the (possibly negated) atoms referenced by a 'Clause'.
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
+
+------------------------------------------------------------------------------
+-- Formulas
+------------------------------------------------------------------------------
 
 newtype Formula = Formula { formulaSet :: Set Clause }
   deriving (Eq, Ord, Monoid, Typeable)
