@@ -1,6 +1,6 @@
-0.1.0.1
+0.1.0.2
 -----
-* Added links to the source repository and issue tracker to the cabal project
+* Added correct links to the source repository and issue tracker to the cabal project
 
 0.1
 ---
