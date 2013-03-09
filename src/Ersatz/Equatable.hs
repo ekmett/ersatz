@@ -21,6 +21,7 @@ import GHC.Generics
 
 infix  4 ===, /==
 
+-- | Instances for this class for arbitrary types can be automatically derived from @Generic@.
 class Equatable t where
   -- | Compare for equality within the SAT problem.
   (===) :: t -> t -> Bit
