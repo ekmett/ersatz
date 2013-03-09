@@ -50,6 +50,14 @@ verify_currying = do
   assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ```
 
+We can then hand that off to a SAT solver, and get back an answer:
+
+```haskell
+main = solveWith minisat verify_currying >>= print
+```
+
+Support is offered for decoding various Haskell datatypes from the
+solution provided by the SAT solver.
 
 Contact Information
 -------------------

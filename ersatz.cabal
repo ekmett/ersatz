@@ -9,6 +9,16 @@ homepage:       http://comonad.com/reader
 category:       Logic, Algorithms
 synopsis:       A monad for expressing SAT or QSAT problems using observable sharing.
 description:    A monad for expressing SAT or QSAT problems using observable sharing.
+  .
+  For example, we can express a full-adder with:
+  .
+  > full_adder :: Bit -> Bit -> Bit -> (Bit, Bit)
+  > full_adder a b cin = (s2, c1 || c2)
+  >   where (s1,c1) = half_adder a b
+  >         (s2,c2) = half_adder s1 cin
+  .
+  > half_adder :: Bit -> Bit -> (Bit, Bit)
+  > half_adder a b = (a `xor` b, a && b)
 copyright:      (c) 2010-2013 Edward Kmett, (c) 2013 Johan Kiviniemi
 build-type:     Custom
 cabal-version:  >= 1.10
