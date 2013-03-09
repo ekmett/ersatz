@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveDataTypeable #-}
+{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveDataTypeable, DeriveGeneric, DefaultSignatures, FlexibleContexts, UndecidableInstances #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -30,11 +30,12 @@ import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
 import Ersatz.Solution
 import Ersatz.Variable
+import GHC.Generics
 import System.IO.Unsafe
 
-infixr 3 &&
-infixr 2 ||
-infixr 0 ==>
+infixr 3 &&, &&#
+infixr 2 ||, ||#
+infixr 0 ==>, ==>#
 
 -- Bit
 
@@ -57,12 +58,13 @@ instance Boolean Bit where
   Bit (Or as) || b           = or (as ++ [b])
   a           || Bit (Or bs) = or (a : bs)
   a           || b           = or [a,b]
+  x ==> y = not x || y
   not (Bit (Not c)) = c
   not (Bit (Var b)) = Bit (Var (negateLit b))
-  not c     = Bit (Not c)
-  a `xor` b = Bit (Xor a b)
-  and xs  = Bit (And xs)
-  or xs   = Bit (Or xs)
+  not c        = Bit (Not c)
+  a `xor` b    = Bit (Xor a b)
+  and xs       = Bit (And xs)
+  or xs        = Bit (Or xs)
   choose f t s = Bit (Mux f t s)
 
 instance Variable Bit where
@@ -136,11 +138,63 @@ runBit b@(Bit c) = generateLiteral b $ \out ->
     Not _       -> error "Unreachable"
     Var (Lit _) -> error "Unreachable"
 
+class GBoolean f where
+  gbool :: Bool -> f a
+  (&&#) :: f a -> f a -> f a
+  (||#) :: f a -> f a -> f a
+  (==>#) :: f a -> f a -> f a
+  gnot :: f a -> f a
+  gand :: [f a] -> f a
+  gor  :: [f a] -> f a
+  gxor :: f a -> f a -> f a
+
+instance GBoolean U1 where
+  gbool _    = U1
+  U1 &&# U1  = U1
+  U1 ||# U1  = U1
+  U1 ==># U1 = U1
+  gnot U1    = U1
+  gand _     = U1
+  gor  _     = U1
+  gxor _ _   = U1
+
+instance (GBoolean f, GBoolean g) => GBoolean (f :*: g) where
+  gbool x = gbool x :*: gbool x
+  (a :*: b) &&#  (c :*: d) = (a &&# c)  :*: (b &&# d)
+  (a :*: b) ||#  (c :*: d) = (a ||# c)  :*: (b ||# d)
+  (a :*: b) ==># (c :*: d) = (a ==># c) :*: (b ==># d)
+  gnot (a :*: b) = gnot a :*: gnot b
+  gand xs = gand (map (\(x :*: _) -> x) xs) :*: gand (map (\(_ :*: x) -> x) xs)
+  gor xs = gor (map (\(x :*: _) -> x) xs) :*: gor (map (\(_ :*: x) -> x) xs)
+  gxor (a :*: b) (c :*: d) = gxor a c :*: gxor b d
+
+instance Boolean a => GBoolean (K1 i a) where
+  gbool = K1 . bool
+  K1 a &&# K1 b = K1 (a && b)
+  K1 a ||# K1 b = K1 (a || b)
+  K1 a ==># K1 b = K1 (a ==> b)
+  gnot (K1 a) = K1 (not a)
+  gand as = K1 (and (map (\(K1 a) -> a) as))
+  gor as = K1 (or (map (\(K1 a) -> a) as))
+  gxor (K1 a) (K1 b) = K1 (xor a b)
+
+instance GBoolean a => GBoolean (M1 i c a) where
+  gbool = M1 . gbool
+  M1 a &&# M1 b = M1 (a &&# b)
+  M1 a ||# M1 b = M1 (a ||# b)
+  M1 a ==># M1 b = M1 (a ==># b)
+  gnot (M1 a) = M1 (gnot a)
+  gand as = M1 (gand (map (\(M1 a) -> a) as))
+  gor as = M1 (gor (map (\(M1 a) -> a) as))
+  gxor (M1 a) (M1 b) = M1 (gxor a b)
+
 -- | The normal 'Bool' operators in Haskell are not overloaded. This
 -- provides a richer set that are.
 class Boolean t where
   -- | Lift a 'Bool'
   bool :: Bool -> t
+  default bool :: (Generic t, GBoolean (Rep t)) => Bool -> t
+  bool = to . gbool
   -- |
   -- @'true' = 'bool' 'True'@
   true :: t
@@ -152,22 +206,33 @@ class Boolean t where
 
   -- | Logical conjunction.
   (&&) :: t -> t -> t
+  default (&&) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x && y = to (from x &&# from y)
 
   -- | Logical disjunction (inclusive or).
   (||) :: t -> t -> t
+  default (||) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x || y = to (from x ||# from y)
 
   -- | Logical implication.
   (==>) :: t -> t -> t
-  x ==> y = not x || y
+  default (==>) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x ==> y = to (from x ==># from y)
 
   -- | Logical negation
   not :: t -> t
+  default not :: (Generic t, GBoolean (Rep t)) => t -> t
+  not = to . gnot . from
 
   -- | The logical conjunction of several values.
   and :: [t] -> t
+  default and :: (Generic t, GBoolean (Rep t)) => [t] -> t
+  and = to . gand . map from
 
   -- | The logical disjunction of several values.
   or :: [t] -> t
+  default or :: (Generic t, GBoolean (Rep t)) => [t] -> t
+  or = to . gor . map from
 
   -- | The negated logical conjunction of several values.
   --
@@ -183,6 +248,8 @@ class Boolean t where
 
   -- | Exclusive-or
   xor :: t -> t -> t
+  default xor :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  xor x y = to (from x `gxor` from y)
 
   -- | Choose between two alternatives based on a selector bit.
   choose :: t  -- ^ False branch
@@ -191,7 +258,6 @@ class Boolean t where
          -> t
   choose f t s = (f && not s) || (t && s)
 
-
 instance Boolean Bool where
   bool = id
   true = True
@@ -199,6 +265,7 @@ instance Boolean Bool where
 
   (&&) = (Prelude.&&)
   (||) = (Prelude.||)
+  x ==> y = not x || y
 
   not = Prelude.not
 

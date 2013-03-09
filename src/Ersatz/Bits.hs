@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, DeriveDataTypeable #-}
+{-# LANGUAGE TypeFamilies, DeriveDataTypeable, DeriveGeneric #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -16,186 +16,42 @@ import Prelude hiding ((&&), (||), and, or, not)
 
 import Control.Applicative
 import Data.Bits (Bits, (.&.), (.|.), shiftL, shiftR)
-import Data.List (foldl', unzip4, unzip5, unzip6, unzip7)
+import Data.List (foldl')
 import Data.Typeable
 import Data.Word (Word8)
-
 import Ersatz.Bit
 import Ersatz.Decoding
 import Ersatz.Equatable
 import Ersatz.Encoding
 import Ersatz.Variable
+import GHC.Generics
 
-newtype Bit1 = Bit1 Bit deriving (Show,Typeable)
-data Bit2 = Bit2 Bit Bit deriving (Show,Typeable)
-data Bit3 = Bit3 Bit Bit Bit deriving (Show,Typeable)
-data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show,Typeable)
-data Bit5 = Bit5 Bit Bit Bit Bit Bit deriving (Show,Typeable)
-data Bit6 = Bit6 Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
-data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
-data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable)
+newtype Bit1 = Bit1 Bit deriving (Show,Typeable,Generic)
+data Bit2 = Bit2 Bit Bit deriving (Show,Typeable,Generic)
+data Bit3 = Bit3 Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit5 = Bit5 Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit6 = Bit6 Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
 
--- Holy boilerplate, Batman!
+instance Boolean Bit1
+instance Boolean Bit2
+instance Boolean Bit3
+instance Boolean Bit4
+instance Boolean Bit5
+instance Boolean Bit6
+instance Boolean Bit7
+instance Boolean Bit8
 
-instance Boolean Bit1 where
-  bool True  = Bit1 true
-  bool False = Bit1 false
-  true       = Bit1 true
-  false      = Bit1 false
-  Bit1 a &&  Bit1 a' = Bit1 (a &&  a')
-  Bit1 a ||  Bit1 a' = Bit1 (a ||  a')
-  Bit1 a ==> Bit1 a' = Bit1 (a ==> a')
-  not (Bit1 a) = Bit1 (not a)
-  and  = listOp1 and
-  or   = listOp1 or
-  nand = listOp1 nand
-  nor  = listOp1 nor
-  xor (Bit1 a) (Bit1 a') = Bit1 (xor a a')
-  choose (Bit1 f) (Bit1 t) (Bit1 s) = Bit1 (choose f t s)
-
-instance Boolean Bit2 where
-  bool True  = Bit2 true  true
-  bool False = Bit2 false false
-  true       = Bit2 true  true
-  false      = Bit2 false false
-  Bit2 a b &&  Bit2 a' b' = Bit2 (a &&  a') (b &&  b')
-  Bit2 a b ||  Bit2 a' b' = Bit2 (a ||  a') (b ||  b')
-  Bit2 a b ==> Bit2 a' b' = Bit2 (a ==> a') (b ==> b')
-  not (Bit2 a b) = Bit2 (not a) (not b)
-  and  = listOp2 and
-  or   = listOp2 or
-  nand = listOp2 nand
-  nor  = listOp2 nor
-  xor (Bit2 a b) (Bit2 a' b') = Bit2 (xor a a') (xor b b')
-  choose (Bit2 fa fb) (Bit2 ta tb) (Bit2 sa sb) = Bit2 (choose fa ta sa) (choose fb tb sb)
-
-instance Boolean Bit3 where
-  bool True  = Bit3 true  true  true
-  bool False = Bit3 false false false
-  true       = Bit3 true  true  true
-  false      = Bit3 false false false
-  Bit3 a b c &&  Bit3 a' b' c' = Bit3 (a &&  a') (b &&  b') (c &&  c')
-  Bit3 a b c ||  Bit3 a' b' c' = Bit3 (a ||  a') (b ||  b') (c ||  c')
-  Bit3 a b c ==> Bit3 a' b' c' = Bit3 (a ==> a') (b ==> b') (c ==> c')
-  not (Bit3 a b c) = Bit3 (not a) (not b) (not c)
-  and  = listOp3 and
-  or   = listOp3 or
-  nand = listOp3 nand
-  nor  = listOp3 nor
-  xor (Bit3 a b c) (Bit3 a' b' c') = Bit3 (xor a a') (xor b b') (xor c c')
-  choose (Bit3 fa fb fc) (Bit3 ta tb tc) (Bit3 sa sb sc) = Bit3 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc)
-
-instance Boolean Bit4 where
-  bool True  = Bit4 true  true  true  true
-  bool False = Bit4 false false false false
-  true       = Bit4 true  true  true  true
-  false      = Bit4 false false false false
-  Bit4 a b c d &&  Bit4 a' b' c' d' = Bit4 (a &&  a') (b &&  b') (c &&  c') (d &&  d')
-  Bit4 a b c d ||  Bit4 a' b' c' d' = Bit4 (a ||  a') (b ||  b') (c ||  c') (d ||  d')
-  Bit4 a b c d ==> Bit4 a' b' c' d' = Bit4 (a ==> a') (b ==> b') (c ==> c') (d ==> d')
-  not (Bit4 a b c d) = Bit4 (not a) (not b) (not c) (not d)
-  and  = listOp4 and
-  or   = listOp4 or
-  nand = listOp4 nand
-  nor  = listOp4 nor
-  xor (Bit4 a b c d) (Bit4 a' b' c' d') = Bit4 (xor a a') (xor b b') (xor c c') (xor d d')
-  choose (Bit4 fa fb fc fd) (Bit4 ta tb tc td) (Bit4 sa sb sc sd) = Bit4 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd)
-
-instance Boolean Bit5 where
-  bool True  = Bit5 true  true  true  true  true
-  bool False = Bit5 false false false false false
-  true       = Bit5 true  true  true  true  true
-  false      = Bit5 false false false false false
-  Bit5 a b c d e &&  Bit5 a' b' c' d' e' = Bit5 (a &&  a') (b &&  b') (c &&  c') (d &&  d') (e &&  e')
-  Bit5 a b c d e ||  Bit5 a' b' c' d' e' = Bit5 (a ||  a') (b ||  b') (c ||  c') (d ||  d') (e ||  e')
-  Bit5 a b c d e ==> Bit5 a' b' c' d' e' = Bit5 (a ==> a') (b ==> b') (c ==> c') (d ==> d') (e ==> e')
-  not (Bit5 a b c d e) = Bit5 (not a) (not b) (not c) (not d) (not e)
-  and  = listOp5 and
-  or   = listOp5 or
-  nand = listOp5 nand
-  nor  = listOp5 nor
-  xor (Bit5 a b c d e) (Bit5 a' b' c' d' e') = Bit5 (xor a a') (xor b b') (xor c c') (xor d d') (xor e e')
-  choose (Bit5 fa fb fc fd fe) (Bit5 ta tb tc td te) (Bit5 sa sb sc sd se) = Bit5 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd) (choose fe te se)
-
-instance Boolean Bit6 where
-  bool True  = Bit6 true  true  true  true  true  true
-  bool False = Bit6 false false false false false false
-  true       = Bit6 true  true  true  true  true  true
-  false      = Bit6 false false false false false false
-  Bit6 a b c d e f &&  Bit6 a' b' c' d' e' f' = Bit6 (a &&  a') (b &&  b') (c &&  c') (d &&  d') (e &&  e') (f &&  f')
-  Bit6 a b c d e f ||  Bit6 a' b' c' d' e' f' = Bit6 (a ||  a') (b ||  b') (c ||  c') (d ||  d') (e ||  e') (f ||  f')
-  Bit6 a b c d e f ==> Bit6 a' b' c' d' e' f' = Bit6 (a ==> a') (b ==> b') (c ==> c') (d ==> d') (e ==> e') (f ==> f')
-  not (Bit6 a b c d e f) = Bit6 (not a) (not b) (not c) (not d) (not e) (not f)
-  and  = listOp6 and
-  or   = listOp6 or
-  nand = listOp6 nand
-  nor  = listOp6 nor
-  xor (Bit6 a b c d e f) (Bit6 a' b' c' d' e' f') = Bit6 (xor a a') (xor b b') (xor c c') (xor d d') (xor e e') (xor f f')
-  choose (Bit6 fa fb fc fd fe ff) (Bit6 ta tb tc td te tf) (Bit6 sa sb sc sd se sf) = Bit6 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd) (choose fe te se) (choose ff tf sf)
-
-instance Boolean Bit7 where
-  bool True  = Bit7 true  true  true  true  true  true  true
-  bool False = Bit7 false false false false false false false
-  true       = Bit7 true  true  true  true  true  true  true
-  false      = Bit7 false false false false false false false
-  Bit7 a b c d e f g &&  Bit7 a' b' c' d' e' f' g' = Bit7 (a &&  a') (b &&  b') (c &&  c') (d &&  d') (e &&  e') (f &&  f') (g &&  g')
-  Bit7 a b c d e f g ||  Bit7 a' b' c' d' e' f' g' = Bit7 (a ||  a') (b ||  b') (c ||  c') (d ||  d') (e ||  e') (f ||  f') (g ||  g')
-  Bit7 a b c d e f g ==> Bit7 a' b' c' d' e' f' g' = Bit7 (a ==> a') (b ==> b') (c ==> c') (d ==> d') (e ==> e') (f ==> f') (g ==> g')
-  not (Bit7 a b c d e f g) = Bit7 (not a) (not b) (not c) (not d) (not e) (not f) (not g)
-  and  = listOp7 and
-  or   = listOp7 or
-  nand = listOp7 nand
-  nor  = listOp7 nor
-  xor (Bit7 a b c d e f g) (Bit7 a' b' c' d' e' f' g') = Bit7 (xor a a') (xor b b') (xor c c') (xor d d') (xor e e') (xor f f') (xor g g')
-  choose (Bit7 fa fb fc fd fe ff fg) (Bit7 ta tb tc td te tf tg) (Bit7 sa sb sc sd se sf sg) = Bit7 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd) (choose fe te se) (choose ff tf sf) (choose fg tg sg)
-
-instance Boolean Bit8 where
-  bool True  = Bit8 true  true  true  true  true  true  true  true
-  bool False = Bit8 false false false false false false false false
-  true       = Bit8 true  true  true  true  true  true  true  true
-  false      = Bit8 false false false false false false false false
-  Bit8 a b c d e f g h &&  Bit8 a' b' c' d' e' f' g' h' = Bit8 (a &&  a') (b &&  b') (c &&  c') (d &&  d') (e &&  e') (f &&  f') (g &&  g') (h &&  h')
-  Bit8 a b c d e f g h ||  Bit8 a' b' c' d' e' f' g' h' = Bit8 (a ||  a') (b ||  b') (c ||  c') (d ||  d') (e ||  e') (f ||  f') (g ||  g') (h ||  h')
-  Bit8 a b c d e f g h ==> Bit8 a' b' c' d' e' f' g' h' = Bit8 (a ==> a') (b ==> b') (c ==> c') (d ==> d') (e ==> e') (f ==> f') (g ==> g') (h ==> h')
-  not (Bit8 a b c d e f g h) = Bit8 (not a) (not b) (not c) (not d) (not e) (not f) (not g) (not h)
-  and  = listOp8 and
-  or   = listOp8 or
-  nand = listOp8 nand
-  nor  = listOp8 nor
-  xor (Bit8 a b c d e f g h) (Bit8 a' b' c' d' e' f' g' h') = Bit8 (xor a a') (xor b b') (xor c c') (xor d d') (xor e e') (xor f f') (xor g g') (xor h h')
-  choose (Bit8 fa fb fc fd fe ff fg fh) (Bit8 ta tb tc td te tf tg th) (Bit8 sa sb sc sd se sf sg sh) = Bit8 (choose fa ta sa) (choose fb tb sb) (choose fc tc sc) (choose fd td sd) (choose fe te se) (choose ff tf sf) (choose fg tg sg) (choose fh th sh)
-
-instance Equatable Bit1 where
-  Bit1 a === Bit1 a' = a === a'
-  Bit1 a /== Bit1 a' = a /== a'
-
-instance Equatable Bit2 where
-  Bit2 a b === Bit2 a' b' = a === a' && b === b'
-  Bit2 a b /== Bit2 a' b' = a /== a' || b /== b'
-
-instance Equatable Bit3 where
-  Bit3 a b c === Bit3 a' b' c' = a === a' && b === b' && c === c'
-  Bit3 a b c /== Bit3 a' b' c' = a /== a' || b /== b' || c /== c'
-
-instance Equatable Bit4 where
-  Bit4 a b c d === Bit4 a' b' c' d' = a === a' && b === b' && c === c' && d === d'
-  Bit4 a b c d /== Bit4 a' b' c' d' = a /== a' || b /== b' || c /== c' || d /== d'
-
-instance Equatable Bit5 where
-  Bit5 a b c d e === Bit5 a' b' c' d' e' = a === a' && b === b' && c === c' && d === d' && e === e'
-  Bit5 a b c d e /== Bit5 a' b' c' d' e' = a /== a' || b /== b' || c /== c' || d /== d' || e /== e'
-
-instance Equatable Bit6 where
-  Bit6 a b c d e f === Bit6 a' b' c' d' e' f' = a === a' && b === b' && c === c' && d === d' && e === e' && f === f'
-  Bit6 a b c d e f /== Bit6 a' b' c' d' e' f' = a /== a' || b /== b' || c /== c' || d /== d' || e /== e' || f /== f'
-
-instance Equatable Bit7 where
-  Bit7 a b c d e f g === Bit7 a' b' c' d' e' f' g' = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g'
-  Bit7 a b c d e f g /== Bit7 a' b' c' d' e' f' g' = a /== a' || b /== b' || c /== c' || d /== d' || e /== e' || f /== f' || g /== g'
-
-instance Equatable Bit8 where
-  Bit8 a b c d e f g h === Bit8 a' b' c' d' e' f' g' h' = a === a' && b === b' && c === c' && d === d' && e === e' && f === f' && g === g' && h === h'
-  Bit8 a b c d e f g h /== Bit8 a' b' c' d' e' f' g' h' = a /== a' || b /== b' || c /== c' || d /== d' || e /== e' || f /== f' || g /== g' || h /== h'
+instance Equatable Bit1
+instance Equatable Bit2
+instance Equatable Bit3
+instance Equatable Bit4
+instance Equatable Bit5
+instance Equatable Bit6
+instance Equatable Bit7
+instance Equatable Bit8
 
 instance Variable Bit1 where
   exists = Bit1 <$> exists
@@ -292,41 +148,6 @@ instance Encoding Bit7 where
 instance Encoding Bit8 where
   type Encoded Bit8 = Word8
   encode = encodeBit8
-
-listOp1 :: ([Bit] -> Bit) -> [Bit1] -> Bit1
-listOp1 op = Bit1 . op . map (\(Bit1 a) -> a)
-
-listOp2 :: ([Bit] -> Bit) -> [Bit2] -> Bit2
-listOp2 op = (\(as,bs) -> Bit2 (op as) (op bs))
-           . unzip . map (\(Bit2 a b) -> (a,b))
-
-listOp3 :: ([Bit] -> Bit) -> [Bit3] -> Bit3
-listOp3 op = (\(as,bs,cs) -> Bit3 (op as) (op bs) (op cs))
-           . unzip3 . map (\(Bit3 a b c) -> (a,b,c))
-
-listOp4 :: ([Bit] -> Bit) -> [Bit4] -> Bit4
-listOp4 op = (\(as,bs,cs,ds) -> Bit4 (op as) (op bs) (op cs) (op ds))
-           . unzip4 . map (\(Bit4 a b c d) -> (a,b,c,d))
-
-listOp5 :: ([Bit] -> Bit) -> [Bit5] -> Bit5
-listOp5 op = (\(as,bs,cs,ds,es) -> Bit5 (op as) (op bs) (op cs) (op ds) (op es))
-           . unzip5 . map (\(Bit5 a b c d e) -> (a,b,c,d,e))
-
-listOp6 :: ([Bit] -> Bit) -> [Bit6] -> Bit6
-listOp6 op = (\(as,bs,cs,ds,es,fs) -> Bit6 (op as) (op bs) (op cs) (op ds) (op es) (op fs))
-           . unzip6 . map (\(Bit6 a b c d e f) -> (a,b,c,d,e,f))
-
-listOp7 :: ([Bit] -> Bit) -> [Bit7] -> Bit7
-listOp7 op = (\(as,bs,cs,ds,es,fs,gs) -> Bit7 (op as) (op bs) (op cs) (op ds) (op es) (op fs) (op gs))
-           . unzip7 . map (\(Bit7 a b c d e f g) -> (a,b,c,d,e,f,g))
-
-listOp8 :: ([Bit] -> Bit) -> [Bit8] -> Bit8
-listOp8 op = (\(as,bs,cs,ds,es,fs,gs,hs) -> Bit8 (op as) (op bs) (op cs) (op ds) (op es) (op fs) (op gs) (op hs))
-           . unzip8 . map (\(Bit8 a b c d e f g h) -> (a,b,c,d,e,f,g,h))
-  where
-    unzip8 = foldr (\(a,b,c,d,e,f,g,h) ~(as,bs,cs,ds,es,fs,gs,hs) ->
-                       (a:as,b:bs,c:cs,d:ds,e:es,f:fs,g:gs,h:hs))
-                   ([],[],[],[],[],[],[],[])
 
 encodeBit1 :: Word8 -> Bit1
 encodeBit1 i = Bit1 a where (a:_) = bitsOf i
