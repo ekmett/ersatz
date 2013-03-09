@@ -192,7 +192,7 @@ instance GBoolean a => GBoolean (M1 i c a) where
 -- provides a richer set that are.
 --
 -- Instances for this class for product-like types can be automatically derived
--- for any type that is an instance of @Generic@
+-- for any type that is an instance of 'Generic'
 class Boolean t where
   -- | Lift a 'Bool'
   bool :: Bool -> t

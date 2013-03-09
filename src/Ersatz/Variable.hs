@@ -38,7 +38,7 @@ instance GVariable f => GVariable (M1 i c f) where
   gforall = M1 <$> gforall
 
 -- | Instances for this class for product-like types can be automatically derived
--- for any type that is an instance of @Generic@.
+-- for any type that is an instance of 'Generic'.
 class Variable t where
   exists :: MonadSAT m => m t
   default exists :: (MonadSAT m, Generic t, GVariable (Rep t)) => m t

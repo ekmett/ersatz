@@ -72,6 +72,8 @@ formulaLiteral (Literal l) =
 
 -- | The boolean /not/ operation
 --
+-- Derivation of the Tseitin transformation:
+--
 -- @
 -- O ≡ ¬A
 -- (O → ¬A) & (¬O → A)
@@ -85,6 +87,8 @@ formulaNot (Literal out) (Literal inp) = formulaFromList cls
     cls = [ [-out, -inp], [out, inp] ]
 
 -- | The boolean /and/ operation
+--
+-- Derivation of the Tseitin transformation:
 --
 -- @
 -- O ≡ (A & B & C)
@@ -101,6 +105,8 @@ formulaAnd (Literal out) inpLs = formulaFromList cls
     inps = map literalId inpLs
 
 -- | The boolean /or/ operation
+--
+-- Derivation of the Tseitin transformation:
 --
 -- @
 -- O ≡ (A | B | C)
@@ -120,6 +126,8 @@ formulaOr (Literal out) inpLs = formulaFromList cls
 
 -- | The boolean /xor/ operation
 --
+-- Derivation of the Tseitin transformation:
+--
 -- @
 -- O ≡ A ⊕ B
 -- O ≡ ((¬A & B) | (A & ¬B))
@@ -127,6 +135,7 @@ formulaOr (Literal out) inpLs = formulaFromList cls
 -- @
 --
 -- Left hand side:
+--
 -- @
 -- O → ((¬A & B) | (A & ¬B))
 -- ¬O | ((¬A & B) | (A & ¬B))
@@ -163,6 +172,8 @@ formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
           ]
 
 -- | The boolean /else-then-if/ or /mux/ operation
+--
+-- Derivation of the Tseitin transformation:
 --
 -- @
 -- O ≡ (F & ¬P) | (T & P)

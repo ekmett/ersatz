@@ -22,6 +22,9 @@ import Ersatz.Internal.Literal
 
 class Encoding a where
   type Encoded a :: *
+  -- | A counterpart to 'Ersatz.Decoding.decode'. Can encode e.g. a 'Bool' as a
+  -- 'Ersatz.Bit.Bit', a 'Data.Word.Word8' as a 'Ersatz.Bits.Bit8', or a
+  -- @[Word8]@ as a @[Bit8]@.
   encode :: Encoded a -> a
 
 instance Encoding Lit where
