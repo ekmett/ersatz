@@ -114,8 +114,8 @@ instance Encoding Bit where
   type Encoded Bit = Bool
   encode = bool
 
--- | Assert claims that in any satisf given 'Bit' must be 'true' in any 
--- satisfying interpretation of the current problem.
+-- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
+-- of the current problem.
 assert :: MonadSAT m => Bit -> m ()
 assert b = do
   l <- runBit b
