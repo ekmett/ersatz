@@ -18,11 +18,15 @@ module Ersatz.Monad
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Reader
+import Control.Monad.RWS.Strict as Strict
+import Control.Monad.RWS.Lazy as Lazy
 import Control.Monad.State.Lazy as Lazy
 import Control.Monad.State.Strict as Strict
+import Control.Monad.Writer.Lazy as Lazy
+import Control.Monad.Writer.Strict as Strict
 import Data.IntSet as IntSet
 import Data.HashMap.Strict as HashMap
-import Data.Monoid
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
@@ -92,5 +96,10 @@ instance MonadSAT (SAT m) where
   sat f = SAT $ \k s -> case f s of
     (a, t) -> k a t
 
+instance MonadSAT m => MonadSAT (ReaderT r m)
 instance MonadSAT m => MonadSAT (Lazy.StateT s m)
 instance MonadSAT m => MonadSAT (Strict.StateT s m)
+instance (MonadSAT m, Monoid w) => MonadSAT (Lazy.WriterT w m)
+instance (MonadSAT m, Monoid w) => MonadSAT (Strict.WriterT w m)
+instance (MonadSAT m, Monoid w) => MonadSAT (Lazy.RWST r w s m)
+instance (MonadSAT m, Monoid w) => MonadSAT (Strict.RWST r w s m)
