@@ -96,59 +96,35 @@ instance Decoding Bit8 where
 
 instance Encoding Bit1 where
   type Encoded Bit1 = Word8
-  encode = encodeBit1
+  encode i = Bit1 a where (a:_) = bitsOf i
 
 instance Encoding Bit2 where
   type Encoded Bit2 = Word8
-  encode = encodeBit2
+  encode i = Bit2 a b where (b:a:_) = bitsOf i
 
 instance Encoding Bit3 where
   type Encoded Bit3 = Word8
-  encode = encodeBit3
+  encode i = Bit3 a b c where (c:b:a:_) = bitsOf i
 
 instance Encoding Bit4 where
   type Encoded Bit4 = Word8
-  encode = encodeBit4
+  encode i = Bit4 a b c d where (d:c:b:a:_) = bitsOf i
 
 instance Encoding Bit5 where
   type Encoded Bit5 = Word8
-  encode = encodeBit5
+  encode i = Bit5 a b c d e where (e:d:c:b:a:_) = bitsOf i
 
 instance Encoding Bit6 where
   type Encoded Bit6 = Word8
-  encode = encodeBit6
+  encode i = Bit6 a b c d e f where (f:e:d:c:b:a:_) = bitsOf i
 
 instance Encoding Bit7 where
   type Encoded Bit7 = Word8
-  encode = encodeBit7
+  encode i = Bit7 a b c d e f g where (g:f:e:d:c:b:a:_) = bitsOf i
 
 instance Encoding Bit8 where
   type Encoded Bit8 = Word8
-  encode = encodeBit8
-
-encodeBit1 :: Word8 -> Bit1
-encodeBit1 i = Bit1 a where (a:_) = bitsOf i
-
-encodeBit2 :: Word8 -> Bit2
-encodeBit2 i = Bit2 a b where (b:a:_) = bitsOf i
-
-encodeBit3 :: Word8 -> Bit3
-encodeBit3 i = Bit3 a b c where (c:b:a:_) = bitsOf i
-
-encodeBit4 :: Word8 -> Bit4
-encodeBit4 i = Bit4 a b c d where (d:c:b:a:_) = bitsOf i
-
-encodeBit5 :: Word8 -> Bit5
-encodeBit5 i = Bit5 a b c d e where (e:d:c:b:a:_) = bitsOf i
-
-encodeBit6 :: Word8 -> Bit6
-encodeBit6 i = Bit6 a b c d e f where (f:e:d:c:b:a:_) = bitsOf i
-
-encodeBit7 :: Word8 -> Bit7
-encodeBit7 i = Bit7 a b c d e f g where (g:f:e:d:c:b:a:_) = bitsOf i
-
-encodeBit8 :: Word8 -> Bit8
-encodeBit8 i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
+  encode i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
 
 boolsToNum1 :: Bool -> Word8
 boolsToNum1 a = boolToNum a
