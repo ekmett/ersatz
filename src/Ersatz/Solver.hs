@@ -18,8 +18,8 @@ import Ersatz.Monad
 import Ersatz.Solution
 import Ersatz.Solver.Minisat
 
-solveWith :: (Monad m, Decoding a) => Solver m -> SAT a -> m (Result, Maybe (Decoded a))
-solveWith solver sat = case runSAT sat def of
-  (a, qbf) -> do
-    (res, litMap) <- solver qbf
-    return (res, decode (solutionFrom litMap qbf) a)
+solveWith :: (Monad m, Decoding a) => Solver m -> SAT m a -> m (Result, Maybe (Decoded a))
+solveWith solver m = do
+  (a, qbf) <- runSAT m (\a s -> return (a , s)) def
+  (res, litMap) <- solver qbf
+  return (res, decode (solutionFrom litMap qbf) a)

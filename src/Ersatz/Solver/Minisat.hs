@@ -16,6 +16,7 @@ module Ersatz.Solver.Minisat
 import Control.Applicative
 import Control.Exception (IOException, handle)
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import Ersatz.Internal.Parser
@@ -26,14 +27,14 @@ import System.IO.Temp (withSystemTempDirectory)
 import System.Process (readProcessWithExitCode)
 
 
-minisat :: Solver IO
+minisat :: MonadIO m => Solver m
 minisat = minisatPath "minisat"
 
-cryptominisat :: Solver IO
+cryptominisat :: MonadIO m => Solver m
 cryptominisat = minisatPath "cryptominisat"
 
-minisatPath :: FilePath -> Solver IO
-minisatPath path qbf =
+minisatPath :: MonadIO m => FilePath -> Solver m
+minisatPath path qbf = liftIO $
   withSystemTempDirectory "ersatz" $ \dir -> do
     let problemPath  = dir ++ "/problem.cnf"
         solutionPath = dir ++ "/solution"

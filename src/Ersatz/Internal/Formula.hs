@@ -33,6 +33,8 @@ import Ersatz.Internal.Literal
 -- Clauses
 ------------------------------------------------------------------------------
 
+-- | A disjunction of possibly negated atoms. Negated atoms are represented
+-- by negating the identifier.
 newtype Clause = Clause { clauseSet :: IntSet }
   deriving (Eq, Ord, Monoid, Typeable)
 
@@ -44,6 +46,7 @@ clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 -- Formulas
 ------------------------------------------------------------------------------
 
+-- | A conjunction of clauses
 newtype Formula = Formula { formulaSet :: Set Clause }
   deriving (Eq, Ord, Monoid, Typeable)
 
