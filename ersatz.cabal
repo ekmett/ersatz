@@ -65,12 +65,14 @@ library
     Ersatz.Problem
     Ersatz.Solution
     Ersatz.Solver
+    Ersatz.Solver.DepQBF
     Ersatz.Solver.Minisat
     Ersatz.Variable
 
   other-modules:
     Ersatz.Internal.Parser
     Ersatz.Internal.StableName
+    Ersatz.Solver.Common
 
 test-suite properties
   type: exitcode-stdio-1.0

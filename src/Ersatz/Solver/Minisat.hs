@@ -18,14 +18,12 @@ import Control.Exception (IOException, handle)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
 import Ersatz.Internal.Parser
 import Ersatz.Problem (qdimacs)
 import Ersatz.Solution
-import System.Exit (ExitCode(..))
-import System.IO.Temp (withSystemTempDirectory)
+import Ersatz.Solver.Common
+import qualified Data.IntMap as IntMap
 import System.Process (readProcessWithExitCode)
-
 
 minisat :: MonadIO m => Solver m
 minisat = minisatPath "minisat"
@@ -35,10 +33,7 @@ cryptominisat = minisatPath "cryptominisat"
 
 minisatPath :: MonadIO m => FilePath -> Solver m
 minisatPath path qbf = liftIO $
-  withSystemTempDirectory "ersatz" $ \dir -> do
-    let problemPath  = dir ++ "/problem.cnf"
-        solutionPath = dir ++ "/solution"
-
+  withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
     writeFile problemPath (qdimacs qbf)
 
     (exit, _out, _err) <-
@@ -47,11 +42,6 @@ minisatPath path qbf = liftIO $
     sol <- parseSolutionFile solutionPath
 
     return (resultOf exit, sol)
-
-resultOf :: ExitCode -> Result
-resultOf (ExitFailure 10) = Satisfied
-resultOf (ExitFailure 20) = Unsatisfied
-resultOf _                = Unsolved
 
 parseSolutionFile :: FilePath -> IO (IntMap Bool)
 parseSolutionFile path = handle handler $ do

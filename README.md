@@ -50,16 +50,11 @@ verify_currying = do
   assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ```
 
-We can then hand that off to a SAT solver, and get back an answer.
-
-You can solve SAT problems with e.g.
+We can then hand that off to a SAT solver, and get back an answer:
 
 ```haskell
-main = solveWith minisat my_problem >>= print
+main = solveWith depqbf verify_currying >>= print
 ```
-
-but anything that uses `forall` requires a QBF solver. The functionality for
-running one and parsing its result is yet to be implemented.
 
 Support is offered for decoding various Haskell datatypes from the
 solution provided by the SAT solver.

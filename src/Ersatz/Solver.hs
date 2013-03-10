@@ -8,7 +8,8 @@
 --
 --------------------------------------------------------------------
 module Ersatz.Solver
-  ( module Ersatz.Solver.Minisat
+  ( module Ersatz.Solver.DepQBF
+  , module Ersatz.Solver.Minisat
   , solveWith
   ) where
 
@@ -16,6 +17,7 @@ import Data.Default
 import Ersatz.Decoding
 import Ersatz.Monad
 import Ersatz.Solution
+import Ersatz.Solver.DepQBF
 import Ersatz.Solver.Minisat
 
 solveWith :: (Monad m, Decoding a) => Solver m -> SAT m a -> m (Result, Maybe (Decoded a))
