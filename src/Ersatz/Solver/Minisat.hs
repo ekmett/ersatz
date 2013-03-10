@@ -19,19 +19,19 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
 import Ersatz.Internal.Parser
-import Ersatz.Problem (qdimacs)
+import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as IntMap
 import System.Process (readProcessWithExitCode)
 
-minisat :: MonadIO m => Solver m
+minisat :: MonadIO m => Solver SAT m
 minisat = minisatPath "minisat"
 
-cryptominisat :: MonadIO m => Solver m
+cryptominisat :: MonadIO m => Solver SAT m
 cryptominisat = minisatPath "cryptominisat"
 
-minisatPath :: MonadIO m => FilePath -> Solver m
+minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path qbf = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
     writeFile problemPath (qdimacs qbf)

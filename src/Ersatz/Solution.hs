@@ -15,6 +15,7 @@ module Ersatz.Solution
   ) where
 
 import Control.Applicative
+import Control.Lens
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
@@ -29,7 +30,7 @@ data Solution = Solution
   , solutionStableName :: StableName () -> Maybe Bool
   } deriving Typeable
 
-solutionFrom :: IntMap Bool -> Problem -> Solution
+solutionFrom :: HasSAT s => IntMap Bool -> s -> Solution
 solutionFrom litMap qbf = Solution lookupLit lookupSN
   where
     lookupLit l | i >= 0    = IntMap.lookup i litMap
@@ -38,7 +39,7 @@ solutionFrom litMap qbf = Solution lookupLit lookupSN
 
     lookupSN sn = lookupLit =<< HashMap.lookup sn snMap
 
-    snMap = qbfSNMap qbf
+    snMap = qbf^.stableMap
 
 data Result
   = Unsolved
@@ -47,7 +48,7 @@ data Result
   deriving (Eq,Ord,Ix,Show,Read)
 
 instance Enum Result where
-  fromEnum Unsolved = (-1)
+  fromEnum Unsolved = -1
   fromEnum Unsatisfied = 0
   fromEnum Satisfied = 1
 
@@ -60,4 +61,4 @@ instance Bounded Result where
   minBound = Unsolved
   maxBound = Satisfied
 
-type Solver m = Problem -> m (Result, IntMap Bool)
+type Solver s m = s -> m (Result, IntMap Bool)

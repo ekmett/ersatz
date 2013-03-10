@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable, DefaultSignatures, TypeFamilies, BangPatterns #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable, DefaultSignatures, TypeFamilies, BangPatterns, TemplateHaskell #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -11,48 +11,113 @@
 --------------------------------------------------------------------
 module Ersatz.Problem
   (
-  -- * Formulas
-    Problem(qbfLastAtom, qbfFormula, qbfUniversals, qbfSNMap)
+  -- * SAT
+    SAT(SAT)
+  , HasSAT(..)
+  , literalExists
+  , assertFormula
+  , generateLiteral
+  -- * QSAT
+  , QSAT(QSAT)
+  , HasQSAT(..)
+  , literalForall
   -- * QDIMACS pretty printing
   , QDIMACS(..)
   ) where
 
+import Control.Applicative
+import Control.Lens
+import Control.Monad
+import Control.Monad.State.Class
 import Data.Default
 import Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (groupBy)
+import Data.Monoid
 import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
+import System.IO.Unsafe
 
 ------------------------------------------------------------------------------
--- Problems
+-- SAT Problems
+------------------------------------------------------------------------------
+
+data SAT = SAT
+  { _lastAtom  :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
+  , _formula   :: !Formula                 -- ^ a set of clauses to assert
+  , _stableMap :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
+  } deriving Typeable
+
+makeLensesWith ?? ''SAT $ classyRules & lensClass.mapped ?~ ("HasSAT","sat")
+
+
+instance Show SAT where
+  showsPrec p bf = showParen (p > 10)
+                 $ showString "SAT " . showsPrec 11 (bf^.lastAtom) . showsPrec 11 (bf^.formula) . showString " mempty"
+
+
+instance Default SAT where
+  def = SAT 0 (Formula Set.empty) HashMap.empty
+
+literalExists :: (MonadState s m, HasSAT s) => m Literal
+literalExists = liftM Literal $ lastAtom <+= 1
+{-# INLINE literalExists #-}
+
+assertFormula :: (MonadState s m, HasSAT s) => Formula -> m ()
+assertFormula xs = formula <>= xs
+{-# INLINE assertFormula #-}
+
+generateLiteral :: (MonadState s m, HasSAT s) => a -> (Literal -> m ()) -> m Literal
+generateLiteral a f = do
+  let sn = unsafePerformIO (makeStableName' a)
+  use (stableMap.at sn) >>= \ ml -> case ml of
+    Just l -> return l
+    Nothing -> do
+      l <- literalExists
+      stableMap.at sn ?= l
+      f l
+      return l
+{-# INLINE generateLiteral #-}
+
+------------------------------------------------------------------------------
+-- QSAT Problems
 ------------------------------------------------------------------------------
 
 -- | A (quantified) boolean formula.
-data Problem = Problem
-  { qbfLastAtom   :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
-  , qbfFormula    :: !Formula                 -- ^ a set of clauses to assert
-  , qbfUniversals :: !IntSet                  -- ^ a set indicating which literals are universally quantified
-  , qbfSNMap      :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
-  -- , qbfNameMap    :: !(IntMap String)      -- ^ a map of literals to given names
-  } deriving Typeable
+data QSAT = QSAT
+  { _universals :: !IntSet -- ^ a set indicating which literals are universally quantified
+  , _qsatSat    :: SAT     -- ^ The id of the last atom allocated
+  } deriving (Show,Typeable)
 
--- TODO: instance Monoid Problem
+class HasSAT t => HasQSAT t where
+  qsat       :: Lens' t QSAT
+  universals :: Lens' t IntSet
+  universals f = qsat ago where
+    ago (QSAT u s) = f u <&> \u' -> QSAT u' s
 
-instance Default Problem where
-  def = Problem 0 (Formula Set.empty) IntSet.empty HashMap.empty
+instance HasSAT QSAT where
+  sat f (QSAT u s) = QSAT u <$> f s
 
-instance Show Problem where
-  showsPrec p qbf = showParen (p > 10)
-                  $ showString "Problem .. " . showsPrec 11 (qbfFormula qbf) . showString " .."
+instance HasQSAT QSAT where
+  qsat = id
+
+instance Default QSAT where
+  def = QSAT IntSet.empty def
+
+literalForall :: (MonadState s m, HasQSAT s) => m Literal
+literalForall = do
+   l <- lastAtom <+= 1
+   universals.contains l .= True
+   return $ Literal l
+{-# INLINE literalForall #-}
 
 ------------------------------------------------------------------------------
--- Printing Problems
+-- Printing QSATs
 ------------------------------------------------------------------------------
 
 -- | (Q)DIMACS file format pretty printer
@@ -70,9 +135,13 @@ instance QDIMACS Formula where
 instance QDIMACS Clause where
   qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
 
-instance QDIMACS Problem where
-  qdimacs (Problem vars formula@(Formula cs) qs _) =
-    unlines (header : map showGroup quantGroups) ++ qdimacs formula
+instance QDIMACS SAT where
+  -- for now this is backwards. TODO: flip it around
+  qdimacs xs = qdimacs (QSAT mempty xs)
+
+instance QDIMACS QSAT where
+  qdimacs (QSAT qs (SAT vars f@(Formula cs) _)) =
+    unlines (header : map showGroup quantGroups) ++ qdimacs f
     where
       header = unwords ["p", "cnf", show (vars + padding), show (Set.size cs) ]
 

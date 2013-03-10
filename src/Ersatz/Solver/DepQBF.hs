@@ -13,16 +13,16 @@ module Ersatz.Solver.DepQBF
   ) where
 
 import Control.Monad.IO.Class
-import Ersatz.Problem (qdimacs)
+import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as IntMap
 import System.Process (readProcessWithExitCode)
 
-depqbf :: MonadIO m => Solver m
+depqbf :: MonadIO m => Solver QSAT m
 depqbf = depqbfPath "depqbf"
 
-depqbfPath :: MonadIO m => FilePath -> Solver m
+depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
 depqbfPath path qbf = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
     writeFile problemPath (qdimacs qbf)

@@ -13,7 +13,6 @@ module Ersatz
   , module Ersatz.Decoding
   , module Ersatz.Equatable
   , module Ersatz.Encoding
-  , module Ersatz.Monad
   , module Ersatz.Problem
   , module Ersatz.Solution
   , module Ersatz.Solver
@@ -25,7 +24,6 @@ import Ersatz.Bits
 import Ersatz.Decoding
 import Ersatz.Equatable
 import Ersatz.Encoding
-import Ersatz.Monad
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver

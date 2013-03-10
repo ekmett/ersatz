@@ -12,45 +12,46 @@ module Ersatz.Variable
   ( Variable(..)
   ) where
 
-import Control.Applicative
+import Control.Monad
+import Control.Monad.State.Class
 import Ersatz.Internal.Literal
-import Ersatz.Monad
+import Ersatz.Problem
 import GHC.Generics
 
 class GVariable f where
-  gexists :: MonadSAT m => m (f a)
-  gforall :: MonadSAT m => m (f a)
+  gexists :: (MonadState s m, HasSAT s)  => m (f a)
+  gforall :: (MonadState s m, HasQSAT s) => m (f a)
 
 instance GVariable U1 where
   gexists = return U1
   gforall = return U1
 
 instance (GVariable f, GVariable g) => GVariable (f :*: g) where
-  gexists = (:*:) <$> gexists <*> gexists
-  gforall = (:*:) <$> gforall <*> gforall
+  gexists = liftM2 (:*:) gexists gexists
+  gforall = liftM2 (:*:) gforall gforall
 
 instance Variable a => GVariable (K1 i a) where
-  gexists = K1 <$> exists
-  gforall = K1 <$> forall
+  gexists = liftM K1 exists
+  gforall = liftM K1 forall
 
 instance GVariable f => GVariable (M1 i c f) where
-  gexists = M1 <$> gexists
-  gforall = M1 <$> gforall
+  gexists = liftM M1 gexists
+  gforall = liftM M1 gforall
 
 -- | Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'.
 class Variable t where
-  exists :: MonadSAT m => m t
-  default exists :: (MonadSAT m, Generic t, GVariable (Rep t)) => m t
-  exists = to <$> gexists
+  exists :: (MonadState s m, HasSAT s) => m t
+  default exists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
+  exists = liftM to gexists
 
-  forall :: MonadSAT m => m t
-  default forall :: (MonadSAT m, Generic t, GVariable (Rep t)) => m t
-  forall = to <$> gforall
+  forall :: (MonadState s m, HasQSAT s) => m t
+  default forall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
+  forall = liftM to gforall
 
 instance Variable Lit where
-  exists = Lit <$> exists
-  forall = Lit <$> forall
+  exists = liftM Lit exists
+  forall = liftM Lit forall
 
 instance Variable Literal where
   exists = literalExists

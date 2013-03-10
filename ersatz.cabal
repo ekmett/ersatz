@@ -1,5 +1,5 @@
 name:           ersatz
-version:        0.1.0.2
+version:        0.2
 license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Johan Kiviniemi
@@ -45,6 +45,7 @@ library
     containers >= 0.2.0.1,
     data-default >= 0.5 && < 0.6,
     ghc-prim,
+    lens >= 3.8 && < 4.0,
     mtl >= 1.1 && < 2.2,
     process == 1.1.*,
     temporary == 1.1.*,
@@ -61,7 +62,6 @@ library
     Ersatz.Internal.Circuit
     Ersatz.Internal.Formula
     Ersatz.Internal.Literal
-    Ersatz.Monad
     Ersatz.Problem
     Ersatz.Solution
     Ersatz.Solver

@@ -19,15 +19,15 @@ import Prelude hiding ((&&),(||),not,and,or)
 import qualified Prelude
 
 import Control.Applicative
-import Data.Traversable (Traversable, traverse)
+import Control.Monad.State
 import Data.Typeable
 import Ersatz.Decoding
 import Ersatz.Encoding
-import Ersatz.Monad
 import Ersatz.Internal.Circuit
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
+import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Variable
 import GHC.Generics
@@ -68,8 +68,8 @@ instance Boolean Bit where
   choose f t s = Bit (Mux f t s)
 
 instance Variable Bit where
-  exists = Bit . Var <$> exists
-  forall = Bit . Var <$> forall
+  exists = liftM (Bit . Var) exists
+  forall = liftM (Bit . Var) forall
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Decoding Bit where
@@ -116,21 +116,21 @@ instance Encoding Bit where
 
 -- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
 -- of the current problem.
-assert :: MonadSAT m => Bit -> m ()
+assert :: (MonadState s m, HasSAT s) => Bit -> m ()
 assert b = do
   l <- runBit b
   assertFormula (formulaLiteral l)
 
 -- | Convert a 'Bit' to a 'Literal'.
-runBit :: MonadSAT m => Bit -> m Literal
-runBit (Bit (Not c)) = negateLiteral <$> runBit c
+runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
+runBit (Bit (Not c)) = negateLiteral `liftM` runBit c
 runBit (Bit (Var (Lit l))) = return l
 runBit b@(Bit c) = generateLiteral b $ \out ->
   assertFormula =<< case c of
-    And bs    -> formulaAnd out <$> traverse runBit bs
-    Or  bs    -> formulaOr  out <$> traverse runBit bs
-    Xor x y   -> formulaXor out <$> runBit x <*> runBit y
-    Mux x y p -> formulaMux out <$> runBit x <*> runBit y <*> runBit p
+    And bs    -> formulaAnd out `liftM` mapM runBit bs
+    Or  bs    -> formulaOr  out `liftM` mapM runBit bs
+    Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
+    Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
     Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
     Var (Bool True)  -> return $ formulaLiteral out
 
