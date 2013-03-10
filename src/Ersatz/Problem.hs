@@ -86,7 +86,7 @@ instance QDIMACS Problem where
         where qlist = IntSet.toAscList qs
 
       showGroup :: [Quant] -> String
-      showGroup xs = unwords $ q (head xs) : map (show . getQuant) xs
+      showGroup xs = unwords $ q (head xs) : map (show . getQuant) xs ++ ["0"]
 
       eqQuant :: Quant -> Quant -> Bool
       eqQuant Exists{} Exists{} = True
