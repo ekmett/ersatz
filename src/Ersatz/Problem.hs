@@ -91,7 +91,7 @@ generateLiteral a f = do
 -- | A (quantified) boolean formula.
 data QSAT = QSAT
   { _universals :: !IntSet -- ^ a set indicating which literals are universally quantified
-  , _qsatSat    :: SAT     -- ^ The id of the last atom allocated
+  , _qsatSat    :: SAT     -- ^ The rest of the information, in 'SAT'
   } deriving (Show,Typeable)
 
 class HasSAT t => HasQSAT t where
@@ -148,7 +148,7 @@ instance QDIMACS QSAT where
       -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
       padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
               | otherwise                                   = 0
-                    -- no universals means we are a plan DIMACS file
+                    -- no universals means we are a plain DIMACS file
       quantGroups | IntSet.null qs = []
                     -- otherwise, skip to the first universal and show runs
                   | otherwise = List.groupBy eqQuant $ quants [head qlist..vars] qlist
