@@ -29,6 +29,21 @@ extra-source-files:
   README.md
   CHANGELOG.md
 
+data-files:
+  data/dimacs/bf/descr.html
+  data/dimacs/bf/*.cnf
+  data/dimacs/blocksworld/descr.html
+  data/dimacs/blocksworld/*.cnf
+  data/dimacs/bmc/*.cnf
+  data/dimacs/logistics/descr.html
+  data/dimacs/logistics/logistics.a.cnf
+  data/dimacs/logistics/logistics.b.cnf
+  data/dimacs/logistics/logistics.c.cnf
+  data/dimacs/logistics/logistics.d.cnf
+  data/dimacs/parity/descr
+  data/dimacs/parity/*.cnf
+  data/dimacs/phole/descr.html
+  data/dimacs/phole/*.cnf
 
 source-repository head
   type: git
