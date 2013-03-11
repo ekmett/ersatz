@@ -30,20 +30,62 @@ extra-source-files:
   CHANGELOG.md
 
 data-files:
+  data/dimacs/bf/bf0432-007.cnf
+  data/dimacs/bf/bf1355-075.cnf
+  data/dimacs/bf/bf1355-638.cnf
+  data/dimacs/bf/bf2670-001.cnf
   data/dimacs/bf/descr.html
-  data/dimacs/bf/*.cnf
+  data/dimacs/bf/ssa0432-003.cnf
+  data/dimacs/bf/ssa2670-130.cnf
+  data/dimacs/bf/ssa2670-141.cnf
+  data/dimacs/bf/ssa6288-047.cnf
+  data/dimacs/bf/ssa7552-038.cnf
+  data/dimacs/bf/ssa7552-158.cnf
+  data/dimacs/bf/ssa7552-159.cnf
+  data/dimacs/bf/ssa7552-160.cnf
+  data/dimacs/blocksworld/anomaly.cnf
+  data/dimacs/blocksworld/bw_large.a.cnf
+  data/dimacs/blocksworld/bw_large.b.cnf
+  data/dimacs/blocksworld/bw_large.c.cnf
   data/dimacs/blocksworld/descr.html
-  data/dimacs/blocksworld/*.cnf
-  data/dimacs/bmc/*.cnf
+  data/dimacs/blocksworld/huge.cnf
+  data/dimacs/blocksworld/medium.cnf
+  data/dimacs/bmc/bmc-ibm-1.cnf
+  data/dimacs/bmc/bmc-ibm-2.cnf
+  data/dimacs/bmc/bmc-ibm-3.cnf
+  data/dimacs/bmc/bmc-ibm-4.cnf
+  data/dimacs/bmc/bmc-ibm-5.cnf
+  data/dimacs/bmc/bmc-ibm-7.cnf
   data/dimacs/logistics/descr.html
   data/dimacs/logistics/logistics.a.cnf
   data/dimacs/logistics/logistics.b.cnf
   data/dimacs/logistics/logistics.c.cnf
   data/dimacs/logistics/logistics.d.cnf
   data/dimacs/parity/descr
-  data/dimacs/parity/*.cnf
+  data/dimacs/parity/par16-1-c.cnf
+  data/dimacs/parity/par16-1.cnf
+  data/dimacs/parity/par16-2-c.cnf
+  data/dimacs/parity/par16-2.cnf
+  data/dimacs/parity/par16-3-c.cnf
+  data/dimacs/parity/par16-3.cnf
+  data/dimacs/parity/par16-4-c.cnf
+  data/dimacs/parity/par16-4.cnf
+  data/dimacs/parity/par16-5-c.cnf
+  data/dimacs/parity/par16-5.cnf
+  data/dimacs/parity/par8-1-c.cnf
+  data/dimacs/parity/par8-1.cnf
+  data/dimacs/parity/par8-2-c.cnf
+  data/dimacs/parity/par8-2.cnf
+  data/dimacs/parity/par8-3-c.cnf
+  data/dimacs/parity/par8-3.cnf
+  data/dimacs/parity/par8-4-c.cnf
+  data/dimacs/parity/par8-4.cnf
+  data/dimacs/parity/par8-5-c.cnf
+  data/dimacs/parity/par8-5.cnf
   data/dimacs/phole/descr.html
-  data/dimacs/phole/*.cnf
+  data/dimacs/phole/hole6.cnf
+  data/dimacs/phole/hole7.cnf
+  data/dimacs/phole/hole8.cnf
 
 source-repository head
   type: git
