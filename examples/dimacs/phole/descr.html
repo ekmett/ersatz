@@ -1,0 +1,120 @@
+<HTML>
+<HEAD>
+   <TITLE>SATLIB - Benchmark Problems</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="white" TEXT="black" LINK="#0000FF" VLINK="#551A8B" ALINK="#FF0000">
+
+
+<h1>SAT instances of the Pigeon Hole Problem</h1>
+
+
+The Pigeon Hole problem asks whether it is possible to place
+<i>n+1</i> pigeons in <i>n</i> holes without two pigeons being in the
+same hole (obviously, it's not possible).<br><br>
+
+<h4>SAT encoding</h4>
+
+The SAT encoding of this problem is very straightforward. For each
+pigeon <i>i</i> we have a variable <i>x_{ij}</i> which means that
+pigeon <i>i</i> is placed in hole <i>j</i>. Then we have <i>n+1</i>
+clauses which say that a pigeon has to be placed in some hole. Then
+for each hole we have a set of clauses ensuring that only one single
+pigeon is placed into that hole. This encoding leads to in total
+<i>n * (n+1)</i> propositional variables and to <i>(n+1) +
+n * (n * (n+1) / 2)</i> clauses.
+
+<h4>Benchmark instances</h4>
+
+There are five instances available at the DIMACS benchmark set which
+encode the pigeon hole problem for six to ten holes; details on the
+instances are given in Table 1.<br><br>
+<TABLE BORDER >
+<TR>
+<TD ALIGN=CENTER><B>instance&nbsp;</B></TD>
+
+<TD ALIGN=CENTER><B>holes&nbsp;</B></TD>
+
+<TD ALIGN=CENTER><B>vars&nbsp;</B></TD>
+
+<TD ALIGN=CENTER><B>clauses&nbsp;</B></TD>
+
+<TD ALIGN=CENTER><B>satisfiable?&nbsp;</B></TD>
+</TR>
+
+<TR>
+<TD ALIGN=RIGHT>hole6.cnf&nbsp;</TD>
+
+<TD ALIGN=RIGHT>6&nbsp;</TD>
+
+<TD ALIGN=RIGHT>42&nbsp;</TD>
+
+<TD ALIGN=RIGHT>133&nbsp;</TD>
+
+<TD ALIGN=RIGHT>no&nbsp;</TD>
+</TR>
+
+<TR>
+<TD ALIGN=RIGHT>hole7.cnf&nbsp;</TD>
+
+<TD ALIGN=RIGHT>7&nbsp;</TD>
+
+<TD ALIGN=RIGHT>56&nbsp;</TD>
+
+<TD ALIGN=RIGHT>204&nbsp;</TD>
+
+<TD ALIGN=RIGHT>no&nbsp;</TD>
+</TR>
+
+<TR>
+<TD ALIGN=RIGHT>hole8.cnf&nbsp;</TD>
+
+<TD ALIGN=RIGHT>8&nbsp;</TD>
+
+<TD ALIGN=RIGHT>72&nbsp;</TD>
+
+<TD ALIGN=RIGHT>297&nbsp;</TD>
+
+<TD ALIGN=RIGHT>no&nbsp;</TD>
+</TR>
+
+<TR>
+<TD ALIGN=RIGHT>hole9.cnf&nbsp;</TD>
+
+<TD ALIGN=RIGHT>9&nbsp;</TD>
+
+<TD ALIGN=RIGHT>90&nbsp;</TD>
+
+<TD ALIGN=RIGHT>415&nbsp;</TD>
+
+<TD ALIGN=RIGHT>no&nbsp;</TD>
+</TR>
+
+<TR NOSAVE>
+<TD ALIGN=RIGHT>hole10.cnf</TD>
+
+<TD ALIGN=RIGHT>10&nbsp;</TD>
+
+<TD ALIGN=RIGHT>110&nbsp;</TD>
+
+<TD ALIGN=RIGHT>561&nbsp;</TD>
+
+<TD ALIGN=RIGHT NOSAVE>no&nbsp;</TD>
+</TR>
+</TABLE><br>
+<B>Table 1:</B> SAT-encodings of the pigeon hole problem
+<BR>&nbsp;
+<BR>&nbsp;
+
+
+<h4>Acknowledgements</h4>
+
+The instances have originally
+been contributed by <A
+HREF="http://ba.gsia.cmu.edu/jnh/">John Hooker</a>
+and are also contained in a collection of SAT instances at the
+Forschungsinstitut f&uuml; anwendungsorientierte Wissensverarbeitung in
+Ulm, Germany. 
+
+</body>
+</html>

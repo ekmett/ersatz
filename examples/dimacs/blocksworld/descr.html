@@ -1,0 +1,149 @@
+<html><head><title>SATLIB - Benchmark Problems</title></head><body alink="#ff0000" bgcolor="white" link="#0000ff" text="black" vlink="#551a8b">
+
+<h1>SAT-encoded Blocks World Planning Problems</h1>
+
+The Blocks World is a very well-known problem domain in AI research. 
+The general scenario in Blocks World Planning comprises 
+a number of blocks and a table. The blocks can be piled onto 
+each other, where the downmost block of a pile is always on the table.
+For the benchmark problems, taken from [KS96],
+there is only one operator which moves the top block of a 
+pile to the top of another pile or onto the table.
+Given an initial and a goal configuration of blocks, the problem
+is to find a sequence of operators which, when applied to 
+the initial configuration, leads to the goal situation.
+Such a sequence is called a (linear) plan.
+Blocks can only be moved when they are clear, i.e., no other block is piled
+on top of them, and they can be only moved on top of blocks which are clear
+or onto the table. If these conditions are satisfied, the move operator 
+always succeeds.
+There is an optimisation and 
+a decision variant of the Blocks World Planning problem:
+In the optimisation variant, the goal is to find a shortest plan, 
+whereas in the decision variant, the question is to decide whether 
+a plan of a given length exists. 
+The two variants are tightly related, as shortest plans can 
+be found by solving a series of decision problems.
+SAT-based approaches to Blocks World Planning typically focus on 
+the decision variant.
+
+<h4>SAT encoding</h4>
+
+A linear encoding strategy was used for translating Blocks World
+instances into CNF formulae.
+The encoding is based on the following predicates:
+
+<ul>
+<li> <i>clear(x,t)</i> - block <i>x</i> is clear at time <i>t</i>
+</li><li> <i>on(x,y,t)</i> - block <i>x</i> is directly on top of <i>y</i> at time <i>t</i>
+</li><li> <i>move(x,y,z,t)</i> - block <i>x</i> is moved from block <i>y</i>
+	on block <i>z</i> at time <i>t</i>
+</li></ul>
+	
+<p>
+<i>clear</i> and <i>on</i> are state predicates, while <i>move</i> is an
+action predicate. The axioms which specify the problem can be grouped into
+4 categories:
+
+</p><p>
+</p><ul>
+<li> actions imply their preconditions and effects,
+</li><li> exactly one action can be executed at each time <i>t</i>,
+</li><li> classical frame conditions which
+	state that state predicates do not change between
+	<i>t</i> and <i>t+1</i> if they are not directly affected by 
+	the action at time <i>t</i>,
+</li><li> in <i>move(x,y,z,t)</i>, <i>x</i>,<i>y</i>, and <i>z</i> are distinct.
+</li></ul>
+
+<p>
+The last group of actions is redundant, but
+has been found to be useful for speeding up local search.
+For a given blocks world planning instance, instantiating 
+the predicates listed above gives the propositional variables
+over which the axioms can then be formulated as CNF clauses.
+
+</p><p>
+The SAT encoding used for generating the benchmark problems
+relies critically on two important techniques for reducing the 
+size of the CNF formulae: operator splitting [KMS96] and 
+simple propositional reductions (unit propagation and subsumption).
+Operator splitting replaces a predicate which take three or
+more arguments by a number of binary predicates. This
+reduces the number of propositional variables
+for the given problem from <i>O(kn^3)</i> to <i>O(kn^2)</i> where <i>n</i> is
+the number of blocks and <i>k</i> the number of plan steps.
+Unit propagation and subsumptions, two well-known
+propositional reduction strategies, are used to simplify the formulae
+before applying stochastic local search. These reducations can be 
+computed in polynomial time and eliminate a number of propositional 
+variables thus efficiently reducing the search space.
+Intuitively, these by applying these strategies the 
+initial and goal states are propagated into the planning structure.
+Details on the SAT encoding used to generate the
+benchmark problems can be found in [KS96,KMS96].
+
+</p><h4>The benchmark instances</h4>
+
+<p>
+Our benchmark set contains 7 blocks world planning instances
+taken from Henry Kautz' and Bart Selman's SATPLAN distribution.
+These instances are described in Table 1; 
+despite the reductions mentioned above, they are still
+very large when compared to other instances of our benchmark suit.
+bw_large.c and bw_large.d belong to the hardest problems which can 
+be solved by state-of-the-art SAT algorithms in reasonable time.
+
+</p><p>
+<table border="1">
+<tbody><tr>
+<td align="center"><b> instance
+</b></td><td align="center"><b> blocks </b></td><td align="center"><b> steps
+</b></td><td align="center"><b> vars </b></td><td align="center"><b> clauses
+</b></td></tr><tr>
+<td align="right"> anomaly </td><td align="right"> 3 </td><td align="right"> 3 
+</td><td align="right"> 48 </td><td align="right"> 261
+</td></tr><tr>
+<td align="right"> medium </td><td align="right"> 5 </td><td align="right"> 4 
+</td><td align="right"> 116 </td><td align="right"> 953
+</td></tr><tr> 
+<td align="right"> bw_large.a </td><td align="right"> 9 </td><td align="right"> 6 
+</td><td align="right"> 459 </td><td align="right"> 4,675
+</td></tr><tr>
+<td align="right"> huge </td><td align="right"> 9 </td><td align="right"> 6 
+</td><td align="right"> 459 </td><td align="right"> 7,054
+</td></tr><tr>
+<td align="right"> bw_large.b </td><td align="right"> 11 </td><td align="right"> 9 
+</td><td align="right"> 1,087 </td><td align="right"> 13,772
+</td></tr><tr>
+<td align="right"> bw_large.c </td><td align="right"> 15 </td><td align="right"> 14 
+</td><td align="right"> 3,016 </td><td align="right"> 50,457
+</td></tr><tr>
+<td align="right"> bw_large.d </td><td align="right"> 19 </td><td align="right"> 18 
+</td><td align="right"> 6,325 </td><td align="right"> 131,973
+</td></tr></tbody></table>
+</p><p>
+<b>Table 1:</b> SAT-encoded Blocks World Planning instances (linear encoding),
+contributed by Henry Kautz and Bart Selman (all instances are satisfiable).
+
+
+
+</p><p><br>
+</p><h4>Bibliography</h4>
+
+<table>
+<tbody><tr>
+<td valign="top"><small>[KS96]
+</small></td><td><small> <i>Henry Kautz and Bart Selman</i>
+<strong>Pushing the Envelope: Planning, Propositional Logic, and Stochastic Search.</strong>
+<cite>Proc. AAAI-96,</cite> pages 1194--1201, 1996<br>
+</small></td></tr><tr>
+<td valign="top"><small>[KMS96]
+</small></td><td><small> <i>Henry Kautz and David McAllester and Bart Selman</i>
+<strong>Encoding Plans in Propositional Logic.</strong>
+<cite>Proc. KR-96,</cite> pages 374--384, 1996<br>
+</small></td></tr></tbody></table>
+
+
+
+</body></html>
