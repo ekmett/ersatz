@@ -1,0 +1,22 @@
+name:          regexp-grid
+version:       0.1
+license-file:  COPYING
+author:        Johan Kiviniemi
+maintainer:    Johan Kiviniemi <devel@johan.kiviniemi.name>
+copyright:     © 2013 Johan Kiviniemi
+build-type:    Simple
+cabal-version: >= 1.8
+synopsis:      A solver for the regular expression crossword problem
+description:
+  An example program that solves the regular expression crossword problem
+  <http://www.coinheist.com/rubik/a_regular_crossword/> using Ersatz.
+
+executable regexp-grid
+  main-is: Main.hs
+  build-depends: base == 4.6.*
+               , containers == 0.5.*
+               , ersatz == 0.2.*
+               , lens == 3.8.*
+               , mtl == 2.1.*
+               , parsec == 3.1.*
+  ghc-options: -Wall -O2

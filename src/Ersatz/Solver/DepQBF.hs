@@ -12,20 +12,24 @@ module Ersatz.Solver.DepQBF
   , depqbfPath
   ) where
 
+import Blaze.ByteString.Builder
 import Control.Monad.IO.Class
+import qualified Data.ByteString as BS
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as IntMap
+import System.IO
 import System.Process (readProcessWithExitCode)
 
 depqbf :: MonadIO m => Solver QSAT m
 depqbf = depqbfPath "depqbf"
 
 depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
-depqbfPath path qbf = liftIO $
+depqbfPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
-    writeFile problemPath (qdimacs qbf)
+    withFile problemPath WriteMode $ \fh ->
+      toByteStringIO (BS.hPut fh) (qdimacs problem)
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath] []

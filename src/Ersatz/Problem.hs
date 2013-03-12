@@ -1,4 +1,4 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable, DefaultSignatures, TypeFamilies, BangPatterns, TemplateHaskell #-}
+{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, TypeOperators, MultiParamTypeClasses, FunctionalDependencies, FlexibleInstances, PatternGuards, DeriveDataTypeable, DefaultSignatures, TypeFamilies, BangPatterns, TemplateHaskell, OverloadedStrings #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -21,21 +21,31 @@ module Ersatz.Problem
   , QSAT(QSAT)
   , HasQSAT(..)
   , literalForall
-  -- * QDIMACS pretty printing
+  -- * DIMACS pretty printing
+  , DIMACS(..)
   , QDIMACS(..)
+  , WDIMACS(..)
+  , dimacs, qdimacs, wdimacs
   ) where
 
+import Blaze.ByteString.Builder
+import Blaze.ByteString.Builder.Char8
+import Blaze.Text
 import Control.Applicative
 import Control.Lens
 import Control.Monad
 import Control.Monad.State.Class
+import Data.ByteString (ByteString)
 import Data.Default
+import Data.Foldable (foldMap)
 import Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as HashMap
+import Data.Int
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-import qualified Data.List as List (groupBy)
+import qualified Data.List as List
 import Data.Monoid
+import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Formula
@@ -117,61 +127,107 @@ literalForall = do
 {-# INLINE literalForall #-}
 
 ------------------------------------------------------------------------------
--- Printing QSATs
+-- Printing SATs
 ------------------------------------------------------------------------------
 
--- | (Q)DIMACS file format pretty printer
+-- | DIMACS file format pretty printer
 --
 -- This is used to generate the problem statement for a given 'SAT' 'Ersatz.Solver.Solver'.
+
+-- http://www.cfdvs.iitb.ac.in/download/Docs/verification/papers/BMC/JT.ps
+class DIMACS t where
+  dimacsComments :: t -> [ByteString]
+  dimacsNumVariables :: t -> Int
+  dimacsClauses :: t -> Set IntSet
+
+-- | QDIMACS file format pretty printer
+--
+-- This is used to generate the problem statement for a given 'QSAT' 'Ersatz.Solver.Solver'.
+
+-- http://www.qbflib.org/qdimacs.html
 class QDIMACS t where
-  qdimacs :: t -> String
+  qdimacsComments :: t -> [ByteString]
+  qdimacsNumVariables :: t -> Int
+  qdimacsQuantified :: t -> [Quant]
+  qdimacsClauses :: t -> Set IntSet
 
-instance QDIMACS Literal where
-  qdimacs (Literal n) = show n
+-- | WDIMACS file format pretty printer
+--
+-- This is used to generate the problem statement for a given 'MaxSAT' 'Ersatz.Solver.Solver' (TODO).
 
-instance QDIMACS Formula where
-  qdimacs (Formula cs) = unlines $ map qdimacs (Set.toList cs)
+-- http://maxsat.ia.udl.cat/requirements/
+class WDIMACS t where
+  wdimacsComments :: t -> [ByteString]
+  wdimacsNumVariables :: t -> Int
+  wdimacsTopWeight :: t -> Int64  -- ^ Specified to be 1 ≤ n < 2^63
+  wdimacsClauses :: t -> Set (Int64, IntSet)
 
-instance QDIMACS Clause where
-  qdimacs (Clause xs) = unwords $ map show (IntSet.toList xs) ++ ["0"]
+-- | Generate a 'Builder' out of a 'DIMACS' problem.
+dimacs :: DIMACS t => t -> Builder
+dimacs t = comments <> problem <> clauses
+  where
+    comments = foldMap bComment (dimacsComments t)
+    problem = bLine [ copyByteString "p cnf"
+                    , integral (dimacsNumVariables t)
+                    , integral (Set.size tClauses)
+                    ]
+    clauses = foldMap bClause tClauses
 
-instance QDIMACS SAT where
-  -- for now this is backwards. TODO: flip it around
-  qdimacs xs = qdimacs (QSAT mempty xs)
+    tClauses = dimacsClauses t
 
-instance QDIMACS QSAT where
-  qdimacs (QSAT qs (SAT vars f@(Formula cs) _)) =
-    unlines (header : map showGroup quantGroups) ++ qdimacs f
-    where
-      header = unwords ["p", "cnf", show (vars + padding), show (Set.size cs) ]
+-- | Generate a 'Builder' out of a 'QDIMACS' problem.
+qdimacs :: QDIMACS t => t -> Builder
+qdimacs t = comments <> problem <> quantified <> clauses
+  where
+    comments = foldMap bComment (qdimacsComments t)
+    problem = bLine [ copyByteString "p cnf"
+                    , integral (qdimacsNumVariables t)
+                    , integral (Set.size tClauses)
+                    ]
+    -- TODO: "The innermost quantified set is always of type 'e'" per QDIMACS
+    -- standard
+    quantified = foldMap go tQuantGroups
+      where go ls = bLine0 (q (head ls) : map (integral . getQuant) ls)
+            q Exists{} = fromChar 'e'
+            q Forall{} = fromChar 'a'
+    clauses = foldMap bClause tClauses
 
-      -- "The innermost quantified set is always of type 'e'" per QDIMACS standard
-      padding | Just (n, _) <- IntSet.maxView qs, n == vars = 1
-              | otherwise                                   = 0
-                    -- no universals means we are a plain DIMACS file
-      quantGroups | IntSet.null qs = []
-                    -- otherwise, skip to the first universal and show runs
-                  | otherwise = List.groupBy eqQuant $ quants [head qlist..vars] qlist
-        where qlist = IntSet.toAscList qs
+    tQuantGroups = List.groupBy eqQuant (qdimacsQuantified t)
+      where
+        eqQuant :: Quant -> Quant -> Bool
+        eqQuant Exists{} Exists{} = True
+        eqQuant Forall{} Forall{} = True
+        eqQuant _ _ = False
+    tClauses = qdimacsClauses t
 
-      showGroup :: [Quant] -> String
-      showGroup xs = unwords $ q (head xs) : map (show . getQuant) xs ++ ["0"]
+-- | Generate a 'Builder' out of a 'WDIMACS' problem.
+wdimacs :: WDIMACS t => t -> Builder
+wdimacs t = comments <> problem <> clauses
+  where
+    comments = foldMap bComment (wdimacsComments t)
+    problem = bLine [ copyByteString "p wcnf"
+                    , integral (wdimacsNumVariables t)
+                    , integral (Set.size tClauses)
+                    , integral (wdimacsTopWeight t)
+                    ]
+    clauses = foldMap (uncurry bWClause) tClauses
 
-      eqQuant :: Quant -> Quant -> Bool
-      eqQuant Exists{} Exists{} = True
-      eqQuant Forall{} Forall{} = True
-      eqQuant _ _ = False
+    tClauses = wdimacsClauses t
 
-      q :: Quant -> String
-      q Exists{} = "e"
-      q Forall{} = "a"
+bComment :: ByteString -> Builder
+bComment bs = bLine [ fromChar 'c', fromByteString bs ]
 
-      quants :: [Int] -> [Int] -> [Quant]
-      quants [] _ = []
-      quants (i:is) []     = Exists i : quants is []
-      quants (i:is) jjs@(j:js)
-        | i == j    = Forall i : quants is js
-        | otherwise = Exists i : quants is jjs
+bClause :: IntSet -> Builder
+bClause ls = bLine0 (map integral (IntSet.toList ls))
+
+bWClause :: Int64 -> IntSet -> Builder
+bWClause w ls = bLine0 (integral w : map integral (IntSet.toList ls))
+
+bLine0 :: [Builder] -> Builder
+bLine0 = bLine . (++ [fromChar '0'])
+
+bLine :: [Builder] -> Builder
+bLine bs = mconcat (List.intersperse (fromChar ' ') bs) <> fromChar '\n'
 
 -- | An explicit prenex quantifier
 data Quant
@@ -179,3 +235,24 @@ data Quant
   | Forall { getQuant :: {-# UNPACK #-} !Int }
   deriving Typeable
 
+instance DIMACS SAT where
+  dimacsComments _ = []
+  dimacsNumVariables s = s^.lastAtom
+  dimacsClauses = satClauses
+
+instance QDIMACS QSAT where
+  qdimacsComments _ = []
+  qdimacsNumVariables q = q^.lastAtom
+  qdimacsQuantified q =
+    quants [1..q^.lastAtom] (IntSet.toAscList (q^.universals))
+    where
+      quants :: [Int] -> [Int] -> [Quant]
+      quants []     _  = []
+      quants (i:is) [] = Exists i : quants is []
+      quants (i:is) jjs@(j:js)
+        | i == j    = Forall i : quants is js
+        | otherwise = Exists i : quants is jjs
+  qdimacsClauses = satClauses
+
+satClauses :: HasSAT s => s -> Set IntSet
+satClauses s = Set.map clauseSet (formulaSet (s^.formula))
