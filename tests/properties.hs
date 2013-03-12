@@ -6,7 +6,7 @@ import Test.Framework (Test)
 import Test.Framework (defaultMain, testGroup)
 import Test.Framework.Providers.HUnit
 -- import Test.Framework.Providers.QuickCheck (testProperty)
-import Test.HUnit hiding (Test)
+-- import Test.HUnit hiding (Test)
 -- import Test.QuickCheck hiding ((==>))
 
 import Ersatz
