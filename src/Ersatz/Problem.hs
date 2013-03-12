@@ -78,7 +78,8 @@ instance Show SAT where
 
 
 instance Default SAT where
-  def = SAT 0 (Formula Set.empty) HashMap.empty
+  -- The literal 1 is dedicated for the True constant.
+  def = SAT 1 (formulaLiteral literalTrue) HashMap.empty
 
 -- | Run a 'SAT'-generating state computation. Useful e.g. in ghci for
 -- disambiguating the type of a 'MonadState', 'HasSAT' value.

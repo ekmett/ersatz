@@ -49,10 +49,6 @@ class Variable t where
   default forall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
   forall = liftM to gforall
 
-instance Variable Lit where
-  exists = liftM Lit exists
-  forall = liftM Lit forall
-
 instance Variable Literal where
   exists = literalExists
   forall = literalForall

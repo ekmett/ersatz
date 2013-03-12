@@ -11,14 +11,15 @@
 module Ersatz.Internal.Literal
   ( Literal(..)
   , negateLiteral
-  , Lit(..)
-  , lit
-  , negateLit
+  , literalFalse, literalTrue
   ) where
 
 import Data.Typeable
 
 -- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.
+--
+-- The literals @-1@ and @1@ are dedicated for the constant 'False' and the
+-- constant 'True' respectively.
 newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord,Typeable)
 
 instance Show Literal where
@@ -29,16 +30,10 @@ instance Show Literal where
 negateLiteral :: Literal -> Literal
 negateLiteral = Literal . negate . literalId
 
--- | Literals with partial evaluation
-data Lit
-  = Lit  {-# UNPACK #-} !Literal
-  | Bool !Bool
-  deriving (Show, Typeable)
+-- | The 'False' constant. The literal @-1@ is dedicated for it.
+literalFalse :: Literal
+literalFalse = Literal (-1)
 
--- | Lift a 'Bool' to a 'Lit'
-lit :: Bool -> Lit
-lit = Bool
-
-negateLit :: Lit -> Lit
-negateLit (Bool b) = Bool (not b)
-negateLit (Lit l) = Lit (negateLiteral l)
+-- | The 'True' constant. The literal @1@ is dedicated for it.
+literalTrue :: Literal
+literalTrue = Literal 1

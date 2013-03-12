@@ -20,6 +20,10 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad.State
+import Data.Foldable (toList)
+import Data.List (foldl')
+import Data.Sequence ((<|), (|>), (><))
+import qualified Data.Sequence as Seq
 import Data.Typeable
 import Ersatz.Decoding
 import Ersatz.Encoding
@@ -48,23 +52,43 @@ instance Boolean Bit where
   -- improve the stablemap this way
   bool True  = true
   bool False = false
-  true  = Bit (Var (lit True))
-  false = Bit (Var (lit False))
-  Bit (And as) && Bit (And bs) = and (as ++ bs)
-  Bit (And as) && b            = and (as ++ [b])
-  a            && Bit (And bs) = and (a : bs)
-  a            && b            = and [a,b]
-  Bit (Or as) || Bit (Or bs) = or (as ++ bs)
-  Bit (Or as) || b           = or (as ++ [b])
-  a           || Bit (Or bs) = or (a : bs)
-  a           || b           = or [a,b]
+  true  = Bit (Var literalTrue)
+  false = Bit (Var literalFalse)
+
+  a@(Bit (Var (Literal (-1)))) && _ = a
+  _ && b@(Bit (Var (Literal (-1)))) = b
+  a && Bit (Var (Literal 1)) = a
+  Bit (Var (Literal 1)) && b = b
+  Bit (And as) && Bit (And bs) = Bit (And (as >< bs))
+  Bit (And as) && b            = Bit (And (as |> b))
+  a            && Bit (And bs) = Bit (And (a <| bs))
+  a            && b            = Bit (And (a <| b <| Seq.empty))
+
+  a || Bit (Var (Literal (-1))) = a
+  Bit (Var (Literal (-1))) || b = b
+  a@(Bit (Var (Literal 1))) || _ = a
+  _ || b@(Bit (Var (Literal 1))) = b
+  Bit (Or as) || Bit (Or bs) = Bit (Or (as >< bs))
+  Bit (Or as) || b           = Bit (Or (as |> b))
+  a           || Bit (Or bs) = Bit (Or (a <| bs))
+  a           || b           = Bit (Or (a <| b <| Seq.empty))
+
   x ==> y = not x || y
   not (Bit (Not c)) = c
-  not (Bit (Var b)) = Bit (Var (negateLit b))
+  not (Bit (Var l)) = Bit (Var (negateLiteral l))
   not c        = Bit (Not c)
+
+  a `xor` Bit (Var (Literal (-1))) = a
+  Bit (Var (Literal (-1))) `xor` b = b
+  a `xor` Bit (Var (Literal 1))    = not a
+  Bit (Var (Literal 1))    `xor` b = not b
   a `xor` b    = Bit (Xor a b)
-  and xs       = Bit (And xs)
-  or xs        = Bit (Or xs)
+
+  and = foldl' (&&) true
+  or  = foldl' (||) false
+
+  choose f _ (Bit (Var (Literal (-1)))) = f
+  choose _ t (Bit (Var (Literal 1)))    = t
   choose f t s = Bit (Mux f t s)
 
 instance Variable Bit where
@@ -79,8 +103,8 @@ instance Decoding Bit where
      -- The StableName didn’t have an associated literal with a solution,
      -- recurse to compute the value.
     <|> case c of
-          And cs  -> andMaybeBools $ decode sol <$> cs
-          Or cs   -> orMaybeBools  $ decode sol <$> cs
+          And cs  -> andMaybeBools . toList $ decode sol <$> cs
+          Or cs   -> orMaybeBools  . toList $ decode sol <$> cs
           Xor x y -> xor <$> decode sol x <*> decode sol y
           Mux cf ct cp -> do
             p <- decode sol cp
@@ -124,19 +148,17 @@ assert b = do
 -- | Convert a 'Bit' to a 'Literal'.
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
 runBit (Bit (Not c)) = negateLiteral `liftM` runBit c
-runBit (Bit (Var (Lit l))) = return l
+runBit (Bit (Var l)) = return l
 runBit b@(Bit c) = generateLiteral b $ \out ->
   assertFormula =<< case c of
-    And bs    -> formulaAnd out `liftM` mapM runBit bs
-    Or  bs    -> formulaOr  out `liftM` mapM runBit bs
+    And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
+    Or  bs    -> formulaOr  out `liftM` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
-    Var (Bool False) -> return $ formulaLiteral (negateLiteral out)
-    Var (Bool True)  -> return $ formulaLiteral out
 
     -- Already handled above but GHC doesn't realize it.
-    Not _       -> error "Unreachable"
-    Var (Lit _) -> error "Unreachable"
+    Not _ -> error "Unreachable"
+    Var _ -> error "Unreachable"
 
 class GBoolean f where
   gbool :: Bool -> f a

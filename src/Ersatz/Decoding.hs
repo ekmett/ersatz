@@ -32,11 +32,6 @@ instance Decoding Literal where
   type Decoded Literal = Bool
   decode s l = solutionLiteral s l
 
-instance Decoding Lit where
-  type Decoded Lit = Bool
-  decode _ (Bool b) = Just b
-  decode s (Lit l)  = decode s l
-
 instance Decoding () where
   type Decoded () = ()
   decode _ () = Just ()

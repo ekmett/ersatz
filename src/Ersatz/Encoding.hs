@@ -27,9 +27,10 @@ class Encoding a where
   -- @[Word8]@ as a @[Bit8]@.
   encode :: Encoded a -> a
 
-instance Encoding Lit where
-  type Encoded Lit = Bool
-  encode = Bool
+instance Encoding Literal where
+  type Encoded Literal = Bool
+  encode False = literalFalse
+  encode True  = literalTrue
 
 instance Encoding () where
   type Encoded () = ()

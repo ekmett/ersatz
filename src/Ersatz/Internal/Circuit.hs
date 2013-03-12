@@ -15,6 +15,7 @@ module Ersatz.Internal.Circuit
 import Control.Applicative
 import Data.Foldable (Foldable, foldMap)
 import Data.Monoid
+import Data.Sequence (Seq)
 import Data.Traversable (Traversable, traverse)
 import Data.Typeable
 import Ersatz.Internal.Literal
@@ -22,17 +23,17 @@ import Ersatz.Internal.Literal
 -- | This is used to observe the directed graph with sharing of how multiple
 -- 'Ersatz.Bit.Bit' values are related.
 data Circuit c
-  = And [c]
-  | Or [c]
+  = And (Seq c)
+  | Or (Seq c)
   | Xor c c
   | Mux c c c  -- ^ False branch, true branch, predicate/selector branch
   | Not c
-  | Var !Lit
+  | Var !Literal
   deriving (Show, Typeable)
 
 instance Functor Circuit where
-  fmap f (And as) = And (map f as)
-  fmap f (Or as) = Or (map f as)
+  fmap f (And as) = And (fmap f as)
+  fmap f (Or as) = Or (fmap f as)
   fmap f (Xor a b) = Xor (f a) (f b)
   fmap f (Mux a b c) = Mux (f a) (f b) (f c)
   fmap f (Not a) = Not (f a)
