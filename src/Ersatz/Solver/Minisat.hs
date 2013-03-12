@@ -13,16 +13,19 @@ module Ersatz.Solver.Minisat
   , minisatPath
   ) where
 
+import Blaze.ByteString.Builder
 import Control.Applicative
 import Control.Exception (IOException, handle)
 import Control.Monad
 import Control.Monad.IO.Class
+import qualified Data.ByteString as BS
 import Data.IntMap (IntMap)
 import Ersatz.Internal.Parser
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as IntMap
+import System.IO
 import System.Process (readProcessWithExitCode)
 
 minisat :: MonadIO m => Solver SAT m
@@ -32,9 +35,10 @@ cryptominisat :: MonadIO m => Solver SAT m
 cryptominisat = minisatPath "cryptominisat"
 
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
-minisatPath path qbf = liftIO $
+minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
-    writeFile problemPath (qdimacs qbf)
+    withFile problemPath WriteMode $ \fh ->
+      toByteStringIO (BS.hPut fh) (dimacs problem)
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath, solutionPath] []

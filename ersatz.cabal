@@ -100,6 +100,9 @@ library
   build-depends:
     array >= 0.2 && < 0.5,
     base >= 4 && < 6,
+    blaze-builder == 0.3.*,
+    blaze-textual == 0.2.*,
+    bytestring == 0.10.*,
     containers >= 0.2.0.1,
     data-default >= 0.5 && < 0.6,
     ghc-prim,
