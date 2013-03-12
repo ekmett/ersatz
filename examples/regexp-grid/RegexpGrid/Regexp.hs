@@ -29,7 +29,7 @@ regexp = go <$> (items `sepBy` char '|')
   where
     go []   = Nil
     go [re] = re
-    go res  = Choice (res) Nil
+    go res  = Choice res Nil
 
 items :: Parsec String REState Regexp
 items = go <$> many (nonModifier >>= modifier)
