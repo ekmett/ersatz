@@ -68,7 +68,9 @@ makeLensesWith ?? ''SAT $ classyRules & lensClass.mapped ?~ ("HasSAT","sat")
 
 instance Show SAT where
   showsPrec p bf = showParen (p > 10)
-                 $ showString "SAT " . showsPrec 11 (bf^.lastAtom) . showsPrec 11 (bf^.formula) . showString " mempty"
+                 $ showString "SAT " . showsPrec 11 (bf^.lastAtom)
+                 . showChar ' ' . showsPrec 11 (bf^.formula)
+                 . showString " mempty"
 
 
 instance Default SAT where
