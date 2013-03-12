@@ -14,12 +14,14 @@ module Ersatz.Problem
   -- * SAT
     SAT(SAT)
   , HasSAT(..)
+  , runSAT, runSAT', dimacsSAT
   , literalExists
   , assertFormula
   , generateLiteral
   -- * QSAT
   , QSAT(QSAT)
   , HasQSAT(..)
+  , runQSAT, runQSAT', qdimacsQSAT
   , literalForall
   -- * DIMACS pretty printing
   , DIMACS(..)
@@ -34,8 +36,10 @@ import Blaze.Text
 import Control.Applicative
 import Control.Lens
 import Control.Monad
-import Control.Monad.State.Class
+import Control.Monad.Identity
+import Control.Monad.State
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as Lazy
 import Data.Default
 import Data.Foldable (foldMap)
 import Data.HashMap.Lazy (HashMap)
@@ -75,6 +79,21 @@ instance Show SAT where
 
 instance Default SAT where
   def = SAT 0 (Formula Set.empty) HashMap.empty
+
+-- | Run a 'SAT'-generating state computation. Useful e.g. in ghci for
+-- disambiguating the type of a 'MonadState', 'HasSAT' value.
+runSAT :: StateT SAT m a -> m (a, SAT)
+runSAT s = runStateT s def
+
+-- | Run a 'SAT'-generating state computation in the 'Identity' monad. Useful
+-- e.g. in ghci for disambiguating the type of a 'MonadState', 'HasSAT' value.
+runSAT' :: StateT SAT Identity a -> (a, SAT)
+runSAT' = runIdentity . runSAT
+
+-- | Run a 'SAT'-generating state computation and return the respective
+-- 'DIMACS' output. Useful for testing and debugging.
+dimacsSAT :: StateT SAT Identity a -> Lazy.ByteString
+dimacsSAT = toLazyByteString . dimacs . snd . runSAT'
 
 literalExists :: (MonadState s m, HasSAT s) => m Literal
 literalExists = liftM Literal $ lastAtom <+= 1
@@ -120,6 +139,21 @@ instance HasQSAT QSAT where
 
 instance Default QSAT where
   def = QSAT IntSet.empty def
+
+-- | Run a 'QSAT'-generating state computation. Useful e.g. in ghci for
+-- disambiguating the type of a 'MonadState', 'HasQSAT' value.
+runQSAT :: StateT QSAT m a -> m (a, QSAT)
+runQSAT s = runStateT s def
+
+-- | Run a 'QSAT'-generating state computation in the 'Identity' monad. Useful
+-- e.g. in ghci for disambiguating the type of a 'MonadState', 'HasQSAT' value.
+runQSAT' :: StateT QSAT Identity a -> (a, QSAT)
+runQSAT' = runIdentity . runQSAT
+
+-- | Run a 'QSAT'-generating state computation and return the respective
+-- 'QDIMACS' output. Useful for testing and debugging.
+qdimacsQSAT :: StateT QSAT Identity a -> Lazy.ByteString
+qdimacsQSAT = toLazyByteString . qdimacs . snd . runQSAT'
 
 literalForall :: (MonadState s m, HasQSAT s) => m Literal
 literalForall = do
