@@ -19,4 +19,4 @@ executable regexp-grid
                , lens == 3.8.*
                , mtl == 2.1.*
                , parsec == 3.1.*
-  ghc-options: -Wall -O2
+  ghc-options: -Wall
