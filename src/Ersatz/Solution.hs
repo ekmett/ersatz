@@ -1,4 +1,6 @@
-{-# LANGUAGE Rank2Types, ImpredicativeTypes, DeriveDataTypeable #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ImpredicativeTypes #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013

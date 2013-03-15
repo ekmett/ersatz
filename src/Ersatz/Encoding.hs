@@ -1,4 +1,5 @@
-{-# LANGUAGE TypeFamilies, Rank2Types #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE TypeFamilies #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013

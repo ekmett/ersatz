@@ -1,4 +1,12 @@
-{-# LANGUAGE TypeFamilies, TypeOperators, FlexibleInstances, DeriveDataTypeable, DeriveGeneric, DefaultSignatures, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |

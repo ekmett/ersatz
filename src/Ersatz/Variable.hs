@@ -1,4 +1,7 @@
-{-# LANGUAGE DefaultSignatures, TypeOperators, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE UndecidableInstances #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
