@@ -12,7 +12,7 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Lens
-import Data.Foldable (asum, toList)
+import Data.Foldable (asum)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Monoid
@@ -183,8 +183,7 @@ reBit (Backreference n next) = do
   -- Advance an equivalent number of fields.
   fields <- traverse (const nextField) refFields
   -- Assert that the field sequences match each other.
-  let this = ReBitResult fields
-                       $ and (toList (Seq.zipWith (===) refFields fields))
+  let this = ReBitResult fields $ and (Seq.zipWith (===) refFields fields)
   mappend this <$> reBit next
 
 -- Advance a field and build a Bit based on it.
