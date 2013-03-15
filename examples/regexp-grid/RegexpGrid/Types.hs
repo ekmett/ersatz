@@ -39,11 +39,12 @@ instance Equatable Field
 
 instance Decoding Field where
   type Decoded Field = Char
-  decode s (Field f) = chr . (+ a) . fromIntegral <$> decode s f
+  decode s (Field f) = chr . (+ origin) . fromIntegral <$> decode s f
 
 instance Encoding Field where
   type Encoded Field = Char
-  encode = Field . encode . fromIntegral . subtract a . ord
+  encode = Field . encode . fromIntegral . subtract origin . ord
 
-a :: Int
-a = ord 'A'
+-- Encode 0 as the character preceding A.
+origin :: Int
+origin = ord 'A' - 1
