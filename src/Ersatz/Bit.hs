@@ -48,7 +48,7 @@ import System.IO.Unsafe
 
 infixr 3 &&, &&#
 infixr 2 ||, ||#
-infixr 0 ==>, ==>#
+infixr 0 ==>
 
 -- Bit
 
@@ -82,7 +82,6 @@ instance Boolean Bit where
   a           || Bit (Or bs) = Bit (Or (a <| bs))
   a           || b           = Bit (Or (a <| b <| Seq.empty))
 
-  x ==> y = not x || y
   not (Bit (Not c)) = c
   not (Bit (Var l)) = Bit (Var (negateLiteral l))
   not c        = Bit (Not c)
@@ -176,7 +175,6 @@ class GBoolean f where
   gbool :: Bool -> f a
   (&&#) :: f a -> f a -> f a
   (||#) :: f a -> f a -> f a
-  (==>#) :: f a -> f a -> f a
   gnot :: f a -> f a
   gall :: Foldable t => (a -> f b) -> t a -> f b
   gany :: Foldable t => (a -> f b) -> t a -> f b
@@ -186,7 +184,6 @@ instance GBoolean U1 where
   gbool _    = U1
   U1 &&# U1  = U1
   U1 ||# U1  = U1
-  U1 ==># U1 = U1
   gnot U1    = U1
   gall _ _   = U1
   gany _ _   = U1
@@ -196,7 +193,6 @@ instance (GBoolean f, GBoolean g) => GBoolean (f :*: g) where
   gbool x = gbool x :*: gbool x
   (a :*: b) &&#  (c :*: d) = (a &&# c)  :*: (b &&# d)
   (a :*: b) ||#  (c :*: d) = (a ||# c)  :*: (b ||# d)
-  (a :*: b) ==># (c :*: d) = (a ==># c) :*: (b ==># d)
   gnot (a :*: b) = gnot a :*: gnot b
   gall p xs = gall id ls :*: gall id rs
     where (ls, rs) = gunzip . map p . toList $ xs
@@ -208,7 +204,6 @@ instance Boolean a => GBoolean (K1 i a) where
   gbool = K1 . bool
   K1 a &&# K1 b = K1 (a && b)
   K1 a ||# K1 b = K1 (a || b)
-  K1 a ==># K1 b = K1 (a ==> b)
   gnot (K1 a) = K1 (not a)
   gall p as = K1 (all (unK1 . p) as)
   gany p as = K1 (any (unK1 . p) as)
@@ -218,7 +213,6 @@ instance GBoolean a => GBoolean (M1 i c a) where
   gbool = M1 . gbool
   M1 a &&# M1 b = M1 (a &&# b)
   M1 a ||# M1 b = M1 (a ||# b)
-  M1 a ==># M1 b = M1 (a ==># b)
   gnot (M1 a) = M1 (gnot a)
   gall p as = M1 (gall (unM1 . p) as)
   gany p as = M1 (gany (unM1 . p) as)
@@ -249,6 +243,7 @@ class Boolean b where
 
   -- | Logical implication.
   (==>) :: b -> b -> b
+  x ==> y = not x || y
 
   -- | Logical negation
   not :: b -> b
@@ -299,9 +294,6 @@ class Boolean b where
   default (||) :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   x || y = to (from x ||# from y)
 
-  default (==>) :: (Generic b, GBoolean (Rep b)) => b -> b -> b
-  x ==> y = to (from x ==># from y)
-
   default not :: (Generic b, GBoolean (Rep b)) => b -> b
   not = to . gnot . from
 
@@ -322,7 +314,6 @@ instance Boolean Bool where
 
   (&&) = (Prelude.&&)
   (||) = (Prelude.||)
-  x ==> y = not x || y
 
   not = Prelude.not
 
