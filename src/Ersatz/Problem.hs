@@ -293,9 +293,16 @@ instance DIMACS SAT where
 instance QDIMACS QSAT where
   qdimacsComments _ = []
   qdimacsNumVariables q = q^.lastAtom
-  qdimacsQuantified q =
-    quants [1..q^.lastAtom] (IntSet.toAscList (q^.universals))
     where
+  -- "Unbound atoms are to be considered as being existentially quantified in
+  -- the first (i.e., the outermost) quantified set." per QDIMACS standard.
+  -- Skip the implicit first existentials.
+  qdimacsQuantified q
+    | IntSet.null (q^.universals) = []
+    | otherwise = quants [head qUniversals..q^.lastAtom] qUniversals
+    where
+      qUniversals = IntSet.toAscList (q^.universals)
+
       quants :: [Int] -> [Int] -> [Quant]
       quants []     _  = []
       quants (i:is) [] = Exists i : quants is []
