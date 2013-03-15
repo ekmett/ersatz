@@ -22,7 +22,6 @@ module Ersatz.Bit
   ( Bit(..)
   , assert
   , Boolean(..)
-  , all, any
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or,all,any)
@@ -30,8 +29,8 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad.State
-import Data.Foldable (toList)
-import Data.List (foldl')
+import Data.Foldable (Foldable, toList)
+import qualified Data.Foldable as Foldable
 import Data.Sequence ((<|), (|>), (><))
 import qualified Data.Sequence as Seq
 import Data.Typeable
@@ -94,8 +93,11 @@ instance Boolean Bit where
   Bit (Var (Literal 1))    `xor` b = not b
   a `xor` b    = Bit (Xor a b)
 
-  and = foldl' (&&) true
-  or  = foldl' (||) false
+  and = Foldable.foldl' (&&) true
+  or  = Foldable.foldl' (||) false
+
+  all p = Foldable.foldl' (\res b -> res && p b) true
+  any p = Foldable.foldl' (\res b -> res || p b) false
 
   choose f _ (Bit (Var (Literal (-1)))) = f
   choose _ t (Bit (Var (Literal 1)))    = t
@@ -176,8 +178,8 @@ class GBoolean f where
   (||#) :: f a -> f a -> f a
   (==>#) :: f a -> f a -> f a
   gnot :: f a -> f a
-  gand :: [f a] -> f a
-  gor  :: [f a] -> f a
+  gall :: Foldable t => (a -> f b) -> t a -> f b
+  gany :: Foldable t => (a -> f b) -> t a -> f b
   gxor :: f a -> f a -> f a
 
 instance GBoolean U1 where
@@ -186,8 +188,8 @@ instance GBoolean U1 where
   U1 ||# U1  = U1
   U1 ==># U1 = U1
   gnot U1    = U1
-  gand _     = U1
-  gor  _     = U1
+  gall _ _   = U1
+  gany _ _   = U1
   gxor _ _   = U1
 
 instance (GBoolean f, GBoolean g) => GBoolean (f :*: g) where
@@ -196,8 +198,10 @@ instance (GBoolean f, GBoolean g) => GBoolean (f :*: g) where
   (a :*: b) ||#  (c :*: d) = (a ||# c)  :*: (b ||# d)
   (a :*: b) ==># (c :*: d) = (a ==># c) :*: (b ==># d)
   gnot (a :*: b) = gnot a :*: gnot b
-  gand xs = gand (map (\(x :*: _) -> x) xs) :*: gand (map (\(_ :*: x) -> x) xs)
-  gor xs = gor (map (\(x :*: _) -> x) xs) :*: gor (map (\(_ :*: x) -> x) xs)
+  gall p xs = gall id ls :*: gall id rs
+    where (ls, rs) = gunzip . map p . toList $ xs
+  gany p xs = gany id ls :*: gany id rs
+    where (ls, rs) = gunzip . map p . toList $ xs
   gxor (a :*: b) (c :*: d) = gxor a c :*: gxor b d
 
 instance Boolean a => GBoolean (K1 i a) where
@@ -206,8 +210,8 @@ instance Boolean a => GBoolean (K1 i a) where
   K1 a ||# K1 b = K1 (a || b)
   K1 a ==># K1 b = K1 (a ==> b)
   gnot (K1 a) = K1 (not a)
-  gand as = K1 (all (\(K1 a) -> a) as)
-  gor as = K1 (any (\(K1 a) -> a) as)
+  gall p as = K1 (all (unK1 . p) as)
+  gany p as = K1 (any (unK1 . p) as)
   gxor (K1 a) (K1 b) = K1 (xor a b)
 
 instance GBoolean a => GBoolean (M1 i c a) where
@@ -216,8 +220,8 @@ instance GBoolean a => GBoolean (M1 i c a) where
   M1 a ||# M1 b = M1 (a ||# b)
   M1 a ==># M1 b = M1 (a ==># b)
   gnot (M1 a) = M1 (gnot a)
-  gand as = M1 (gand (map (\(M1 a) -> a) as))
-  gor as = M1 (gor (map (\(M1 a) -> a) as))
+  gall p as = M1 (gall (unM1 . p) as)
+  gany p as = M1 (gany (unM1 . p) as)
   gxor (M1 a) (M1 b) = M1 (gxor a b)
 
 -- | The normal 'Bool' operators in Haskell are not overloaded. This
@@ -225,81 +229,89 @@ instance GBoolean a => GBoolean (M1 i c a) where
 --
 -- Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'
-class Boolean t where
+class Boolean b where
   -- | Lift a 'Bool'
-  bool :: Bool -> t
+  bool :: Bool -> b
   -- |
   -- @'true' = 'bool' 'True'@
-  true :: t
+  true :: b
   true = bool True
   -- |
   -- @'false' = 'bool' 'False'@
-  false :: t
+  false :: b
   false = bool False
 
   -- | Logical conjunction.
-  (&&) :: t -> t -> t
+  (&&) :: b -> b -> b
 
   -- | Logical disjunction (inclusive or).
-  (||) :: t -> t -> t
+  (||) :: b -> b -> b
 
   -- | Logical implication.
-  (==>) :: t -> t -> t
+  (==>) :: b -> b -> b
 
   -- | Logical negation
-  not :: t -> t
+  not :: b -> b
 
   -- | The logical conjunction of several values.
-  and :: [t] -> t
+  and :: Foldable t => t b -> b
+  and = Ersatz.Bit.all id  -- qualified for HLint
 
   -- | The logical disjunction of several values.
-  or :: [t] -> t
+  or :: Foldable t => t b -> b
+  or = Ersatz.Bit.any id  -- qualified for HLint
 
   -- | The negated logical conjunction of several values.
   --
   -- @'nand' = 'not' . 'and'@
-  nand :: [t] -> t
+  nand :: Foldable t => t b -> b
   nand = not . and
 
   -- | The negated logical disjunction of several values.
   --
   -- @'nor' = 'not' . 'or'@
-  nor :: [t] -> t
+  nor :: Foldable t => t b -> b
   nor = not . or
 
+  -- | The logical conjunction of the mapping of a function over several values.
+  all :: (Foldable t, Boolean b) => (a -> b) -> t a -> b
+
+  -- | The logical disjunction of the mapping of a function over several values.
+  any :: (Foldable t, Boolean b) => (a -> b) -> t a -> b
+
   -- | Exclusive-or
-  xor :: t -> t -> t
+  xor :: b -> b -> b
 
   -- | Choose between two alternatives based on a selector bit.
-  choose :: t  -- ^ False branch
-         -> t  -- ^ True branch
-         -> t  -- ^ Predicate/selector branch
-         -> t
+  choose :: b  -- ^ False branch
+         -> b  -- ^ True branch
+         -> b  -- ^ Predicate/selector branch
+         -> b
   choose f t s = (f && not s) || (t && s)
 
 #ifndef HLINT
-  default bool :: (Generic t, GBoolean (Rep t)) => Bool -> t
+  default bool :: (Generic b, GBoolean (Rep b)) => Bool -> b
   bool = to . gbool
 
-  default (&&) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  default (&&) :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   x && y = to (from x &&# from y)
 
-  default (||) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  default (||) :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   x || y = to (from x ||# from y)
 
-  default (==>) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  default (==>) :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   x ==> y = to (from x ==># from y)
 
-  default not :: (Generic t, GBoolean (Rep t)) => t -> t
+  default not :: (Generic b, GBoolean (Rep b)) => b -> b
   not = to . gnot . from
 
-  default and :: (Generic t, GBoolean (Rep t)) => [t] -> t
-  and = to . gand . map from
+  default all :: (Foldable t, Generic b, GBoolean (Rep b)) => (a -> b) -> t a -> b
+  all p = to . gall (from . p)
 
-  default or :: (Generic t, GBoolean (Rep t)) => [t] -> t
-  or = to . gor . map from
+  default any :: (Foldable t, Generic b, GBoolean (Rep b)) => (a -> b) -> t a -> b
+  any p = to . gany (from . p)
 
-  default xor :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  default xor :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   xor x y = to (from x `gxor` from y)
 #endif
 
@@ -314,8 +326,11 @@ instance Boolean Bool where
 
   not = Prelude.not
 
-  and = Prelude.and
-  or = Prelude.or
+  and = Foldable.and
+  or  = Foldable.or
+
+  all = Foldable.all
+  any = Foldable.any
 
   False `xor` False = False
   False `xor` True  = True
@@ -325,10 +340,6 @@ instance Boolean Bool where
   choose f _ False = f
   choose _ t True  = t
 
-all :: Boolean b => (a -> b) -> [a] -> b
-all p = and . map p
-{-# INLINE all #-}
-
-any :: Boolean b => (a -> b) -> [a] -> b
-any p = or . map p
-{-# INLINE any #-}
+gunzip :: [(f :*: g) a] -> ([f a], [g a])
+gunzip = foldr go ([],[])
+  where go (a :*: b) ~(as, bs) = (a:as, b:bs)
