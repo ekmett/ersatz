@@ -234,8 +234,6 @@ qdimacs t = comments <> problem <> quantified <> clauses
                     , integral (qdimacsNumVariables t)
                     , integral (Set.size tClauses)
                     ]
-    -- TODO: "The innermost quantified set is always of type 'e'" per QDIMACS
-    -- standard
     quantified = foldMap go tQuantGroups
       where go ls = bLine0 (q (head ls) : map (integral . getQuant) ls)
             q Exists{} = fromChar 'e'
@@ -292,15 +290,21 @@ instance DIMACS SAT where
 
 instance QDIMACS QSAT where
   qdimacsComments _ = []
-  qdimacsNumVariables q = q^.lastAtom
+  qdimacsNumVariables q = q^.lastAtom + padding
     where
+      -- "The innermost quantified set is always of type 'e'" per QDIMACS
+      -- standard. Add an existential atom if the last one is universal.
+      padding
+        | Just (i, _) <- IntSet.maxView (q^.universals), i == q^.lastAtom = 1
+        | otherwise = 0
   -- "Unbound atoms are to be considered as being existentially quantified in
   -- the first (i.e., the outermost) quantified set." per QDIMACS standard.
   -- Skip the implicit first existentials.
   qdimacsQuantified q
     | IntSet.null (q^.universals) = []
-    | otherwise = quants [head qUniversals..q^.lastAtom] qUniversals
+    | otherwise = quants [head qUniversals..lastAtom'] qUniversals
     where
+      lastAtom'   = qdimacsNumVariables q
       qUniversals = IntSet.toAscList (q^.universals)
 
       quants :: [Int] -> [Int] -> [Quant]
