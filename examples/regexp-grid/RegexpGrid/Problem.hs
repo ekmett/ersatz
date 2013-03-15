@@ -12,9 +12,12 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Lens
-import Data.Foldable (asum)
+import Data.Foldable (asum, toList)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Monoid
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
 import Ersatz
 
 import RegexpGrid.Regexp
@@ -22,12 +25,29 @@ import RegexpGrid.Types
 
 type ReBit = StateT ReBitState []
 
-data ReBitState = ReBitState { _rbsFields    :: [Field]
-                             , _rbsLastGroup :: Integer
-                             , _rbsGroups    :: Map Integer [Field]
-                             }
+-- | The state threaded through 'reBit'.
+data ReBitState = ReBitState
+  { _rbsFields    :: Seq Field  -- ^ The fields against whom to apply the regexp.
+  , _rbsLastGroup :: Integer    -- ^ The latest captured group.
+  , _rbsGroups    :: Map Integer (Seq Field)  -- ^ The groups captured so far.
+  }
   deriving Show
 makeLenses ''ReBitState
+
+-- | The result value of 'reBit'.
+data ReBitResult = ReBitResult
+  { _rbrCurrentGroup :: Seq Field  -- ^ The fields in the current group. Used by backreferences.
+  , _rbrResultBit    :: Bit        -- ^ The accumulated result 'Bit'.
+  }
+  deriving Show
+makeLenses ''ReBitResult
+
+instance Monoid ReBitResult where
+  mempty = ReBitResult mempty true
+  {-# INLINE mempty #-}
+  ReBitResult fieldsA bitA `mappend` ReBitResult fieldsB bitB =
+    ReBitResult (fieldsA <> fieldsB) (bitA && bitB)
+  {-# INLINE mappend #-}
 
 problem :: (Applicative m, MonadState s m, HasSAT s) => m (Map Pos Field)
 problem = do
@@ -84,72 +104,99 @@ r :: (MonadState s m, HasSAT s)
   => [Pos] -> String -> ReaderT (Map Pos Field) m ()
 r poss regexpStr = do
   fieldMap <- ask
-  let fields = map (fieldMap Map.!) poss
+  let fields = (fieldMap Map.!) <$> Seq.fromList poss
 
   regexp <- either (fail . show) return
           $ parseRegexp "RegexpGrid.Problem" regexpStr
 
   lift . assert $ runReBit regexp fields
 
-runReBit :: Regexp -> [Field] -> Bit
+runReBit :: Regexp -> Seq Field -> Bit
 runReBit regexp fields = or (evalStateT go (ReBitState fields 0 Map.empty))
   where
-    go = snd <$> reBit regexp <* do { [] <- use rbsFields; return () }
+    go = view rbrResultBit <$> reBit regexp <* endOfFields
+    -- Make sure all the fields have been consumed.
+    endOfFields = guard . Seq.null =<< use rbsFields
 
-reBit :: Regexp -> ReBit ([Field], Bit)
-reBit Nil = pure ([], true)
+reBit :: Regexp -> ReBit ReBitResult
 
-reBit (AnyCharacter next) = do
-  f <- nextField
-  reBit next <&> \(gfs, resb) -> (f:gfs, resb)
+-- The end of the regexp. Nothing to do.
+reBit Nil = pure mempty
 
-reBit (Character c next) = do
-  f <- nextField
-  let b = f === encode c
-  reBit next <&> \(gfs, resb) -> (f:gfs, b && resb)
+-- Any character. Advance a field, assert just true.
+reBit (AnyCharacter next) =
+  mappend <$> withNextField (const true)
+          <*> reBit next
 
-reBit (Accept cs next) = do
-  f <- nextField
-  let b = any (\c -> f === encode c) cs
-  reBit next <&> \(gfs, resb) -> (f:gfs, b && resb)
+-- The character c. Advance a field and assert that it matches c.
+reBit (Character c next) =
+  mappend <$> withNextField (\f -> f === encode c)
+          <*> reBit next
 
-reBit (Reject cs next) = do
-  f <- nextField
-  let b = all (\c -> f /== encode c) cs
-  reBit next <&> \(gfs, resb) -> (f:gfs, b && resb)
+-- The character group cs. Advance a field and assert that it matches any one
+-- of cs.
+reBit (Accept cs next) =
+  mappend <$> withNextField (\f -> any (\c -> f === encode c) cs)
+          <*> reBit next
 
-reBit (Choice res next) = do
-  (gfs0, b) <- asum (map reBit res)
-  reBit next <&> \(gfs1, resb) -> (gfs0 ++ gfs1, b && resb)
+-- The character group ^cs. Advance a field and assert that it does not match
+-- any of cs.
+reBit (Reject cs next) =
+  mappend <$> withNextField (\f -> all (\c -> f /== encode c) cs)
+          <*> reBit next
 
+-- A choice of regexps. The 'Alternative' sum of all of them.
+reBit (Choice res next) =
+  mappend <$> asum (map reBit res)
+          <*> reBit next
+
+-- Capture a group.
 reBit (Group re' next) = do
-  (gfs0, b) <- reBit re'
+  groupResult <- reBit re'
 
+  -- Allocate a new group ID and add the group to the group map.
   gid <- rbsLastGroup <+= 1
-  rbsGroups . at gid ?= gfs0
+  rbsGroups . at gid ?= (groupResult ^. rbrCurrentGroup)
 
-  reBit next <&> \(gfs1, resb) -> (gfs0 ++ gfs1, b && resb)
+  mappend groupResult <$> reBit next
 
+-- Repetition {_,0}: Just skip to the next part of the regexp.
 reBit (Repeat _ (Just 0) _ next) =
   reBit next
+
+-- Repetition {0,_}: Branch to the alternatives:
+-- • skip to the next part (zero instances)
+-- • at least one instance ({1,_}).
 reBit (Repeat 0 mj re' next) =
   reBit next <|> reBit (Repeat 1 mj re' next)
-reBit (Repeat i mj re' next) = do
-  (gfs0, b) <- reBit re'
-  reBit (Repeat (i-1) (subtract 1 <$> mj) re' next)
-    <&> \(gfs1, resb) -> (gfs0 ++ gfs1, b && resb)
 
+-- Repetition {i,j} where i > 0 and j > 0: At least one instance followed by
+-- {i−1,j−1}.
+reBit (Repeat i mj re' next) =
+  mappend <$> reBit re'
+          <*> reBit (Repeat (i-1) (subtract 1 <$> mj) re' next)
+
+-- Backreference.
 reBit (Backreference n next) = do
-  Just rfs <- use (rbsGroups . at n)
-  fs <- mapM (const nextField) rfs
-  let b = and (zipWith (===) rfs fs)
-  reBit next <&> \(gfs, resb) -> (fs ++ gfs, b && resb)
+  -- The fields of the group referred to.
+  Just refFields <- use (rbsGroups . at n)
+  -- Advance an equivalent number of fields.
+  fields <- traverse (const nextField) refFields
+  -- Assert that the field sequences match each other.
+  let this = ReBitResult fields
+                       $ and (toList (Seq.zipWith (===) refFields fields))
+  mappend this <$> reBit next
 
+-- Advance a field and build a Bit based on it.
+withNextField :: (Field -> Bit) -> ReBit ReBitResult
+withNextField func = do
+  f <- nextField
+  return $ ReBitResult (Seq.singleton f) (func f)
+
+-- Advance a field.
 nextField :: ReBit Field
 nextField = do
-  (f:fs) <- use rbsFields
+  -- Pop the first field from the state. Fails if there are none left.
+  Just (f, fs) <- preuse (rbsFields . _Cons)
   rbsFields .= fs
   return f
-
-{-# ANN module "HLint: ignore Use ***" #-}
-{-# ANN module "HLint: ignore Use first" #-}
