@@ -21,7 +21,7 @@ module Ersatz.Equatable
   ( Equatable(..)
   ) where
 
-import Prelude hiding ((&&),(||),not,and,or)
+import Prelude hiding ((&&),(||),not,and,or,all,any)
 import qualified Prelude
 
 import Ersatz.Bit

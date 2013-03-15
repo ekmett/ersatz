@@ -21,9 +21,10 @@ module Ersatz.Bit
   ( Bit(..)
   , assert
   , Boolean(..)
+  , all, any
   ) where
 
-import Prelude hiding ((&&),(||),not,and,or)
+import Prelude hiding ((&&),(||),not,and,or,all,any)
 import qualified Prelude
 
 import Control.Applicative
@@ -204,8 +205,8 @@ instance Boolean a => GBoolean (K1 i a) where
   K1 a ||# K1 b = K1 (a || b)
   K1 a ==># K1 b = K1 (a ==> b)
   gnot (K1 a) = K1 (not a)
-  gand as = K1 (and (map (\(K1 a) -> a) as))
-  gor as = K1 (or (map (\(K1 a) -> a) as))
+  gand as = K1 (all (\(K1 a) -> a) as)
+  gor as = K1 (any (\(K1 a) -> a) as)
   gxor (K1 a) (K1 b) = K1 (xor a b)
 
 instance GBoolean a => GBoolean (M1 i c a) where
@@ -312,3 +313,11 @@ instance Boolean Bool where
 
   choose f _ False = f
   choose _ t True  = t
+
+all :: Boolean b => (a -> b) -> [a] -> b
+all p = and . map p
+{-# INLINE all #-}
+
+any :: Boolean b => (a -> b) -> [a] -> b
+any p = or . map p
+{-# INLINE any #-}

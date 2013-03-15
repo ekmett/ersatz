@@ -5,7 +5,7 @@
 
 module RegexpGrid.Problem (problem) where
 
-import Prelude hiding ((&&), (||), not, and, or)
+import Prelude hiding ((&&), (||), not, and, or, all, any)
 import qualified Prelude as P
 
 import Control.Applicative
@@ -110,12 +110,12 @@ reBit (Character c next) = do
 
 reBit (Accept cs next) = do
   f <- nextField
-  let b = or (map (\c -> f === encode c) cs)
+  let b = any (\c -> f === encode c) cs
   reBit next <&> \(gfs, resb) -> (f:gfs, b && resb)
 
 reBit (Reject cs next) = do
   f <- nextField
-  let b = and (map (\c -> f /== encode c) cs)
+  let b = all (\c -> f /== encode c) cs
   reBit next <&> \(gfs, resb) -> (f:gfs, b && resb)
 
 reBit (Choice res next) = do
