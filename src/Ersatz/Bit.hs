@@ -323,10 +323,7 @@ instance Boolean Bool where
   all = Foldable.all
   any = Foldable.any
 
-  False `xor` False = False
-  False `xor` True  = True
-  True `xor` False  = True
-  True `xor` True   = False
+  xor = (/=)
 
   choose f _ False = f
   choose _ t True  = t
