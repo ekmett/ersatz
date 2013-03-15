@@ -28,3 +28,5 @@ import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver
 import Ersatz.Variable
+
+{-# ANN module "HLint: ignore Use import/export shortcut" #-}

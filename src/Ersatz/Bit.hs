@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
@@ -227,8 +228,6 @@ instance GBoolean a => GBoolean (M1 i c a) where
 class Boolean t where
   -- | Lift a 'Bool'
   bool :: Bool -> t
-  default bool :: (Generic t, GBoolean (Rep t)) => Bool -> t
-  bool = to . gbool
   -- |
   -- @'true' = 'bool' 'True'@
   true :: t
@@ -240,33 +239,21 @@ class Boolean t where
 
   -- | Logical conjunction.
   (&&) :: t -> t -> t
-  default (&&) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
-  x && y = to (from x &&# from y)
 
   -- | Logical disjunction (inclusive or).
   (||) :: t -> t -> t
-  default (||) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
-  x || y = to (from x ||# from y)
 
   -- | Logical implication.
   (==>) :: t -> t -> t
-  default (==>) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
-  x ==> y = to (from x ==># from y)
 
   -- | Logical negation
   not :: t -> t
-  default not :: (Generic t, GBoolean (Rep t)) => t -> t
-  not = to . gnot . from
 
   -- | The logical conjunction of several values.
   and :: [t] -> t
-  default and :: (Generic t, GBoolean (Rep t)) => [t] -> t
-  and = to . gand . map from
 
   -- | The logical disjunction of several values.
   or :: [t] -> t
-  default or :: (Generic t, GBoolean (Rep t)) => [t] -> t
-  or = to . gor . map from
 
   -- | The negated logical conjunction of several values.
   --
@@ -282,8 +269,6 @@ class Boolean t where
 
   -- | Exclusive-or
   xor :: t -> t -> t
-  default xor :: (Generic t, GBoolean (Rep t)) => t -> t -> t
-  xor x y = to (from x `gxor` from y)
 
   -- | Choose between two alternatives based on a selector bit.
   choose :: t  -- ^ False branch
@@ -291,6 +276,32 @@ class Boolean t where
          -> t  -- ^ Predicate/selector branch
          -> t
   choose f t s = (f && not s) || (t && s)
+
+#ifndef HLINT
+  default bool :: (Generic t, GBoolean (Rep t)) => Bool -> t
+  bool = to . gbool
+
+  default (&&) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x && y = to (from x &&# from y)
+
+  default (||) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x || y = to (from x ||# from y)
+
+  default (==>) :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  x ==> y = to (from x ==># from y)
+
+  default not :: (Generic t, GBoolean (Rep t)) => t -> t
+  not = to . gnot . from
+
+  default and :: (Generic t, GBoolean (Rep t)) => [t] -> t
+  and = to . gand . map from
+
+  default or :: (Generic t, GBoolean (Rep t)) => [t] -> t
+  or = to . gor . map from
+
+  default xor :: (Generic t, GBoolean (Rep t)) => t -> t -> t
+  xor x y = to (from x `gxor` from y)
+#endif
 
 instance Boolean Bool where
   bool = id

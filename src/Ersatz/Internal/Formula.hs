@@ -1,13 +1,10 @@
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-# OPTIONS_HADDOCK not-home #-}

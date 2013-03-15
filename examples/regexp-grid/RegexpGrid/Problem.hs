@@ -150,3 +150,6 @@ nextField = do
   (f:fs) <- use rbsFields
   rbsFields .= fs
   return f
+
+{-# ANN module "HLint: ignore Use ***" #-}
+{-# ANN module "HLint: ignore Use first" #-}

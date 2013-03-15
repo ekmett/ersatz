@@ -75,3 +75,5 @@ modifier re  =  Repeat 0 (Just 1) re' <$ char '?'
   where
     re' :: Regexp
     re' = re Nil
+
+{-# ANN module "HLint: ignore Use String" #-}

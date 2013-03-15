@@ -137,7 +137,7 @@ instance Encoding Bit8 where
   encode i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
 
 boolsToNum1 :: Bool -> Word8
-boolsToNum1 a = boolToNum a
+boolsToNum1 = boolToNum
 
 boolsToNum2 :: Bool -> Bool -> Word8
 boolsToNum2 a b = boolsToNum [a,b]

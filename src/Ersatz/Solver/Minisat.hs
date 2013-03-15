@@ -48,17 +48,16 @@ minisatPath path problem = liftIO $
     return (resultOf exit, sol)
 
 parseSolutionFile :: FilePath -> IO (IntMap Bool)
-parseSolutionFile path = handle handler $ do
-  parseSolution <$> readFile path
+parseSolutionFile path = handle handler (parseSolution <$> readFile path)
   where
     handler :: IOException -> IO (IntMap Bool)
     handler _ = return IntMap.empty
 
-parseSolution :: String -> (IntMap Bool)
+parseSolution :: String -> IntMap Bool
 parseSolution input =
   case runParser solution input of
-    (s:_) -> s
-    _     -> IntMap.empty
+    s:_ -> s
+    _   -> IntMap.empty
 
 solution :: Parser Char (IntMap Bool)
 solution = do

@@ -31,7 +31,7 @@ class Decoding a where
 
 instance Decoding Literal where
   type Decoded Literal = Bool
-  decode s l = solutionLiteral s l
+  decode = solutionLiteral
 
 instance Decoding () where
   type Decoded () = ()

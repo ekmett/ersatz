@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -45,12 +46,15 @@ instance GVariable f => GVariable (M1 i c f) where
 -- for any type that is an instance of 'Generic'.
 class Variable t where
   exists :: (MonadState s m, HasSAT s) => m t
+  forall :: (MonadState s m, HasQSAT s) => m t
+
+#ifndef HLINT
   default exists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
   exists = liftM to gexists
 
-  forall :: (MonadState s m, HasQSAT s) => m t
   default forall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
   forall = liftM to gforall
+#endif
 
 instance Variable Literal where
   exists = literalExists
