@@ -1,3 +1,7 @@
+0.2.0.1
+-------
+* Fixed an overly conservative bound on `containers`.
+
 0.2
 ---
 * Converted to `Control.Lens` internally.
