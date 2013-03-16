@@ -1,5 +1,6 @@
 0.2
 ---
+* Converted to `Control.Lens` internally.
 * Added `Ersatz.Solver.DepQBF`
 * Added a bunch of example dimacs files
 * The types now prevent one from applying a solver that does not support QSAT
