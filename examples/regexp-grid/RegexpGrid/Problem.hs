@@ -6,7 +6,6 @@
 module RegexpGrid.Problem (problem) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
-import qualified Prelude as P
 
 import Control.Applicative
 import Control.Monad.Reader
