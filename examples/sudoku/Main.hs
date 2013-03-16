@@ -57,8 +57,8 @@ renderLine sol y = unwords . renderGroups "│" "│" "│"
             | otherwise        = " "
 
 renderGroups :: a -> a -> a -> [a] -> [a]
-renderGroups begin middle end =
-  ([begin]++) . (++[end]) . intercalate [middle] . group3
+renderGroups begin middle end values =
+  [begin] ++ intercalate [middle] (group3 values) ++ [end]
   where
     group3 []            = []
     group3 (a0:a1:a2:as) = [a0,a1,a2] : group3 as
