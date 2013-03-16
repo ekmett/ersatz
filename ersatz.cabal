@@ -28,7 +28,9 @@ extra-source-files:
   AUTHORS.md
   README.md
   CHANGELOG.md
-  notes/papers.md
+  .ghci
+  .gitignore
+  .travis.yml
   examples/regexp-grid/COPYING
   examples/regexp-grid/Main.hs
   examples/regexp-grid/regexp-grid.cabal
@@ -36,6 +38,9 @@ extra-source-files:
   examples/regexp-grid/RegexpGrid/Regexp.hs
   examples/regexp-grid/RegexpGrid/Types.hs
   examples/regexp-grid/Setup.hs
+  notes/papers.md
+  travis/cabal-apt-install
+  travis/config
 
 data-files:
   data/dimacs/bf/bf0432-007.cnf
