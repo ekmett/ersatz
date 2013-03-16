@@ -10,12 +10,11 @@ import qualified Prelude as P
 
 import Control.Applicative
 import Control.Monad.Reader
-import Control.Monad.State
+import Control.Monad.RWS.Strict
 import Control.Lens
 import Data.Foldable (asum)
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Monoid
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import Ersatz
@@ -23,7 +22,7 @@ import Ersatz
 import RegexpGrid.Regexp
 import RegexpGrid.Types
 
-type ReBit = StateT ReBitState []
+type ReBit = RWST () ReBitResult ReBitState []
 
 -- | The state threaded through 'reBit'.
 data ReBitState = ReBitState
@@ -32,7 +31,6 @@ data ReBitState = ReBitState
   , _rbsGroups    :: Map Integer (Seq Field)  -- ^ The groups captured so far.
   }
   deriving Show
-makeLenses ''ReBitState
 
 -- | The result value of 'reBit'.
 data ReBitResult = ReBitResult
@@ -40,6 +38,8 @@ data ReBitResult = ReBitResult
   , _rbrResultBit    :: Bit        -- ^ The accumulated result 'Bit'.
   }
   deriving Show
+
+makeLenses ''ReBitState
 makeLenses ''ReBitResult
 
 instance Monoid ReBitResult where
@@ -112,53 +112,56 @@ r poss regexpStr = do
   lift . assert $ runReBit regexp fields
 
 runReBit :: Regexp -> Seq Field -> Bit
-runReBit regexp fields = or (evalStateT go (ReBitState fields 0 Map.empty))
+runReBit regexp fields =
+  or (evalRWST go () initState ^.. folded . _2 . rbrResultBit)
   where
-    go = view rbrResultBit <$> reBit regexp <* endOfFields
+    initState = ReBitState fields 0 Map.empty
+
+    go = reBit regexp <* endOfFields
     -- Make sure all the fields have been consumed.
     endOfFields = guard . Seq.null =<< use rbsFields
 
-reBit :: Regexp -> ReBit ReBitResult
+reBit :: Regexp -> ReBit ()
 
 -- The end of the regexp. Nothing to do.
-reBit Nil = pure mempty
+reBit Nil = return ()
 
 -- Any character. Advance a field, assert just true.
-reBit (AnyCharacter next) =
-  mappend <$> withNextField (const true)
-          <*> reBit next
+reBit (AnyCharacter next) = do
+  withNextField $ const true
+  reBit next
 
 -- The character c. Advance a field and assert that it matches c.
-reBit (Character c next) =
-  mappend <$> withNextField (\f -> f === encode c)
-          <*> reBit next
+reBit (Character c next) = do
+  withNextField $ \f -> f === encode c
+  reBit next
 
 -- The character group cs. Advance a field and assert that it matches any one
 -- of cs.
-reBit (Accept cs next) =
-  mappend <$> withNextField (\f -> any (\c -> f === encode c) cs)
-          <*> reBit next
+reBit (Accept cs next) = do
+  withNextField $ \f -> any (\c -> f === encode c) cs
+  reBit next
 
 -- The character group ^cs. Advance a field and assert that it does not match
 -- any of cs.
-reBit (Reject cs next) =
-  mappend <$> withNextField (\f -> all (\c -> f /== encode c) cs)
-          <*> reBit next
+reBit (Reject cs next) = do
+  withNextField $ \f -> all (\c -> f /== encode c) cs
+  reBit next
 
 -- A choice of regexps. The 'Alternative' sum of all of them.
-reBit (Choice res next) =
-  mappend <$> asum (map reBit res)
-          <*> reBit next
+reBit (Choice res next) = do
+  asum (map reBit res)
+  reBit next
 
 -- Capture a group.
 reBit (Group re' next) = do
-  groupResult <- reBit re'
+  ((), groupResult) <- listen (reBit re')
 
   -- Allocate a new group ID and add the group to the group map.
   gid <- rbsLastGroup <+= 1
   rbsGroups . at gid ?= (groupResult ^. rbrCurrentGroup)
 
-  mappend groupResult <$> reBit next
+  reBit next
 
 -- Repetition {_,0}: Just skip to the next part of the regexp.
 reBit (Repeat _ (Just 0) _ next) =
@@ -172,9 +175,9 @@ reBit (Repeat 0 mj re' next) =
 
 -- Repetition {i,j} where i > 0 and j > 0: At least one instance followed by
 -- {i−1,j−1}.
-reBit (Repeat i mj re' next) =
-  mappend <$> reBit re'
-          <*> reBit (Repeat (i-1) (subtract 1 <$> mj) re' next)
+reBit (Repeat i mj re' next) = do
+  reBit re'
+  reBit (Repeat (i-1) (subtract 1 <$> mj) re' next)
 
 -- Backreference.
 reBit (Backreference n next) = do
@@ -183,14 +186,14 @@ reBit (Backreference n next) = do
   -- Advance an equivalent number of fields.
   fields <- traverse (const nextField) refFields
   -- Assert that the field sequences match each other.
-  let this = ReBitResult fields $ and (Seq.zipWith (===) refFields fields)
-  mappend this <$> reBit next
+  tell $ ReBitResult fields (and (Seq.zipWith (===) refFields fields))
+  reBit next
 
 -- Advance a field and build a Bit based on it.
-withNextField :: (Field -> Bit) -> ReBit ReBitResult
+withNextField :: (Field -> Bit) -> ReBit ()
 withNextField func = do
   f <- nextField
-  return $ ReBitResult (Seq.singleton f) (func f)
+  tell $ ReBitResult (Seq.singleton f) (func f)
 
 -- Advance a field.
 nextField :: ReBit Field
