@@ -38,6 +38,12 @@ extra-source-files:
   examples/regexp-grid/RegexpGrid/Regexp.hs
   examples/regexp-grid/RegexpGrid/Types.hs
   examples/regexp-grid/Setup.hs
+  examples/sudoku/COPYING
+  examples/sudoku/Main.hs
+  examples/sudoku/Setup.hs
+  examples/sudoku/sudoku.cabal
+  examples/sudoku/Sudoku/Cell.hs
+  examples/sudoku/Sudoku/Problem.hs
   notes/papers.md
   travis/cabal-apt-install
   travis/config

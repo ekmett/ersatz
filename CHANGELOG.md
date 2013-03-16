@@ -1,3 +1,7 @@
+???
+---
+* Added `examples/sudoku`, a sudoku solver.
+
 0.2.0.1
 -------
 * Fixed an overly conservative bound on `containers`.
