@@ -29,6 +29,13 @@ extra-source-files:
   README.md
   CHANGELOG.md
   notes/papers.md
+  examples/regexp-grid/COPYING
+  examples/regexp-grid/Main.hs
+  examples/regexp-grid/regexp-grid.cabal
+  examples/regexp-grid/RegexpGrid/Problem.hs
+  examples/regexp-grid/RegexpGrid/Regexp.hs
+  examples/regexp-grid/RegexpGrid/Types.hs
+  examples/regexp-grid/Setup.hs
 
 data-files:
   data/dimacs/bf/bf0432-007.cnf
