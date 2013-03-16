@@ -1,5 +1,5 @@
-???
----
+0.2.1
+-----
 * Added `examples/sudoku`, a sudoku solver.
 
 0.2.0.1
