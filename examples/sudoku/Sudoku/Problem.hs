@@ -31,9 +31,8 @@ problem initValues = do
 
   -- Assert all initial values.
   forM_ (Array.assocs initValues) $ \(idx, val) ->
-    if 1 <= val && val <= 9
-      then assert $ (cellArray ! idx) === encode val
-      else return ()
+    when (1 <= val && val <= 9) $
+      assert $ (cellArray ! idx) === encode val
 
   return cellArray
 
