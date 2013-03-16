@@ -20,8 +20,7 @@ main = do
   (res, msol) <- solveWith cryptominisat (problem initValues)
   when (res /= Satisfied) (fail (show res))
   case msol of
-    Just sol -> do
-      putStr (render sol)
+    Just sol -> putStr (render sol)
     _ -> fail ("sol was " ++ show msol)
 
 initValues :: Array (Word8,Word8) Word8

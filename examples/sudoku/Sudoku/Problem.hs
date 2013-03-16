@@ -47,7 +47,7 @@ legalValues = mapM_ legalValue . Array.elems =<< asks envCellArray
   where
     legalValue cell = do
       values <- asks envValues
-      assert $ or (map (cell ===) values)
+      assert $ any (cell ===) values
 
 -- | Assert that each cell in a group must have a different value.
 allDifferent :: (MonadState s m, HasSAT s)
