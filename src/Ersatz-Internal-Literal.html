@@ -20,36 +20,31 @@
 <a name="line-11"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Internal</span><span class='hs-varop'>.</span><span class='hs-conid'>Literal</span>
 <a name="line-12"></a>  <span class='hs-layout'>(</span> <span class='hs-conid'>Literal</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
 <a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>negateLiteral</span>
-<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-conid'>Lit</span><span class='hs-layout'>(</span><span class='hs-keyglyph'>..</span><span class='hs-layout'>)</span>
-<a name="line-15"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>lit</span>
-<a name="line-16"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>negateLit</span>
-<a name="line-17"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-14"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>literalFalse</span><span class='hs-layout'>,</span> <span class='hs-varid'>literalTrue</span>
+<a name="line-15"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-16"></a>
+<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Typeable</span>
 <a name="line-18"></a>
-<a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Typeable</span>
-<a name="line-20"></a>
-<a name="line-21"></a><a name="Literal"></a><span class='hs-comment'>-- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.</span>
-<a name="line-22"></a><a name="Literal"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Literal</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-layout'>{</span> <span class='hs-varid'>literalId</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Int</span> <span class='hs-layout'>}</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Eq</span><span class='hs-layout'>,</span><span class='hs-conid'>Ord</span><span class='hs-layout'>,</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>)</span>
-<a name="line-23"></a>
-<a name="line-24"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Show</span> <span class='hs-conid'>Literal</span> <span class='hs-keyword'>where</span>
-<a name="line-25"></a>  <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>i</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>i</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
-<a name="line-26"></a>  <span class='hs-varid'>show</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>show</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
-<a name="line-27"></a>  <span class='hs-varid'>showList</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>showList</span> <span class='hs-varop'>.</span> <span class='hs-varid'>map</span> <span class='hs-varid'>literalId</span>
-<a name="line-28"></a>
-<a name="line-29"></a><a name="negateLiteral"></a><span class='hs-definition'>negateLiteral</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Literal</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Literal</span>
-<a name="line-30"></a><span class='hs-definition'>negateLiteral</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-varop'>.</span> <span class='hs-varid'>negate</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
-<a name="line-31"></a>
-<a name="line-32"></a><a name="Lit"></a><span class='hs-comment'>-- | Literals with partial evaluation</span>
-<a name="line-33"></a><a name="Lit"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Lit</span>
-<a name="line-34"></a>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Lit</span>  <span class='hs-comment'>{-# UNPACK #-}</span> <span class='hs-varop'>!</span><span class='hs-conid'>Literal</span>
-<a name="line-35"></a>  <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Bool</span> <span class='hs-varop'>!</span><span class='hs-conid'>Bool</span>
-<a name="line-36"></a>  <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Show</span><span class='hs-layout'>,</span> <span class='hs-conid'>Typeable</span><span class='hs-layout'>)</span>
-<a name="line-37"></a>
-<a name="line-38"></a><a name="lit"></a><span class='hs-comment'>-- | Lift a 'Bool' to a 'Lit'</span>
-<a name="line-39"></a><span class='hs-definition'>lit</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Bool</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Lit</span>
-<a name="line-40"></a><span class='hs-definition'>lit</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Bool</span>
-<a name="line-41"></a>
-<a name="line-42"></a><a name="negateLit"></a><span class='hs-definition'>negateLit</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Lit</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Lit</span>
-<a name="line-43"></a><span class='hs-definition'>negateLit</span> <span class='hs-layout'>(</span><span class='hs-conid'>Bool</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Bool</span> <span class='hs-layout'>(</span><span class='hs-varid'>not</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span>
-<a name="line-44"></a><span class='hs-definition'>negateLit</span> <span class='hs-layout'>(</span><span class='hs-conid'>Lit</span> <span class='hs-varid'>l</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Lit</span> <span class='hs-layout'>(</span><span class='hs-varid'>negateLiteral</span> <span class='hs-varid'>l</span><span class='hs-layout'>)</span>
+<a name="line-19"></a><a name="Literal"></a><span class='hs-comment'>-- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.</span>
+<a name="line-20"></a><a name="Literal"></a><span class='hs-comment'>--</span>
+<a name="line-21"></a><a name="Literal"></a><span class='hs-comment'>-- The literals @-1@ and @1@ are dedicated for the constant 'False' and the</span>
+<a name="line-22"></a><a name="Literal"></a><span class='hs-comment'>-- constant 'True' respectively.</span>
+<a name="line-23"></a><a name="Literal"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>Literal</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-layout'>{</span> <span class='hs-varid'>literalId</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Int</span> <span class='hs-layout'>}</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Eq</span><span class='hs-layout'>,</span><span class='hs-conid'>Ord</span><span class='hs-layout'>,</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>)</span>
+<a name="line-24"></a>
+<a name="line-25"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Show</span> <span class='hs-conid'>Literal</span> <span class='hs-keyword'>where</span>
+<a name="line-26"></a>  <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>i</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>showsPrec</span> <span class='hs-varid'>i</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
+<a name="line-27"></a>  <span class='hs-varid'>show</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>show</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
+<a name="line-28"></a>  <span class='hs-varid'>showList</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>showList</span> <span class='hs-varop'>.</span> <span class='hs-varid'>map</span> <span class='hs-varid'>literalId</span>
+<a name="line-29"></a>
+<a name="line-30"></a><a name="negateLiteral"></a><span class='hs-definition'>negateLiteral</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Literal</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Literal</span>
+<a name="line-31"></a><span class='hs-definition'>negateLiteral</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-varop'>.</span> <span class='hs-varid'>negate</span> <span class='hs-varop'>.</span> <span class='hs-varid'>literalId</span>
+<a name="line-32"></a>
+<a name="line-33"></a><a name="literalFalse"></a><span class='hs-comment'>-- | The 'False' constant. The literal @-1@ is dedicated for it.</span>
+<a name="line-34"></a><span class='hs-definition'>literalFalse</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Literal</span>
+<a name="line-35"></a><span class='hs-definition'>literalFalse</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-layout'>(</span><span class='hs-comment'>-</span><span class='hs-num'>1</span><span class='hs-layout'>)</span>
+<a name="line-36"></a>
+<a name="line-37"></a><a name="literalTrue"></a><span class='hs-comment'>-- | The 'True' constant. The literal @1@ is dedicated for it.</span>
+<a name="line-38"></a><span class='hs-definition'>literalTrue</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>Literal</span>
+<a name="line-39"></a><span class='hs-definition'>literalTrue</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Literal</span> <span class='hs-num'>1</span>
 </pre></body>
 </html>
