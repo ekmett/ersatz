@@ -20,7 +20,7 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
   .
   > half_adder :: Bit -> Bit -> (Bit, Bit)
   > half_adder a b = (a `xor` b, a && b)
-copyright:      (c) 2010-2013 Edward Kmett, (c) 2013 Johan Kiviniemi
+copyright:      © 2010-2013 Edward Kmett, © 2013 Johan Kiviniemi
 build-type:     Custom
 cabal-version:  >= 1.10
 tested-with:    GHC == 7.4.1, GHC == 7.6.2
