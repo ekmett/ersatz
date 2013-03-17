@@ -2,6 +2,7 @@ module Main (main) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
 
+import Control.Applicative
 import Control.Monad
 import Data.Array (Array, (!))
 import qualified Data.Array as Array
@@ -58,8 +59,6 @@ renderLine sol y = unwords . renderGroups "│" "│" "│"
 
 renderGroups :: a -> a -> a -> [a] -> [a]
 renderGroups begin middle end values =
-  [begin] ++ intercalate [middle] (group3 values) ++ [end]
+  [begin] ++ intercalate [middle] (chunks 3 values) ++ [end]
   where
-    group3 []            = []
-    group3 (a0:a1:a2:as) = [a0,a1,a2] : group3 as
-    group3 as            = [as]
+    chunks n = unfoldr $ \xs -> splitAt n xs <$ guard (not (null xs))
