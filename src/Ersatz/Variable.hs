@@ -48,7 +48,9 @@ instance GVariable f => GVariable (M1 i c f) where
 -- for any type that is an instance of 'Generic'.
 class Variable t where
   exists :: (MonadState s m, HasSAT s) => m t
+#ifndef HLINT
   forall :: (MonadState s m, HasQSAT s) => m t
+#endif
 
 #ifndef HLINT
   default exists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
@@ -60,7 +62,9 @@ class Variable t where
 
 instance Variable Literal where
   exists = literalExists
+#ifndef HLINT
   forall = literalForall
+#endif
 
 instance (Variable a, Variable b) => Variable (a,b)
 instance (Variable a, Variable b, Variable c) => Variable (a,b,c)
