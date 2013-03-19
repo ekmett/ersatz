@@ -77,21 +77,22 @@ build-type:     Custom
 cabal-version:  >= 1.10
 tested-with:    GHC == 7.4.1, GHC == 7.6.2
 extra-source-files:
-  AUTHORS.md
-  README.md
-  CHANGELOG.md
   .ghci
   .gitignore
   .travis.yml
+  AUTHORS.md
+  CHANGELOG.md
+  HLint.hs
+  README.md
   examples/regexp-grid/COPYING
-  examples/regexp-grid/regexp-grid.cabal
   examples/regexp-grid/Setup.hs
+  examples/regexp-grid/regexp-grid.cabal
   examples/sudoku/COPYING
   examples/sudoku/Setup.hs
   examples/sudoku/sudoku.cabal
+  notes/SPOILER.html
   notes/grid.pdf
   notes/papers.md
-  notes/SPOILER.html
   travis/cabal-apt-install
   travis/config
 
