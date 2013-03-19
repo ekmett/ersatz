@@ -104,7 +104,7 @@ ersatz-sudoku  1,13s user 0,04s system 99% cpu 1,179 total
 
 ## regexp-grid
 
-This solves the [regular expression crossword puzzle](http://www.coinheist.com/rubik/a_regular_crossword/grid.pdf) from the MIT mystery hunt.
+This solves the [regular crossword puzzle](https://github.com/ekmett/ersatz/raw/master/notes/grid.pdf) from the MIT mystery hunt.
 
 > % time ersatz-regexp-grid
 
