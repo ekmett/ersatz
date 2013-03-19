@@ -22,7 +22,7 @@ main = defaultMainWithHooks simpleUserHooks
      generateBuildModule (fromFlag (buildVerbosity flags)) pkg lbi
      buildHook simpleUserHooks pkg lbi hooks flags
   , postHaddock = \args flags pkg lbi -> do
-     copyFiles normal (haddockOutputDir flags pkg) [("notes","regexp-grid-spoiler.txt")]
+     copyFiles normal (haddockOutputDir flags pkg) [("notes","SPOILER.html"), ("notes","grid.pdf")]
      postHaddock simpleUserHooks args flags pkg lbi
   }
 
