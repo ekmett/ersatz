@@ -108,7 +108,7 @@ This solves the [regular expression crossword puzzle](http://www.coinheist.com/r
 
 > % time ersatz-regexp-grid
 
-[Spoiler!](notes/regexp-grid-spoiler.txt)
+[Spoiler!](notes/SPOILER.html)
 
 > ersatz-regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
 
