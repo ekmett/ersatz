@@ -38,6 +38,7 @@ extra-source-files:
   examples/sudoku/Setup.hs
   examples/sudoku/sudoku.cabal
   notes/papers.md
+  notes/regexp-grid-spoiler.txt
   travis/cabal-apt-install
   travis/config
 

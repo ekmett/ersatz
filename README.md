@@ -70,7 +70,7 @@ with `ersatz`.
 ## sudoku
 
 ```
-% time sudoku
+% time ersatz-sudoku
 Problem:
 ┌───────┬───────┬───────┐
 │ 5 3   │   7   │       │
@@ -99,30 +99,18 @@ Solution:
 │ 2 8 7 │ 4 1 9 │ 6 3 5 │
 │ 3 4 5 │ 2 8 6 │ 1 7 9 │
 └───────┴───────┴───────┘
-sudoku  1,13s user 0,04s system 99% cpu 1,179 total
+ersatz-sudoku  1,13s user 0,04s system 99% cpu 1,179 total
 ```
 
 ## regexp-grid
 
 This solves the [regular expression crossword puzzle](http://www.coinheist.com/rubik/a_regular_crossword/grid.pdf) from the MIT mystery hunt.
 
-> % time regexp-grid
+> % time ersatz-regexp-grid
 
->!       N H P E H A S
->!      D I O M O M T H
->!     F O X N X A X P H
->!    M M O M M M M R H H
->!   M C X N M M C R X E M
->!  C M C C C C M M M M M M
->! H R X R C M I I I H X L S
->!  O R E O R E O R E O R E
->!   V C X C C H H M X C C
->!    R R R R H H H R R U
->!     N C X D X E X L E
->!      R R D D M M M M
->!       G C C H H C C
+[Spoiler!](notes/regexp-grid-spoiler.txt)
 
-> regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
+> ersatz-regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
 
 Contact Information
 -------------------
