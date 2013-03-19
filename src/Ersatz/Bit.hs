@@ -7,7 +7,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
-
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -31,12 +30,11 @@ import Control.Applicative
 import Control.Monad.State
 import Data.Foldable (Foldable, toList)
 import qualified Data.Foldable as Foldable
-import Data.Sequence ((<|), (|>), (><))
+import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
 import Data.Typeable
 import Ersatz.Decoding
 import Ersatz.Encoding
-import Ersatz.Internal.Circuit
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
@@ -54,43 +52,51 @@ infixr 0 ==>
 
 -- | A 'Bit' provides a reference to a possibly indeterminate boolean
 -- value that can be determined by an external SAT solver.
-newtype Bit = Bit (Circuit Bit)
+data Bit
+  = And (Seq Bit)
+  | Or (Seq Bit)
+  | Xor Bit Bit
+  | Mux Bit Bit Bit
+  | Not Bit
+  | Var !Literal
   deriving (Show, Typeable)
 
 instance Boolean Bit where
   -- improve the stablemap this way
   bool True  = true
   bool False = false
-  true  = Bit (Var literalTrue)
-  false = Bit (Var literalFalse)
+  true  = Var literalTrue
+  false = Var literalFalse
 
-  a@(Bit (Var (Literal (-1)))) && _ = a
-  _ && b@(Bit (Var (Literal (-1)))) = b
-  a && Bit (Var (Literal 1)) = a
-  Bit (Var (Literal 1)) && b = b
-  Bit (And as) && Bit (And bs) = Bit (And (as >< bs))
-  Bit (And as) && b            = Bit (And (as |> b))
-  a            && Bit (And bs) = Bit (And (a <| bs))
-  a            && b            = Bit (And (a <| b <| Seq.empty))
+  a@(Var (Literal (-1))) && _ = a
+  _ && b@(Var (Literal (-1))) = b
+  a && Var (Literal 1) = a
+  Var (Literal 1) && b = b
+  And as && And bs = And (as >< bs)
+  And as && b      = And (as |> b)
+  a            && And bs = And (a <| bs)
+  a            && b      = And (a <| b <| Seq.empty)
 
-  a || Bit (Var (Literal (-1))) = a
-  Bit (Var (Literal (-1))) || b = b
-  a@(Bit (Var (Literal 1))) || _ = a
-  _ || b@(Bit (Var (Literal 1))) = b
-  Bit (Or as) || Bit (Or bs) = Bit (Or (as >< bs))
-  Bit (Or as) || b           = Bit (Or (as |> b))
-  a           || Bit (Or bs) = Bit (Or (a <| bs))
-  a           || b           = Bit (Or (a <| b <| Seq.empty))
+  a || Var (Literal (-1)) = a
+  Var (Literal (-1)) || b = b
 
-  not (Bit (Not c)) = c
-  not (Bit (Var l)) = Bit (Var (negateLiteral l))
-  not c        = Bit (Not c)
+  a@(Var (Literal 1)) || _ = a
+  _ || b@(Var (Literal 1)) = b
 
-  a `xor` Bit (Var (Literal (-1))) = a
-  Bit (Var (Literal (-1))) `xor` b = b
-  a `xor` Bit (Var (Literal 1))    = not a
-  Bit (Var (Literal 1))    `xor` b = not b
-  a `xor` b    = Bit (Xor a b)
+  Or as || Or bs = Or (as >< bs)
+  Or as || b     = Or (as |> b)
+  a     || Or bs = Or (a <| bs)
+  a     || b     = Or (a <| b <| Seq.empty)
+
+  not (Not c) = c
+  not (Var l) = Var (negateLiteral l)
+  not c       = Not c
+
+  a `xor` Var (Literal (-1)) = a
+  Var (Literal (-1)) `xor` b = b
+  a `xor` Var (Literal 1) = not a
+  Var (Literal 1) `xor` b = not b
+  a `xor` b    = Xor a b
 
   and = Foldable.foldl' (&&) true
   or  = Foldable.foldl' (||) false
@@ -98,24 +104,24 @@ instance Boolean Bit where
   all p = Foldable.foldl' (\res b -> res && p b) true
   any p = Foldable.foldl' (\res b -> res || p b) false
 
-  choose f _ (Bit (Var (Literal (-1)))) = f
-  choose _ t (Bit (Var (Literal 1)))    = t
-  choose f t s = Bit (Mux f t s)
+  choose f _ (Var (Literal (-1))) = f
+  choose _ t (Var (Literal 1))    = t
+  choose f t s = Mux f t s
 
 instance Variable Bit where
-  exists = liftM (Bit . Var) exists
+  exists = liftM Var exists
 #ifndef HLINT
-  forall = liftM (Bit . Var) forall
+  forall = liftM Var forall
 #endif
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Decoding Bit where
   type Decoded Bit = Bool
-  decode sol b@(Bit c) 
+  decode sol b
       = solutionStableName sol (unsafePerformIO (makeStableName' b))
      -- The StableName didn’t have an associated literal with a solution,
      -- recurse to compute the value.
-    <|> case c of
+    <|> case b of
           And cs  -> andMaybeBools . toList $ decode sol <$> cs
           Or cs   -> orMaybeBools  . toList $ decode sol <$> cs
           Xor x y -> xor <$> decode sol x <*> decode sol y
@@ -160,10 +166,10 @@ assert b = do
 
 -- | Convert a 'Bit' to a 'Literal'.
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
-runBit (Bit (Not c)) = negateLiteral `liftM` runBit c
-runBit (Bit (Var l)) = return l
-runBit b@(Bit c) = generateLiteral b $ \out ->
-  assertFormula =<< case c of
+runBit (Not c) = negateLiteral `liftM` runBit c
+runBit (Var l) = return l
+runBit b = generateLiteral b $ \out ->
+  assertFormula =<< case b of
     And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
     Or  bs    -> formulaOr  out `liftM` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)

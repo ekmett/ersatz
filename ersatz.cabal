@@ -191,7 +191,6 @@ library
     Ersatz.Decoding
     Ersatz.Equatable
     Ersatz.Encoding
-    Ersatz.Internal.Circuit
     Ersatz.Internal.Formula
     Ersatz.Internal.Literal
     Ersatz.Problem
