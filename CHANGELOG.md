@@ -1,3 +1,8 @@
+0.2.2
+-----
+* Added examples to the documentation.
+* Made the examples build as `ersatz-sudoku` and `ersatz-regexp-grid`.
+
 0.2.1
 -----
 * Added `examples/sudoku`, a sudoku solver.
