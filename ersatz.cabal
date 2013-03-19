@@ -22,7 +22,7 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
   > half_adder :: Bit -> Bit -> (Bit, Bit)
   > half_adder a b = (a `xor` b, a && b)
   .
-  * Longer Examples
+  /Longer Examples/
   .
   Included are a couple of examples included with the distribution.
   Neither are as fast as a dedicated solver for their respective
