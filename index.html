@@ -9,4 +9,44 @@ window.onload = function () {pageLoad();};
          (s2,c2) = half_adder s1 cin
 </pre><pre> half_adder :: Bit -&gt; Bit -&gt; (Bit, Bit)
  half_adder a b = (a `xor` b, a &amp;&amp; b)
+</pre><ul><li> Longer Examples
+</li></ul><p>Included are a couple of examples included with the distribution.
+Neither are as fast as a dedicated solver for their respective
+domains, but they showcase how you can solve real world problems
+involving 10s or 100s of thousands of variables and constraints
+with <code>ersatz</code>.
+</p><pre>ersatz-sudoku</pre><pre> % time ersatz-sudoku
+ Problem:
+ &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+ &#9474; 5 3   &#9474;   7   &#9474;       &#9474;
+ &#9474; 6     &#9474; 1 9 5 &#9474;       &#9474;
+ &#9474;   9 8 &#9474;       &#9474;   6   &#9474;
+ &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+ &#9474; 8     &#9474;   6   &#9474;     3 &#9474;
+ &#9474; 4     &#9474; 8   3 &#9474;     1 &#9474;
+ &#9474; 7     &#9474;   2   &#9474;     6 &#9474;
+ &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+ &#9474;   6   &#9474;       &#9474; 2 8   &#9474;
+ &#9474;       &#9474; 4 1 9 &#9474;     5 &#9474;
+ &#9474;       &#9474;   8   &#9474;   7 9 &#9474;
+ &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+ Solution:
+ &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9516;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+ &#9474; 5 3 4 &#9474; 6 7 8 &#9474; 9 1 2 &#9474;
+ &#9474; 6 7 2 &#9474; 1 9 5 &#9474; 3 4 8 &#9474;
+ &#9474; 1 9 8 &#9474; 3 4 2 &#9474; 5 6 7 &#9474;
+ &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+ &#9474; 8 5 9 &#9474; 7 6 1 &#9474; 4 2 3 &#9474;
+ &#9474; 4 2 6 &#9474; 8 5 3 &#9474; 7 9 1 &#9474;
+ &#9474; 7 1 3 &#9474; 9 2 4 &#9474; 8 5 6 &#9474;
+ &#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9532;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;
+ &#9474; 9 6 1 &#9474; 5 3 7 &#9474; 2 8 4 &#9474;
+ &#9474; 2 8 7 &#9474; 4 1 9 &#9474; 6 3 5 &#9474;
+ &#9474; 3 4 5 &#9474; 2 8 6 &#9474; 1 7 9 &#9474;
+ &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9524;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;
+ ersatz-sudoku  1,13s user 0,04s system 99% cpu 1,179 total
+</pre><pre>ersatz-regexp-grid</pre><p>This solves the &quot;regular crossword puzzle&quot; (<a href="grid.pdf">grid.pdf</a>) from the 2013 MIT mystery hunt.
+</p><pre> % time ersatz-regexp-grid
+</pre><p><a href="SPOILER.html">SPOILER</a>
+</p><pre> ersatz-regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
 </pre></div></div><div id="module-list"><p class="caption">Modules</p><ul><li><span class="module"><span id="control.n.1" class="collapser" onclick="toggleSection('n.1')">&nbsp;</span><a href="Ersatz.html">Ersatz</a></span><ul id="section.n.1" class="show"><li><span class="module"><a href="Ersatz-Bit.html">Ersatz.Bit</a></span></li><li><span class="module"><a href="Ersatz-Bits.html">Ersatz.Bits</a></span></li><li><span class="module"><a href="Ersatz-Decoding.html">Ersatz.Decoding</a></span></li><li><span class="module"><a href="Ersatz-Encoding.html">Ersatz.Encoding</a></span></li><li><span class="module"><a href="Ersatz-Equatable.html">Ersatz.Equatable</a></span></li><li><span id="control.n.1.6" class="module collapser" onclick="toggleSection('n.1.6')">Internal</span><ul id="section.n.1.6" class="show"><li><span class="module"><a href="Ersatz-Internal-Circuit.html">Ersatz.Internal.Circuit</a></span></li><li><span class="module"><a href="Ersatz-Internal-Formula.html">Ersatz.Internal.Formula</a></span></li><li><span class="module"><a href="Ersatz-Internal-Literal.html">Ersatz.Internal.Literal</a></span></li></ul></li><li><span class="module"><a href="Ersatz-Problem.html">Ersatz.Problem</a></span></li><li><span class="module"><a href="Ersatz-Solution.html">Ersatz.Solution</a></span></li><li><span class="module"><span id="control.n.1.9" class="collapser" onclick="toggleSection('n.1.9')">&nbsp;</span><a href="Ersatz-Solver.html">Ersatz.Solver</a></span><ul id="section.n.1.9" class="show"><li><span class="module"><a href="Ersatz-Solver-DepQBF.html">Ersatz.Solver.DepQBF</a></span></li><li><span class="module"><a href="Ersatz-Solver-Minisat.html">Ersatz.Solver.Minisat</a></span></li></ul></li><li><span class="module"><a href="Ersatz-Variable.html">Ersatz.Variable</a></span></li></ul></li></ul></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.10.0</p></div></body></html>
