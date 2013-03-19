@@ -4,6 +4,7 @@ license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Johan Kiviniemi
 maintainer:     Edward A. Kmett <ekmett@gmail.com>
+copyright:      © 2010-2013 Edward Kmett, © 2013 Johan Kiviniemi
 stability:      experimental
 homepage:       http://github.com/ekmett/ersatz
 bug-reports:    http://github.com/ekmett/ersatz/issues
@@ -72,7 +73,6 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
   .
   > ersatz-regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
 
-copyright:      © 2010-2013 Edward Kmett, © 2013 Johan Kiviniemi
 build-type:     Custom
 cabal-version:  >= 1.10
 tested-with:    GHC == 7.4.1, GHC == 7.6.2
