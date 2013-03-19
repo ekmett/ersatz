@@ -36,7 +36,9 @@ instance (GVariable f, GVariable g) => GVariable (f :*: g) where
 
 instance Variable a => GVariable (K1 i a) where
   gexists = liftM K1 exists
+#ifndef HLINT
   gforall = liftM K1 forall
+#endif
 
 instance GVariable f => GVariable (M1 i c f) where
   gexists = liftM M1 gexists

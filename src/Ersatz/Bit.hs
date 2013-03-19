@@ -104,7 +104,9 @@ instance Boolean Bit where
 
 instance Variable Bit where
   exists = liftM (Bit . Var) exists
+#ifndef HLINT
   forall = liftM (Bit . Var) forall
+#endif
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Decoding Bit where
