@@ -59,6 +59,71 @@ main = solveWith depqbf verify_currying >>= print
 Support is offered for decoding various Haskell datatypes from the
 solution provided by the SAT solver.
 
+# Examples
+
+Included are a couple of examples included with the distribution.
+Neither are as fast as a dedicated solver for their respective
+domains, but they showcase how you can solve real world problems
+involving 10s or 100s of thousands of variables and constraints
+with `ersatz`.
+
+## sudoku
+
+```
+% time sudoku
+Problem:
+┌───────┬───────┬───────┐
+│ 5 3   │   7   │       │
+│ 6     │ 1 9 5 │       │
+│   9 8 │       │   6   │
+├───────┼───────┼───────┤
+│ 8     │   6   │     3 │
+│ 4     │ 8   3 │     1 │
+│ 7     │   2   │     6 │
+├───────┼───────┼───────┤
+│   6   │       │ 2 8   │
+│       │ 4 1 9 │     5 │
+│       │   8   │   7 9 │
+└───────┴───────┴───────┘
+Solution:
+┌───────┬───────┬───────┐
+│ 5 3 4 │ 6 7 8 │ 9 1 2 │
+│ 6 7 2 │ 1 9 5 │ 3 4 8 │
+│ 1 9 8 │ 3 4 2 │ 5 6 7 │
+├───────┼───────┼───────┤
+│ 8 5 9 │ 7 6 1 │ 4 2 3 │
+│ 4 2 6 │ 8 5 3 │ 7 9 1 │
+│ 7 1 3 │ 9 2 4 │ 8 5 6 │
+├───────┼───────┼───────┤
+│ 9 6 1 │ 5 3 7 │ 2 8 4 │
+│ 2 8 7 │ 4 1 9 │ 6 3 5 │
+│ 3 4 5 │ 2 8 6 │ 1 7 9 │
+└───────┴───────┴───────┘
+sudoku  1,13s user 0,04s system 99% cpu 1,179 total
+```
+
+## regexp-grid
+
+This solves the [regular expression crossword puzzle](http://www.coinheist.com/rubik/a_regular_crossword/grid.pdf) from the MIT mystery hunt.
+
+> % time regexp-grid
+
+>!       N H P E H A S
+>!      D I O M O M T H
+>!     F O X N X A X P H
+>!    M M O M M M M R H H
+>!   M C X N M M C R X E M
+>!  C M C C C C M M M M M M
+>! H R X R C M I I I H X L S
+>!  O R E O R E O R E O R E
+>!   V C X C C H H M X C C
+>!    R R R R H H H R R U
+>!     N C X D X E X L E
+>!      R R D D M M M M
+>!       G C C H H C C
+
+> regexp-grid  2,45s user 0,05s system 99% cpu 2,502 total
+
 Contact Information
 -------------------
 
