@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
--- Copyright :  (c) Edward Kmett 2010-2013, Johan Kiviniemi 2013
+-- Copyright :  © Edward Kmett 2010-2013, Johan Kiviniemi 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
@@ -31,19 +31,19 @@ import GHC.Generics
 -- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
 newtype Bit1 = Bit1 Bit deriving (Show,Typeable,Generic)
 -- | A container of 2 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit2 = Bit2 Bit Bit deriving (Show,Typeable,Generic)
+data Bit2 = Bit2 !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 3 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit3 = Bit3 Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit3 = Bit3 !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 4 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit4 = Bit4 Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit4 = Bit4 !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 5 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit5 = Bit5 Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit5 = Bit5 !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 6 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit6 = Bit6 Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit6 = Bit6 !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 7 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit7 = Bit7 Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit7 = Bit7 !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 -- | A container of 8 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit8 = Bit8 Bit Bit Bit Bit Bit Bit Bit Bit deriving (Show,Typeable,Generic)
+data Bit8 = Bit8 !Bit !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
 
 instance Boolean Bit1
 instance Boolean Bit2

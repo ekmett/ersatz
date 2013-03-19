@@ -30,7 +30,7 @@ data Pos =             P00|P01|P02|P03|P04|P05|P06
 
 -- 5 bits are enough for A–Z. (The subset of the alphabet used by the regexps
 -- also requires 5 bits. For simplicity, just use the full alphabet.)
-data Field = Field Bit5
+newtype Field = Field Bit5
   deriving (Show, Typeable, Generic)
 
 instance Boolean   Field
