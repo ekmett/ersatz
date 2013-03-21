@@ -30,3 +30,10 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------
+
+The puzzle in notes/grid.pdf was also made available to us for
+distribution under the BSD3 license. This puzzle was written
+for MIT Mystery Hunt 2013 by Dan Gulotta based on an idea by
+Palmer Mebane. Copyright © 2013 Dan Gulotta
