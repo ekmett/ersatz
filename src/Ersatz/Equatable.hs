@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE Safe #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------

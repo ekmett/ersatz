@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -12,7 +13,7 @@ module Ersatz.Solver.DepQBF
   , depqbfPath
   ) where
 
-import Blaze.ByteString.Builder
+import Blaze.ByteString.Builder -- not Trustworthy
 import Control.Monad.IO.Class
 import qualified Data.ByteString as BS
 import Ersatz.Problem

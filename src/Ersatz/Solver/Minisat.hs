@@ -1,3 +1,4 @@
+{-# LANGUAGE Trustworthy #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -13,7 +14,7 @@ module Ersatz.Solver.Minisat
   , minisatPath
   ) where
 
-import Blaze.ByteString.Builder
+import Blaze.ByteString.Builder -- not Trustworthy
 import Control.Applicative
 import Control.Exception (IOException, handle)
 import Control.Monad
