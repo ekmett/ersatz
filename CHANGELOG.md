@@ -1,3 +1,7 @@
+0.2.3
+-----
+* SafeHaskell support
+
 0.2.2
 -----
 * Added examples to the documentation.
