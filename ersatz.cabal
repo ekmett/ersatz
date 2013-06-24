@@ -84,12 +84,6 @@ extra-source-files:
   CHANGELOG.md
   HLint.hs
   README.md
-  examples/regexp-grid/COPYING
-  examples/regexp-grid/Setup.hs
-  examples/regexp-grid/regexp-grid.cabal
-  examples/sudoku/COPYING
-  examples/sudoku/Setup.hs
-  examples/sudoku/sudoku.cabal
   notes/SPOILER.html
   notes/grid.pdf
   notes/papers.md
