@@ -1,3 +1,7 @@
+0.2.6
+-----
+* `temporary 1.2` support
+
 0.2.5.1
 -------
 * Slightly faster builds due to dropping the need for `template-haskell`.
