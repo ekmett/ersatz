@@ -1,3 +1,7 @@
+0.2.5
+-----
+* Support for GHC 7.8 and `lens` 4.x
+
 0.2.3
 -----
 * SafeHaskell support
