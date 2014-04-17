@@ -4,7 +4,7 @@ license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Johan Kiviniemi
 maintainer:     Edward A. Kmett <ekmett@gmail.com>
-copyright:      © 2010-2013 Edward Kmett, © 2013 Johan Kiviniemi
+copyright:      © 2010-2014 Edward Kmett, © 2013 Johan Kiviniemi
 stability:      experimental
 homepage:       http://github.com/ekmett/ersatz
 bug-reports:    http://github.com/ekmett/ersatz/issues
