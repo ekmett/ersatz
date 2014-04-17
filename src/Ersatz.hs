@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -29,4 +30,6 @@ import Ersatz.Solution
 import Ersatz.Solver
 import Ersatz.Variable
 
+#ifdef HLINT
 {-# ANN module "HLint: ignore Use import/export shortcut" #-}
+#endif
