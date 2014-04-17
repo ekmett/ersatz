@@ -1,3 +1,7 @@
+0.2.5.1
+-------
+* Slightly faster builds due to dropping the need for `template-haskell`.
+
 0.2.5
 -----
 * Support for GHC 7.8 and `lens` 4.x
