@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -14,6 +15,9 @@
 {-# LANGUAGE Trustworthy #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
+#ifndef MIN_VERSION_lens
+#define MIN_VERSION_lens(x,y,z) 1
+#endif
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2013, Johan Kiviniemi 2013
@@ -50,7 +54,9 @@ import Blaze.Text
 import Control.Applicative
 import Control.Lens
 import Control.Monad
+#if !(MIN_VERSION_lens(4,0,0))
 import Control.Monad.Identity
+#endif
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as Lazy
