@@ -24,7 +24,6 @@ module Ersatz.Equatable
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or,all,any)
-import qualified Prelude
 
 import Ersatz.Bit
 import GHC.Generics
