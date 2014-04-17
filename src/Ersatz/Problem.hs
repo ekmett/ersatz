@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -87,8 +86,20 @@ data SAT = SAT
   , _stableMap :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
   } deriving Typeable
 
-makeLensesWith ?? ''SAT $ classyRules & lensClass.mapped ?~ ("HasSAT","sat")
+class HasSAT s where
+  sat :: Lens' s SAT
 
+  lastAtom :: Lens' s Int
+  lastAtom f = sat $ \ (SAT a b c) -> fmap (\a' -> SAT a' b c) (f a)
+
+  formula :: Lens' s Formula
+  formula f = sat $ \ (SAT a b c) -> fmap (\b' -> SAT a b' c) (f b)
+
+  stableMap :: Lens' s (HashMap (StableName ()) Literal)
+  stableMap f = sat $ \ (SAT a b c) -> SAT a b <$> f c
+
+instance HasSAT SAT where
+  sat = id
 
 instance Show SAT where
   showsPrec p bf = showParen (p > 10)
