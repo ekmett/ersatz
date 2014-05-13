@@ -18,7 +18,7 @@ main = do
   putStr (render initValues)
 
   putStrLn "Solution:"
-  (res, msol) <- solveWith cryptominisat (problem initValues)
+  (res, msol) <- solveWith minisat (problem initValues)
   when (res /= Satisfied) (fail (show res))
   case msol of
     Just sol -> putStr (render sol)
