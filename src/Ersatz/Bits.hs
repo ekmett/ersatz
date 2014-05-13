@@ -13,6 +13,7 @@
 --------------------------------------------------------------------
 module Ersatz.Bits
   ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
+  , full_adder, half_adder
   ) where
 
 import Prelude hiding ((&&), (||), and, or, not)
@@ -178,3 +179,41 @@ boolToNum :: Num a => Bool -> a
 boolToNum False = 0
 boolToNum True  = 1
 {-# INLINE boolToNum #-}
+
+instance Num Bit1 where
+  Bit1 a + Bit1 b = Bit1 (xor a b)
+  Bit1 a * Bit1 b = Bit1 (a && b)
+  Bit1 a - Bit1 b = Bit1 (xor a b)
+  negate a = a
+  abs a    = a
+  signum a = a
+  fromInteger = Bit1 . bool . odd
+
+full_adder :: Bit -> Bit -> Bit -> (Bit, Bit)
+full_adder a b cin = (s2, c1 || c2)
+  where (s1,c1) = half_adder a b
+        (s2,c2) = half_adder s1 cin
+
+half_adder :: Bit -> Bit -> (Bit, Bit)
+half_adder a b = (a `xor` b, a && b)
+
+instance Num Bit2 where
+  Bit2 a2 a1 + Bit2 b2 b1 = Bit2 s2 s1 where
+    (s1,c2) = half_adder a1 b1
+    (s2,_)  = full_adder a2 b2 c2
+  Bit2 a2 a1 * Bit2 b2 b1 = Bit2 ((a1 && b2) `xor` (a2 && b1)) (a1 && b1)
+    -- wallace tree
+    --
+    --   XX
+    --  XX
+    -- ----
+    --  XXX
+    --  X
+    -- ----
+    -- XXXX
+    --
+    -- But we only need the first 2 bits
+  negate (Bit2 a b) = Bit2 (not a) (not b) + 1
+  abs a = a
+  signum (Bit2 a b) = Bit2 false (a || b)
+  fromInteger k = Bit2 (bool (k .&. 2 /= 0)) (bool (k .&. 1 /= 0))
