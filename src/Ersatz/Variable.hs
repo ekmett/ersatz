@@ -14,6 +14,7 @@
 --------------------------------------------------------------------
 module Ersatz.Variable
   ( Variable(..)
+  , GVariable(..)
   ) where
 
 import Control.Monad

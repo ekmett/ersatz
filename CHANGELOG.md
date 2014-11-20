@@ -1,3 +1,7 @@
+0.2.6.1
+-----
+* Exported `Ersatz.Variable.GVariable`
+
 0.2.6
 -----
 * `temporary 1.2` support
