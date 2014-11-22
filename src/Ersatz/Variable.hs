@@ -15,6 +15,8 @@
 module Ersatz.Variable
   ( Variable(..)
   , GVariable(..)
+  , genericExists
+  , genericForall
   ) where
 
 import Control.Monad
@@ -37,9 +39,7 @@ instance (GVariable f, GVariable g) => GVariable (f :*: g) where
 
 instance Variable a => GVariable (K1 i a) where
   gexists = liftM K1 exists
-#ifndef HLINT
   gforall = liftM K1 forall
-#endif
 
 instance GVariable f => GVariable (M1 i c f) where
   gexists = liftM M1 gexists
@@ -49,23 +49,25 @@ instance GVariable f => GVariable (M1 i c f) where
 -- for any type that is an instance of 'Generic'.
 class Variable t where
   exists :: (MonadState s m, HasSAT s) => m t
-#ifndef HLINT
   forall :: (MonadState s m, HasQSAT s) => m t
-#endif
 
 #ifndef HLINT
   default exists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
-  exists = liftM to gexists
+  exists = genericExists
 
   default forall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
-  forall = liftM to gforall
+  forall = genericForall
 #endif
+
+genericExists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
+genericExists = liftM to gexists
+
+genericForall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
+genericForall = liftM to gforall
 
 instance Variable Literal where
   exists = literalExists
-#ifndef HLINT
   forall = literalForall
-#endif
 
 instance (Variable a, Variable b) => Variable (a,b)
 instance (Variable a, Variable b, Variable c) => Variable (a,b,c)
