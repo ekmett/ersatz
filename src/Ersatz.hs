@@ -11,9 +11,8 @@
 module Ersatz
   ( module Ersatz.Bit
   , module Ersatz.Bits
-  , module Ersatz.Decoding
+  , module Ersatz.Codec
   , module Ersatz.Equatable
-  , module Ersatz.Encoding
   , module Ersatz.Problem
   , module Ersatz.Solution
   , module Ersatz.Solver
@@ -22,9 +21,8 @@ module Ersatz
 
 import Ersatz.Bit
 import Ersatz.Bits
-import Ersatz.Decoding
+import Ersatz.Codec
 import Ersatz.Equatable
-import Ersatz.Encoding
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver

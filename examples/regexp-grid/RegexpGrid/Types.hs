@@ -37,12 +37,9 @@ instance Boolean   Field
 instance Variable  Field
 instance Equatable Field
 
-instance Decoding Field where
+instance Codec Field where
   type Decoded Field = Char
   decode s (Field f) = chr . (+ origin) . fromIntegral <$> decode s f
-
-instance Encoding Field where
-  type Encoded Field = Char
   encode = Field . encode . fromIntegral . subtract origin . ord
 
 -- Encode 0 as the character preceding A.

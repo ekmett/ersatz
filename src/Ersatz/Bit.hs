@@ -34,8 +34,7 @@ import qualified Data.Foldable as Foldable
 import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
 import Data.Typeable
-import Ersatz.Decoding
-import Ersatz.Encoding
+import Ersatz.Codec
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
@@ -116,8 +115,9 @@ instance Variable Bit where
 #endif
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
-instance Decoding Bit where
+instance Codec Bit where
   type Decoded Bit = Bool
+  encode = bool
   decode sol b
       = solutionStableName sol (unsafePerformIO (makeStableName' b))
      -- The StableName didn’t have an associated literal with a solution,
@@ -153,10 +153,6 @@ instance Decoding Bit where
         where
           go Nothing  ~(ns, js) = (():ns, js)
           go (Just a) ~(ns, js) = (ns,    a:js)
-
-instance Encoding Bit where
-  type Encoded Bit = Bool
-  encode = bool
 
 -- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
 -- of the current problem.

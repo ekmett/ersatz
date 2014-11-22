@@ -23,12 +23,12 @@ import Data.Bits (Bits, (.&.), (.|.), shiftL, shiftR)
 import Data.List (foldl')
 import Data.Typeable
 import Data.Word (Word8)
-import Ersatz.Bit
-import Ersatz.Decoding
-import Ersatz.Equatable
-import Ersatz.Encoding
-import Ersatz.Variable
 import GHC.Generics
+
+import Ersatz.Bit
+import Ersatz.Codec
+import Ersatz.Equatable
+import Ersatz.Variable
 
 -- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
 newtype Bit1 = Bit1 Bit deriving (Show,Typeable,Generic)
@@ -74,69 +74,46 @@ instance Variable Bit6
 instance Variable Bit7
 instance Variable Bit8
 
-instance Decoding Bit1 where
+instance Codec Bit1 where
   type Decoded Bit1 = Word8
   decode s (Bit1 a) = boolsToNum1 <$> decode s a
-
-instance Decoding Bit2 where
-  type Decoded Bit2 = Word8
-  decode s (Bit2 a b) = boolsToNum2 <$> decode s a <*> decode s b
-
-instance Decoding Bit3 where
-  type Decoded Bit3 = Word8
-  decode s (Bit3 a b c) = boolsToNum3 <$> decode s a <*> decode s b <*> decode s c
-
-instance Decoding Bit4 where
-  type Decoded Bit4 = Word8
-  decode s (Bit4 a b c d) = boolsToNum4 <$> decode s a <*> decode s b <*> decode s c <*> decode s d
-
-instance Decoding Bit5 where
-  type Decoded Bit5 = Word8
-  decode s (Bit5 a b c d e) = boolsToNum5 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
-
-instance Decoding Bit6 where
-  type Decoded Bit6 = Word8
-  decode s (Bit6 a b c d e f) = boolsToNum6 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
-
-instance Decoding Bit7 where
-  type Decoded Bit7 = Word8
-  decode s (Bit7 a b c d e f g) = boolsToNum7 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
-
-instance Decoding Bit8 where
-  type Decoded Bit8 = Word8
-  decode s (Bit8 a b c d e f g h) = boolsToNum8 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
-
-instance Encoding Bit1 where
-  type Encoded Bit1 = Word8
   encode i = Bit1 a where (a:_) = bitsOf i
 
-instance Encoding Bit2 where
-  type Encoded Bit2 = Word8
+instance Codec Bit2 where
+  type Decoded Bit2 = Word8
+  decode s (Bit2 a b) = boolsToNum2 <$> decode s a <*> decode s b
   encode i = Bit2 a b where (b:a:_) = bitsOf i
 
-instance Encoding Bit3 where
-  type Encoded Bit3 = Word8
+instance Codec Bit3 where
+  type Decoded Bit3 = Word8
+  decode s (Bit3 a b c) = boolsToNum3 <$> decode s a <*> decode s b <*> decode s c
   encode i = Bit3 a b c where (c:b:a:_) = bitsOf i
 
-instance Encoding Bit4 where
-  type Encoded Bit4 = Word8
+instance Codec Bit4 where
+  type Decoded Bit4 = Word8
+  decode s (Bit4 a b c d) = boolsToNum4 <$> decode s a <*> decode s b <*> decode s c <*> decode s d
   encode i = Bit4 a b c d where (d:c:b:a:_) = bitsOf i
 
-instance Encoding Bit5 where
-  type Encoded Bit5 = Word8
+instance Codec Bit5 where
+  type Decoded Bit5 = Word8
+  decode s (Bit5 a b c d e) = boolsToNum5 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
   encode i = Bit5 a b c d e where (e:d:c:b:a:_) = bitsOf i
 
-instance Encoding Bit6 where
-  type Encoded Bit6 = Word8
+instance Codec Bit6 where
+  type Decoded Bit6 = Word8
+  decode s (Bit6 a b c d e f) = boolsToNum6 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
   encode i = Bit6 a b c d e f where (f:e:d:c:b:a:_) = bitsOf i
 
-instance Encoding Bit7 where
-  type Encoded Bit7 = Word8
+instance Codec Bit7 where
+  type Decoded Bit7 = Word8
+  decode s (Bit7 a b c d e f g) = boolsToNum7 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
   encode i = Bit7 a b c d e f g where (g:f:e:d:c:b:a:_) = bitsOf i
 
-instance Encoding Bit8 where
-  type Encoded Bit8 = Word8
+instance Codec Bit8 where
+  type Decoded Bit8 = Word8
+  decode s (Bit8 a b c d e f g h) = boolsToNum8 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
   encode i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
+
 
 boolsToNum1 :: Bool -> Word8
 boolsToNum1 = boolToNum

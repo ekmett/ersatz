@@ -1,5 +1,5 @@
 name:           ersatz
-version:        0.2.6.1
+version:        0.3
 license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Johan Kiviniemi
@@ -184,9 +184,8 @@ library
     Ersatz
     Ersatz.Bit
     Ersatz.Bits
-    Ersatz.Decoding
+    Ersatz.Codec
     Ersatz.Equatable
-    Ersatz.Encoding
     Ersatz.Internal.Formula
     Ersatz.Internal.Literal
     Ersatz.Problem

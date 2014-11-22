@@ -18,11 +18,8 @@ instance Boolean   Cell
 instance Variable  Cell
 instance Equatable Cell
 
-instance Decoding Cell where
+instance Codec Cell where
   type Decoded Cell = Word8
   decode s (Cell b) = decode s b
-
-instance Encoding Cell where
-  type Encoded Cell = Word8
   encode n | 1 <= n && n <= 9 = Cell (encode n)
            | otherwise = error ("Cell encode: invalid value " ++ show n)

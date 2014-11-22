@@ -1,3 +1,7 @@
+0.3
+-----
+* Unify `Encoding` and `Decoding` into `Codec`
+
 0.2.6.1
 -----
 * Exported `Ersatz.Variable.GVariable`
