@@ -166,12 +166,14 @@ instance Num Bit1 where
   signum a = a
   fromInteger = Bit1 . bool . odd
 
-full_adder :: Bit -> Bit -> Bit -> (Bit, Bit)
+-- | Compute the sum and carry bit from adding three bits.
+full_adder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
 full_adder a b cin = (s2, c1 || c2)
   where (s1,c1) = half_adder a b
         (s2,c2) = half_adder s1 cin
 
-half_adder :: Bit -> Bit -> (Bit, Bit)
+-- | Compute the sum and carry bit from adding two bits.
+half_adder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
 half_adder a b = (a `xor` b, a && b)
 
 instance Num Bit2 where
