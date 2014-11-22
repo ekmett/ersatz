@@ -14,9 +14,11 @@
 --------------------------------------------------------------------
 module Ersatz.Variable
   ( Variable(..)
+  , forall
+  , exists
+
   , GVariable(..)
-  , genericExists
-  , genericForall
+  , genericLiterally
   ) where
 
 import Control.Monad
@@ -25,53 +27,48 @@ import Ersatz.Internal.Literal
 import Ersatz.Problem
 import GHC.Generics
 
-class GVariable f where
-  gexists :: (MonadState s m, HasSAT s)  => m (f a)
-  gforall :: (MonadState s m, HasQSAT s) => m (f a)
+exists :: (Variable a, MonadState s m, HasSAT s)  => m a
+exists = literally literalExists
 
-instance GVariable U1 where
-  gexists = return U1
-  gforall = return U1
-
-instance (GVariable f, GVariable g) => GVariable (f :*: g) where
-  gexists = liftM2 (:*:) gexists gexists
-  gforall = liftM2 (:*:) gforall gforall
-
-instance Variable a => GVariable (K1 i a) where
-  gexists = liftM K1 exists
 #ifndef HLINT
-  gforall = liftM K1 forall
+forall :: (Variable a, MonadState s m, HasQSAT s)  => m a
+forall = literally literalForall
 #endif
 
+class GVariable f where
+  gliterally :: (MonadState s m, HasSAT s) => m Literal -> m (f a)
+
+instance GVariable U1 where
+  gliterally _ = return U1
+
+instance (GVariable f, GVariable g) => GVariable (f :*: g) where
+  gliterally m = liftM2 (:*:) (gliterally m) (gliterally m)
+
+instance Variable a => GVariable (K1 i a) where
+  gliterally = liftM K1 . literally
+
 instance GVariable f => GVariable (M1 i c f) where
-  gexists = liftM M1 gexists
-  gforall = liftM M1 gforall
+  gliterally = liftM M1 . gliterally
 
 -- | Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'.
 class Variable t where
-  exists :: (MonadState s m, HasSAT s) => m t
+  literally :: (HasSAT s, MonadState s m) => m Literal -> m t
+
 #ifndef HLINT
-  forall :: (MonadState s m, HasQSAT s) => m t
-
-  default exists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
-  exists = genericExists
-
-  default forall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
-  forall = genericForall
+  default literally ::
+    (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
+    m Literal -> m t
+  literally = genericLiterally
 #endif
 
-genericExists :: (MonadState s m, HasSAT s, Generic t, GVariable (Rep t)) => m t
-genericExists = liftM to gexists
-
-genericForall :: (MonadState s m, HasQSAT s, Generic t, GVariable (Rep t)) => m t
-genericForall = liftM to gforall
+genericLiterally ::
+  (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
+  m Literal -> m t
+genericLiterally = liftM to . gliterally
 
 instance Variable Literal where
-  exists = literalExists
-#ifndef HLINT
-  forall = literalForall
-#endif
+  literally = id
 
 instance (Variable a, Variable b) => Variable (a,b)
 instance (Variable a, Variable b, Variable c) => Variable (a,b,c)

@@ -1,6 +1,9 @@
 0.3
 -----
 * Unify `Encoding` and `Decoding` into `Codec`
+* Unify the `forall` and `exists` implementations into a single `literally`
+  method.
+* Add `Ersatz.BitN` for variable-sized bit arithmetic.
 
 0.2.6.1
 -----

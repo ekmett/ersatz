@@ -109,10 +109,7 @@ instance Boolean Bit where
   choose f t s = Mux f t s
 
 instance Variable Bit where
-  exists = liftM Var exists
-#ifndef HLINT
-  forall = liftM Var forall
-#endif
+  literally = liftM Var . literally
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Codec Bit where
