@@ -1,7 +1,7 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ImpredicativeTypes #-}
-{-# LANGUAGE Trustworthy #-} -- Safe if lens is Safe
+{-# LANGUAGE Safe #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013

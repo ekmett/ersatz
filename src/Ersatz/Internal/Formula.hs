@@ -5,8 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
@@ -45,11 +44,15 @@ import Ersatz.Internal.Literal
 -- | A disjunction of possibly negated atoms. Negated atoms are represented
 -- by negating the identifier.
 newtype Clause = Clause { clauseSet :: IntSet }
-  deriving (Eq, Ord, Monoid, Typeable)
+  deriving (Eq, Ord, Typeable)
 
 -- | Extract the (possibly negated) atoms referenced by a 'Clause'.
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
+
+instance Monoid Clause where
+  mempty = Clause mempty
+  mappend (Clause x) (Clause y) = Clause (mappend x y)
 
 ------------------------------------------------------------------------------
 -- Formulas
@@ -57,7 +60,11 @@ clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
 -- | A conjunction of clauses
 newtype Formula = Formula { formulaSet :: Set Clause }
-  deriving (Eq, Ord, Monoid, Typeable)
+  deriving (Eq, Ord, Typeable)
+
+instance Monoid Formula where
+  mempty = Formula mempty
+  mappend (Formula x) (Formula y) = Formula (mappend x y)
 
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id

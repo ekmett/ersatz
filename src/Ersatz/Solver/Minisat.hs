@@ -1,4 +1,4 @@
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
