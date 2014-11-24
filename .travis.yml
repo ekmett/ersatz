@@ -15,8 +15,6 @@ install:
 
 script:
   - $script
-  - packdeps ersatz.cabal
-  - packunused
   - hlint src --cpp-define HLINT
 
 notifications:
