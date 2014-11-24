@@ -157,6 +157,12 @@ flag examples
   default: True
   manual: True
 
+-- You can enable the hlint test suite with -ftest-hlint
+flag test-hlint
+  default: False
+  manual: True
+
+
 library
   ghc-options: -Wall
   hs-source-dirs: src
@@ -278,3 +284,17 @@ test-suite doctests
   if impl(ghc<7.6.1)
     ghc-options: -Werror
   hs-source-dirs: tests
+
+test-suite hlint
+  type: exitcode-stdio-1.0
+  main-is: hlint.hs
+  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: tests
+  default-language: Haskell2010
+
+  if !flag(test-hlint)
+    buildable: False
+  else
+    build-depends:
+      base,
+      hlint >= 1.7

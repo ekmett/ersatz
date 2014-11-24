@@ -81,12 +81,12 @@ addBitN c (BitN xs0) (BitN ys0) = BitN (add2 c xs0 ys0)
   add2 cin xs     []    = add1 cin xs
   add2 cin (x:xs) (y:ys)= s : add2 cout xs ys
     where
-    (s,cout)            = full_adder x y cin
+    (s,cout)            = fullAdder x y cin
 
   add1 cin []           = [cin]
   add1 cin (x:xs)       = s : add1 cout xs
     where
-    (s,cout)            = half_adder cin x
+    (s,cout)            = halfAdder cin x
 
 -- | Compute the sum of a source of 'BitN' values.
 sumBitN :: Foldable t => t BitN -> BitN

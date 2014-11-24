@@ -13,7 +13,7 @@
 --------------------------------------------------------------------
 module Ersatz.Bits
   ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
-  , full_adder, half_adder
+  , fullAdder, halfAdder
   ) where
 
 import Prelude hiding ((&&), (||), and, or, not)
@@ -177,19 +177,19 @@ instance Num Bit1 where
   fromInteger = Bit1 . bool . odd
 
 -- | Compute the sum and carry bit from adding three bits.
-full_adder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
-full_adder a b cin = (s2, c1 || c2)
-  where (s1,c1) = half_adder a b
-        (s2,c2) = half_adder s1 cin
+fullAdder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
+fullAdder a b cin = (s2, c1 || c2)
+  where (s1,c1) = halfAdder a b
+        (s2,c2) = halfAdder s1 cin
 
 -- | Compute the sum and carry bit from adding two bits.
-half_adder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
-half_adder a b = (a `xor` b, a && b)
+halfAdder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
+halfAdder a b = (a `xor` b, a && b)
 
 instance Num Bit2 where
   Bit2 a2 a1 + Bit2 b2 b1 = Bit2 s2 s1 where
-    (s1,c2) = half_adder a1 b1
-    (s2,_)  = full_adder a2 b2 c2
+    (s1,c2) = halfAdder a1 b1
+    (s2,_)  = fullAdder a2 b2 c2
   Bit2 a2 a1 * Bit2 b2 b1 = Bit2 ((a1 && b2) `xor` (a2 && b1)) (a1 && b1)
     -- wallace tree
     --

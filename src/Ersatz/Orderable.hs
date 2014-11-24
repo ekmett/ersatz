@@ -1,11 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Safe #-}
 
@@ -69,6 +67,7 @@ instance (Orderable a, Orderable b) => Orderable (Either a b)
 
 -- | Lexicographic order
 instance Orderable a => Orderable [a] where
+#ifndef HLINT
   []   <? []   = false
   x:xs <? y:ys = x === y && xs <? ys
               || x <?  y
@@ -79,6 +78,7 @@ instance Orderable a => Orderable [a] where
   x:xs <=? y:ys = x === y && xs <=? ys
                || x <?  y
   _    <=? []   = false
+#endif
 
 class GEquatable f => GOrderable f where
   (<?#) :: f a -> f a -> Bit
