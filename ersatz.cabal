@@ -187,6 +187,7 @@ library
     Ersatz.Equatable
     Ersatz.Internal.Formula
     Ersatz.Internal.Literal
+    Ersatz.Orderable
     Ersatz.Problem
     Ersatz.Solution
     Ersatz.Solver

@@ -46,6 +46,14 @@ zipWithBitN f (x:xs) (y:ys) = f x y : zipWithBitN f xs ys
 zipWithBitN f xs     []     = map (`f` false) xs
 zipWithBitN f []     ys     = map (false `f`) ys
 
+instance Orderable BitN where
+  BitN xs <?  BitN ys = orderHelper false xs ys
+  BitN xs <=? BitN ys = orderHelper true  xs ys
+
+orderHelper :: Bit -> [Bit] -> [Bit] -> Bit
+orderHelper c0 xs ys = foldl aux c0 (zipWithBitN (,) xs ys)
+    where
+    aux c (x,y) = c && x === y || x <? y
 
 instance Codec BitN where
   type Decoded BitN = Integer

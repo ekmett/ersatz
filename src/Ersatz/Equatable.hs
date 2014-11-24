@@ -21,6 +21,7 @@
 --------------------------------------------------------------------
 module Ersatz.Equatable
   ( Equatable(..)
+  , GEquatable(..)
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or,all,any)

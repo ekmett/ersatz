@@ -13,6 +13,7 @@ module Ersatz
   , module Ersatz.Bits
   , module Ersatz.Codec
   , module Ersatz.Equatable
+  , module Ersatz.Orderable
   , module Ersatz.Problem
   , module Ersatz.Solution
   , module Ersatz.Solver
@@ -23,6 +24,7 @@ import Ersatz.Bit
 import Ersatz.Bits
 import Ersatz.Codec
 import Ersatz.Equatable
+import Ersatz.Orderable
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver
