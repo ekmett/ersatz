@@ -182,6 +182,15 @@ class GBoolean f where
   gany :: Foldable t => (a -> f b) -> t a -> f b
   gxor :: f a -> f a -> f a
 
+instance GBoolean V1 where
+  gbool x    = x `seq` error "GBoolean[V1].gbool"
+  x &&# y    = x `seq` y `seq` error "GBoolean[V1].&&#"
+  x ||# y    = x `seq` y `seq` error "GBoolean[V1].||#"
+  gnot x     = x `seq` error "GBoolean[V1].gnot"
+  gall x y   = x `seq` y `seq` error "GBoolean[V1].gall"
+  gany x y   = x `seq` y `seq` error "GBoolean[V1].gany"
+  gxor x y   = x `seq` y `seq` error "GBoolean[V1].gxor"
+
 instance GBoolean U1 where
   gbool _    = U1
   U1 &&# U1  = U1

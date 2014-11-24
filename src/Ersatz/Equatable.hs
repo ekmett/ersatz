@@ -78,6 +78,9 @@ class GEquatable f where
 instance GEquatable U1 where
   U1 ===# U1 = true
 
+instance GEquatable V1 where
+  x ===# y = x `seq` y `seq` error "GEquatable[V1].===#"
+
 instance (GEquatable f, GEquatable g) => GEquatable (f :*: g) where
   (a :*: b) ===# (c :*: d) = (a ===# c) && (b ===# d)
 
