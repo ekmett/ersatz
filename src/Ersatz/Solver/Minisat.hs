@@ -14,12 +14,11 @@ module Ersatz.Solver.Minisat
   , minisatPath
   ) where
 
-import Blaze.ByteString.Builder -- not Trustworthy
+import Data.ByteString.Builder
 import Control.Applicative
 import Control.Exception (IOException, handle)
 import Control.Monad
 import Control.Monad.IO.Class
-import qualified Data.ByteString as BS
 import Data.IntMap (IntMap)
 import Ersatz.Internal.Parser
 import Ersatz.Problem
@@ -39,7 +38,7 @@ minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
     withFile problemPath WriteMode $ \fh ->
-      toByteStringIO (BS.hPut fh) (dimacs problem)
+      hPutBuilder fh (dimacs problem)
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath, solutionPath] []

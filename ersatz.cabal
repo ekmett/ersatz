@@ -165,9 +165,7 @@ library
   build-depends:
     array                >= 0.2     && < 0.6,
     base                 >= 4       && < 5,
-    blaze-builder        == 0.3.*,
-    blaze-textual        == 0.2.*,
-    bytestring           >= 0.9     && < 0.12,
+    bytestring           >= 0.10.4.0 && < 0.12,
     containers           >= 0.2.0.1 && < 0.6,
     data-default         >= 0.5     && < 0.6,
     lens                 >= 3.8     && < 5,

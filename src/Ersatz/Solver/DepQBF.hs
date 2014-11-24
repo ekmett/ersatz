@@ -13,9 +13,8 @@ module Ersatz.Solver.DepQBF
   , depqbfPath
   ) where
 
-import Blaze.ByteString.Builder -- not Trustworthy
+import Data.ByteString.Builder
 import Control.Monad.IO.Class
-import qualified Data.ByteString as BS
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
@@ -30,7 +29,7 @@ depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
 depqbfPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
     withFile problemPath WriteMode $ \fh ->
-      toByteStringIO (BS.hPut fh) (qdimacs problem)
+      hPutBuilder fh (qdimacs problem)
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath] []

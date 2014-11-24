@@ -47,9 +47,7 @@ module Ersatz.Problem
   , dimacs, qdimacs, wdimacs
   ) where
 
-import Blaze.ByteString.Builder
-import Blaze.ByteString.Builder.Char8
-import Blaze.Text
+import Data.ByteString.Builder
 import Control.Applicative
 import Control.Lens
 import Control.Monad
@@ -235,9 +233,9 @@ dimacs :: DIMACS t => t -> Builder
 dimacs t = comments <> problem <> clauses
   where
     comments = foldMap bComment (dimacsComments t)
-    problem = bLine [ copyByteString "p cnf"
-                    , integral (dimacsNumVariables t)
-                    , integral (Set.size tClauses)
+    problem = bLine [ string7 "p cnf"
+                    , intDec (dimacsNumVariables t)
+                    , intDec (Set.size tClauses)
                     ]
     clauses = foldMap bClause tClauses
 
@@ -248,14 +246,14 @@ qdimacs :: QDIMACS t => t -> Builder
 qdimacs t = comments <> problem <> quantified <> clauses
   where
     comments = foldMap bComment (qdimacsComments t)
-    problem = bLine [ copyByteString "p cnf"
-                    , integral (qdimacsNumVariables t)
-                    , integral (Set.size tClauses)
+    problem = bLine [ string7 "p cnf"
+                    , intDec (qdimacsNumVariables t)
+                    , intDec (Set.size tClauses)
                     ]
     quantified = foldMap go tQuantGroups
-      where go ls = bLine0 (q (head ls) : map (integral . getQuant) ls)
-            q Exists{} = fromChar 'e'
-            q Forall{} = fromChar 'a'
+      where go ls = bLine0 (q (head ls) : map (intDec . getQuant) ls)
+            q Exists{} = char7 'e'
+            q Forall{} = char7 'a'
     clauses = foldMap bClause tClauses
 
     tQuantGroups = List.groupBy eqQuant (qdimacsQuantified t)
@@ -271,29 +269,29 @@ wdimacs :: WDIMACS t => t -> Builder
 wdimacs t = comments <> problem <> clauses
   where
     comments = foldMap bComment (wdimacsComments t)
-    problem = bLine [ copyByteString "p wcnf"
-                    , integral (wdimacsNumVariables t)
-                    , integral (Set.size tClauses)
-                    , integral (wdimacsTopWeight t)
+    problem = bLine [ string7 "p wcnf"
+                    , intDec (wdimacsNumVariables t)
+                    , intDec (Set.size tClauses)
+                    , int64Dec (wdimacsTopWeight t)
                     ]
     clauses = foldMap (uncurry bWClause) tClauses
 
     tClauses = wdimacsClauses t
 
 bComment :: ByteString -> Builder
-bComment bs = bLine [ fromChar 'c', fromByteString bs ]
+bComment bs = bLine [ char7 'c', byteString bs ]
 
 bClause :: IntSet -> Builder
-bClause ls = bLine0 (map integral (IntSet.toList ls))
+bClause ls = bLine0 (map intDec (IntSet.toList ls))
 
 bWClause :: Int64 -> IntSet -> Builder
-bWClause w ls = bLine0 (integral w : map integral (IntSet.toList ls))
+bWClause w ls = bLine0 (int64Dec w : map intDec (IntSet.toList ls))
 
 bLine0 :: [Builder] -> Builder
-bLine0 = bLine . (++ [fromChar '0'])
+bLine0 = bLine . (++ [char7 '0'])
 
 bLine :: [Builder] -> Builder
-bLine bs = mconcat (List.intersperse (fromChar ' ') bs) <> fromChar '\n'
+bLine bs = mconcat (List.intersperse (char7 ' ') bs) <> char7 '\n'
 
 -- | An explicit prenex quantifier
 data Quant
