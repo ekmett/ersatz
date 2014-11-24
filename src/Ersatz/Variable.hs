@@ -14,7 +14,9 @@
 --------------------------------------------------------------------
 module Ersatz.Variable
   ( Variable(..)
+#ifndef HLINT
   , forall
+#endif
   , exists
 
   , GVariable(..)

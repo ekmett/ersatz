@@ -23,7 +23,7 @@ import Data.Foldable (Foldable, toList)
 import Data.List (unfoldr)
 import Data.Traversable (traverse)
 import Data.Typeable (Typeable)
-import Prelude hiding (and, or, not)
+import Prelude hiding (and, or, not, (&&), (||))
 
 import Ersatz
 
@@ -165,3 +165,38 @@ instance FromFixed Bit7 where
 
 instance FromFixed Bit8 where
   fromFixed (Bit8 x7 x6 x5 x4 x3 x2 x1 x0) = BitN [x0,x1,x2,x3,x4,x5,x6,x7]
+
+
+mulBitN :: BitN -> BitN -> BitN
+mulBitN (BitN xs) (BitN ys0) = sumBitN
+                             $ zipWith aux xs (iterate times2 ys0)
+  where
+  times2 = (false:)
+  aux x ys = BitN (map (x &&) ys)
+
+instance Num BitN where
+  (+) = addBitN false
+  (*) = mulBitN
+  (-) = subBitN
+  fromInteger = encode
+  signum (BitN xs) = BitN [or xs]
+  abs x = x
+
+
+fullSubtract :: Bit -> Bit -> Bit -> (Bit,Bit)
+fullSubtract c x y =
+  (x `xor` y `xor` c, x && y && c || not x && y || not x && c)
+
+subBitN :: BitN -> BitN -> BitN
+subBitN (BitN xs0) (BitN ys0) = BitN (map (not cN &&) ss)
+  where
+  (cN, ss) = aux false xs0 ys0
+
+  aux c [] [] = (c, [])
+
+  aux c (x:xs) (y:ys) = fmap (z :) (aux cout xs ys)
+    where
+    (z,cout) = fullSubtract c x y
+
+  aux c [] ys = aux c [false] ys
+  aux c xs [] = aux c xs      [false]
