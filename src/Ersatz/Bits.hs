@@ -28,6 +28,7 @@ import GHC.Generics
 import Ersatz.Bit
 import Ersatz.Codec
 import Ersatz.Equatable
+import Ersatz.Orderable
 import Ersatz.Variable
 
 -- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
@@ -64,6 +65,15 @@ instance Equatable Bit5
 instance Equatable Bit6
 instance Equatable Bit7
 instance Equatable Bit8
+
+instance Orderable Bit1
+instance Orderable Bit2
+instance Orderable Bit3
+instance Orderable Bit4
+instance Orderable Bit5
+instance Orderable Bit6
+instance Orderable Bit7
+instance Orderable Bit8
 
 instance Variable Bit1
 instance Variable Bit2
