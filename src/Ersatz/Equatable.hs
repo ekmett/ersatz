@@ -27,6 +27,10 @@ import Prelude hiding ((&&),(||),not,and,or,all,any)
 
 import Ersatz.Bit
 import GHC.Generics
+import Data.IntMap (IntMap)
+import Data.Map (Map)
+import qualified Data.Map as Map
+import qualified Data.IntMap as IntMap
 
 infix  4 ===, /==
 
@@ -47,6 +51,16 @@ class Equatable t where
 instance Equatable Bit where
   a === b = not (xor a b)
   (/==) = xor
+
+instance (Eq k, Equatable v) => Equatable (Map k v) where
+  x === y
+    | Map.keys x == Map.keys y = Map.elems x === Map.elems y
+    | otherwise                = false
+
+instance Equatable v => Equatable (IntMap v) where
+  x === y
+    | IntMap.keys x == IntMap.keys y = IntMap.elems x === IntMap.elems y
+    | otherwise                      = false
 
 instance (Equatable a, Equatable b) => Equatable (a,b)
 instance (Equatable a, Equatable b, Equatable c) => Equatable (a,b,c)
