@@ -1,9 +1,18 @@
 0.3
 -----
-* Unify `Encoding` and `Decoding` into `Codec`
-* Unify the `forall` and `exists` implementations into a single `literally`
-  method.
-* Add `Ersatz.BitN` for variable-sized bit arithmetic.
+* Unified `Encoding` and `Decoding` into `Codec`
+* Unified the `forall` and `exists` implementations into a single `literally`
+  method in `Variable` class.
+* Added `Ersatz.BitN` for variable-sized bit arithmetic.
+* Added `Orderable` type class and instances
+* Renamed `Ersatz.Bits.half_adder` to `halfAdder`
+* Renamed `Ersatz.Bits.full_adder` to `fullAdder`
+* Added new examples
+* Dropped `blaze` package dependency in favor of newer `bytestring`
+* Significantly shrank the number of "Trustworthy" modules
+* Added various generic `V1` instances
+* Added `Equatable` instances for `Map` and `IntMap`
+* Added `Ersatz.BitChar` module for computing with `Char` and `String`
 
 0.2.6.1
 -----

@@ -1,0 +1,56 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeFamilies #-}
+--------------------------------------------------------------------
+-- |
+-- Copyright :  © Eric Mertens 2010-2014
+-- License   :  BSD3
+-- Maintainer:  Edward Kmett <ekmett@gmail.com>
+-- Stability :  experimental
+-- Portability: non-portable
+--
+--------------------------------------------------------------------
+module Ersatz.BitChar where
+
+import Data.Char (chr,ord)
+import Control.Monad (liftM, replicateM)
+import Prelude hiding ((&&))
+import Data.Typeable (Typeable)
+
+import Ersatz.Bit
+import Ersatz.BitN
+import Ersatz.Codec
+import Ersatz.Equatable
+import Ersatz.Orderable
+import Ersatz.Variable
+
+-- | List of 'BitChar' intended to be used as the representation for 'String'.
+type BitString = [BitChar]
+
+-- | Encoding of the full range of 'Char' values.
+newtype BitChar = BitChar BitN
+  deriving (Show,Typeable)
+
+instance Codec BitChar where
+  type Decoded BitChar = Char
+  encode                = BitChar . fromIntegral . ord
+  decode s (BitChar xs) = liftM (chr . fromIntegral) (decode s xs)
+
+instance Equatable BitChar where
+  BitChar xs === BitChar ys = xs === ys
+  BitChar xs /== BitChar ys = xs /== ys
+
+instance Orderable BitChar where
+  BitChar xs <?  BitChar ys = xs <?  ys
+  BitChar xs <=? BitChar ys = xs <=? ys
+
+instance Variable BitChar where
+  literally m =
+       -- Char upperbound is 0x10ffff, so only set
+       -- the high bit when the next 4 bits are 0
+
+    do x:xs <- replicateM 21 (literally m)
+
+       let x' = x && nor (take 4 xs)
+           n  = BitN (reverse (x':xs)) -- BitN is little endian
+
+       return (BitChar n)
