@@ -18,12 +18,16 @@ import Control.Monad.IO.Class
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap as I
 import System.IO
 import System.Process (readProcessWithExitCode)
 
 depqbf :: MonadIO m => Solver QSAT m
 depqbf = depqbfPath "depqbf"
+
+parseLiteral :: String -> (Int, Bool)
+parseLiteral ('-':xs) = (read xs, False)
+parseLiteral xs = (read xs, True)
 
 depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
 depqbfPath path problem = liftIO $
@@ -31,7 +35,14 @@ depqbfPath path problem = liftIO $
     withFile problemPath WriteMode $ \fh ->
       hPutBuilder fh (qdimacs problem)
 
-    (exit, _out, _err) <-
-      readProcessWithExitCode path [problemPath] []
+    (exit, out, _err) <-
+      readProcessWithExitCode path [problemPath, "--qdo"] []
 
-    return (resultOf exit, IntMap.empty)
+    let result = resultOf exit
+
+    return $ (,) result $
+      case result of
+        Satisfied ->
+          I.fromList $ map (parseLiteral . head . tail . words) $ tail $ lines out
+        _ ->
+          I.empty
