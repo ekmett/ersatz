@@ -1,3 +1,7 @@
+0.3.0.1
+-------
+* Wider version bounds for `transformers` and `mtl`.
+
 0.3
 -----
 * Unified `Encoding` and `Decoding` into `Codec`
