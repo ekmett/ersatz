@@ -18,7 +18,7 @@ half_adder :: Bit -> Bit -> (Bit, Bit)
 half_adder a b = (a `xor` b, a && b)
 ```
 
-as opposed to the following code in [satchmo](http://dfa.imn.htwk-leipzig.de/satchmo/):
+as opposed to the following code in [satchmo](https://hackage.haskell.org/package/satchmo/):
 
 
 ```haskell
