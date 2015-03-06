@@ -73,6 +73,12 @@
 <a name="line-64"></a>  <span class='hs-varid'>minBound</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Unsolved</span>
 <a name="line-65"></a>  <span class='hs-varid'>maxBound</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Satisfied</span>
 <a name="line-66"></a>
-<a name="line-67"></a><a name="Solver"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Solver</span> <span class='hs-varid'>s</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>s</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-conid'>Result</span><span class='hs-layout'>,</span> <span class='hs-conid'>IntMap</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span>
+<a name="line-67"></a><a name="Solver"></a><span class='hs-comment'>-- | A @'Solver' s m@ is responsible for invoking a solver and</span>
+<a name="line-68"></a><a name="Solver"></a><span class='hs-comment'>-- returning a 'Result' and a map of determined results.</span>
+<a name="line-69"></a><a name="Solver"></a><span class='hs-comment'>--</span>
+<a name="line-70"></a><a name="Solver"></a><span class='hs-comment'>-- * @s@ is typically 'SAT' or 'QSAT'</span>
+<a name="line-71"></a><a name="Solver"></a><span class='hs-comment'>--</span>
+<a name="line-72"></a><a name="Solver"></a><span class='hs-comment'>-- * @m@ is typically 'IO'</span>
+<a name="line-73"></a><a name="Solver"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>Solver</span> <span class='hs-varid'>s</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>s</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>m</span> <span class='hs-layout'>(</span><span class='hs-conid'>Result</span><span class='hs-layout'>,</span> <span class='hs-conid'>IntMap</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span>
 </pre></body>
 </html>
