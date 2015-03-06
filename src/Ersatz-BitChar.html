@@ -26,7 +26,7 @@
 <a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>Typeable</span> <span class='hs-layout'>(</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>)</span>
 <a name="line-18"></a>
 <a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Bit</span>
-<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>BitN</span>
+<a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Bits</span>
 <a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Codec</span>
 <a name="line-22"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Equatable</span>
 <a name="line-23"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Orderable</span>
@@ -36,7 +36,7 @@
 <a name="line-27"></a><a name="BitString"></a><span class='hs-keyword'>type</span> <span class='hs-conid'>BitString</span> <span class='hs-keyglyph'>=</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>BitChar</span><span class='hs-keyglyph'>]</span>
 <a name="line-28"></a>
 <a name="line-29"></a><a name="BitChar"></a><span class='hs-comment'>-- | Encoding of the full range of 'Char' values.</span>
-<a name="line-30"></a><a name="BitChar"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>BitChar</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BitChar</span> <span class='hs-conid'>BitN</span>
+<a name="line-30"></a><a name="BitChar"></a><span class='hs-keyword'>newtype</span> <span class='hs-conid'>BitChar</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BitChar</span> <span class='hs-conid'>Bits</span>
 <a name="line-31"></a>  <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Show</span><span class='hs-layout'>,</span><span class='hs-conid'>Typeable</span><span class='hs-layout'>)</span>
 <a name="line-32"></a>
 <a name="line-33"></a><a name="instance%20Codec%20BitChar"></a><span class='hs-keyword'>instance</span> <span class='hs-conid'>Codec</span> <span class='hs-conid'>BitChar</span> <span class='hs-keyword'>where</span>
@@ -60,7 +60,7 @@
 <a name="line-51"></a>    <span class='hs-keyword'>do</span> <span class='hs-varid'>x</span><span class='hs-conop'>:</span><span class='hs-varid'>xs</span> <span class='hs-keyglyph'>&lt;-</span> <span class='hs-varid'>replicateM</span> <span class='hs-num'>21</span> <span class='hs-layout'>(</span><span class='hs-varid'>literally</span> <span class='hs-varid'>m</span><span class='hs-layout'>)</span>
 <a name="line-52"></a>
 <a name="line-53"></a>       <span class='hs-keyword'>let</span> <span class='hs-varid'>x'</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>x</span> <span class='hs-varop'>&amp;&amp;</span> <span class='hs-varid'>nor</span> <span class='hs-layout'>(</span><span class='hs-varid'>take</span> <span class='hs-num'>4</span> <span class='hs-varid'>xs</span><span class='hs-layout'>)</span>
-<a name="line-54"></a>           <span class='hs-varid'>n</span>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>BitN</span> <span class='hs-layout'>(</span><span class='hs-varid'>reverse</span> <span class='hs-layout'>(</span><span class='hs-varid'>x'</span><span class='hs-conop'>:</span><span class='hs-varid'>xs</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-comment'>-- BitN is little endian</span>
+<a name="line-54"></a>           <span class='hs-varid'>n</span>  <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Bits</span> <span class='hs-layout'>(</span><span class='hs-varid'>reverse</span> <span class='hs-layout'>(</span><span class='hs-varid'>x'</span><span class='hs-conop'>:</span><span class='hs-varid'>xs</span><span class='hs-layout'>)</span><span class='hs-layout'>)</span> <span class='hs-comment'>-- Bits is little endian</span>
 <a name="line-55"></a>
 <a name="line-56"></a>       <span class='hs-varid'>return</span> <span class='hs-layout'>(</span><span class='hs-conid'>BitChar</span> <span class='hs-varid'>n</span><span class='hs-layout'>)</span>
 </pre></body>
