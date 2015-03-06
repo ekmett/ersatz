@@ -7,42 +7,53 @@
 <link type='text/css' rel='stylesheet' href='hscolour.css' />
 </head>
 <body>
-<pre><a name="line-1"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
-<a name="line-2"></a><span class='hs-comment'>-- |</span>
-<a name="line-3"></a><span class='hs-comment'>-- Copyright :  © Edward Kmett 2010-2013, Johan Kiviniemi 2013</span>
-<a name="line-4"></a><span class='hs-comment'>-- License   :  BSD3</span>
-<a name="line-5"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
-<a name="line-6"></a><span class='hs-comment'>-- Stability :  experimental</span>
-<a name="line-7"></a><span class='hs-comment'>-- Portability: non-portable</span>
-<a name="line-8"></a><span class='hs-comment'>--</span>
-<a name="line-9"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
-<a name="line-10"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Solver</span><span class='hs-varop'>.</span><span class='hs-conid'>DepQBF</span>
-<a name="line-11"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>depqbf</span>
-<a name="line-12"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>depqbfPath</span>
-<a name="line-13"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
-<a name="line-14"></a>
-<a name="line-15"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Blaze</span><span class='hs-varop'>.</span><span class='hs-conid'>ByteString</span><span class='hs-varop'>.</span><span class='hs-conid'>Builder</span>
-<a name="line-16"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
-<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-keyword'>qualified</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>ByteString</span> <span class='hs-keyword'>as</span> <span class='hs-conid'>BS</span>
+<pre><a name="line-1"></a><span class='hs-comment'>{-# LANGUAGE Safe #-}</span>
+<a name="line-2"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-3"></a><span class='hs-comment'>-- |</span>
+<a name="line-4"></a><span class='hs-comment'>-- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013</span>
+<a name="line-5"></a><span class='hs-comment'>-- License   :  BSD3</span>
+<a name="line-6"></a><span class='hs-comment'>-- Maintainer:  Edward Kmett &lt;ekmett@gmail.com&gt;</span>
+<a name="line-7"></a><span class='hs-comment'>-- Stability :  experimental</span>
+<a name="line-8"></a><span class='hs-comment'>-- Portability: non-portable</span>
+<a name="line-9"></a><span class='hs-comment'>--</span>
+<a name="line-10"></a><span class='hs-comment'>--------------------------------------------------------------------</span>
+<a name="line-11"></a><span class='hs-keyword'>module</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Solver</span><span class='hs-varop'>.</span><span class='hs-conid'>DepQBF</span>
+<a name="line-12"></a>  <span class='hs-layout'>(</span> <span class='hs-varid'>depqbf</span>
+<a name="line-13"></a>  <span class='hs-layout'>,</span> <span class='hs-varid'>depqbfPath</span>
+<a name="line-14"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
+<a name="line-15"></a>
+<a name="line-16"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>ByteString</span><span class='hs-varop'>.</span><span class='hs-conid'>Builder</span>
+<a name="line-17"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Control</span><span class='hs-varop'>.</span><span class='hs-conid'>Monad</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span><span class='hs-varop'>.</span><span class='hs-conid'>Class</span>
 <a name="line-18"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Problem</span>
 <a name="line-19"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Solution</span>
 <a name="line-20"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>Ersatz</span><span class='hs-varop'>.</span><span class='hs-conid'>Solver</span><span class='hs-varop'>.</span><span class='hs-conid'>Common</span>
-<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-keyword'>qualified</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>IntMap</span> <span class='hs-keyword'>as</span> <span class='hs-conid'>IntMap</span>
+<a name="line-21"></a><span class='hs-keyword'>import</span> <span class='hs-keyword'>qualified</span> <span class='hs-conid'>Data</span><span class='hs-varop'>.</span><span class='hs-conid'>IntMap</span> <span class='hs-keyword'>as</span> <span class='hs-conid'>I</span>
 <a name="line-22"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>IO</span>
 <a name="line-23"></a><span class='hs-keyword'>import</span> <span class='hs-conid'>System</span><span class='hs-varop'>.</span><span class='hs-conid'>Process</span> <span class='hs-layout'>(</span><span class='hs-varid'>readProcessWithExitCode</span><span class='hs-layout'>)</span>
 <a name="line-24"></a>
 <a name="line-25"></a><a name="depqbf"></a><span class='hs-definition'>depqbf</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Solver</span> <span class='hs-conid'>QSAT</span> <span class='hs-varid'>m</span>
 <a name="line-26"></a><span class='hs-definition'>depqbf</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>depqbfPath</span> <span class='hs-str'>"depqbf"</span>
 <a name="line-27"></a>
-<a name="line-28"></a><a name="depqbfPath"></a><span class='hs-definition'>depqbfPath</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>FilePath</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Solver</span> <span class='hs-conid'>QSAT</span> <span class='hs-varid'>m</span>
-<a name="line-29"></a><span class='hs-definition'>depqbfPath</span> <span class='hs-varid'>path</span> <span class='hs-varid'>problem</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span>
-<a name="line-30"></a>  <span class='hs-varid'>withTempFiles</span> <span class='hs-str'>".cnf"</span> <span class='hs-str'>""</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>problemPath</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
-<a name="line-31"></a>    <span class='hs-varid'>withFile</span> <span class='hs-varid'>problemPath</span> <span class='hs-conid'>WriteMode</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>fh</span> <span class='hs-keyglyph'>-&gt;</span>
-<a name="line-32"></a>      <span class='hs-varid'>toByteStringIO</span> <span class='hs-layout'>(</span><span class='hs-conid'>BS</span><span class='hs-varop'>.</span><span class='hs-varid'>hPut</span> <span class='hs-varid'>fh</span><span class='hs-layout'>)</span> <span class='hs-layout'>(</span><span class='hs-varid'>qdimacs</span> <span class='hs-varid'>problem</span><span class='hs-layout'>)</span>
-<a name="line-33"></a>
-<a name="line-34"></a>    <span class='hs-layout'>(</span><span class='hs-varid'>exit</span><span class='hs-layout'>,</span> <span class='hs-sel'>_out</span><span class='hs-layout'>,</span> <span class='hs-sel'>_err</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>&lt;-</span>
-<a name="line-35"></a>      <span class='hs-varid'>readProcessWithExitCode</span> <span class='hs-varid'>path</span> <span class='hs-keyglyph'>[</span><span class='hs-varid'>problemPath</span><span class='hs-keyglyph'>]</span> <span class='hs-conid'>[]</span>
-<a name="line-36"></a>
-<a name="line-37"></a>    <span class='hs-varid'>return</span> <span class='hs-layout'>(</span><span class='hs-varid'>resultOf</span> <span class='hs-varid'>exit</span><span class='hs-layout'>,</span> <span class='hs-conid'>IntMap</span><span class='hs-varop'>.</span><span class='hs-varid'>empty</span><span class='hs-layout'>)</span>
+<a name="line-28"></a><a name="parseLiteral"></a><span class='hs-definition'>parseLiteral</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>String</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-layout'>(</span><span class='hs-conid'>Int</span><span class='hs-layout'>,</span> <span class='hs-conid'>Bool</span><span class='hs-layout'>)</span>
+<a name="line-29"></a><span class='hs-definition'>parseLiteral</span> <span class='hs-layout'>(</span><span class='hs-chr'>'-'</span><span class='hs-conop'>:</span><span class='hs-varid'>xs</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-layout'>(</span><span class='hs-varid'>read</span> <span class='hs-varid'>xs</span><span class='hs-layout'>,</span> <span class='hs-conid'>False</span><span class='hs-layout'>)</span>
+<a name="line-30"></a><span class='hs-definition'>parseLiteral</span> <span class='hs-varid'>xs</span> <span class='hs-keyglyph'>=</span> <span class='hs-layout'>(</span><span class='hs-varid'>read</span> <span class='hs-varid'>xs</span><span class='hs-layout'>,</span> <span class='hs-conid'>True</span><span class='hs-layout'>)</span>
+<a name="line-31"></a>
+<a name="line-32"></a><a name="depqbfPath"></a><span class='hs-definition'>depqbfPath</span> <span class='hs-keyglyph'>::</span> <span class='hs-conid'>MonadIO</span> <span class='hs-varid'>m</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>FilePath</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-conid'>Solver</span> <span class='hs-conid'>QSAT</span> <span class='hs-varid'>m</span>
+<a name="line-33"></a><span class='hs-definition'>depqbfPath</span> <span class='hs-varid'>path</span> <span class='hs-varid'>problem</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>liftIO</span> <span class='hs-varop'>$</span>
+<a name="line-34"></a>  <span class='hs-varid'>withTempFiles</span> <span class='hs-str'>".cnf"</span> <span class='hs-str'>""</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>problemPath</span> <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-keyword'>do</span>
+<a name="line-35"></a>    <span class='hs-varid'>withFile</span> <span class='hs-varid'>problemPath</span> <span class='hs-conid'>WriteMode</span> <span class='hs-varop'>$</span> <span class='hs-keyglyph'>\</span><span class='hs-varid'>fh</span> <span class='hs-keyglyph'>-&gt;</span>
+<a name="line-36"></a>      <span class='hs-varid'>hPutBuilder</span> <span class='hs-varid'>fh</span> <span class='hs-layout'>(</span><span class='hs-varid'>qdimacs</span> <span class='hs-varid'>problem</span><span class='hs-layout'>)</span>
+<a name="line-37"></a>
+<a name="line-38"></a>    <span class='hs-layout'>(</span><span class='hs-varid'>exit</span><span class='hs-layout'>,</span> <span class='hs-varid'>out</span><span class='hs-layout'>,</span> <span class='hs-sel'>_err</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>&lt;-</span>
+<a name="line-39"></a>      <span class='hs-varid'>readProcessWithExitCode</span> <span class='hs-varid'>path</span> <span class='hs-keyglyph'>[</span><span class='hs-varid'>problemPath</span><span class='hs-layout'>,</span> <span class='hs-str'>"--qdo"</span><span class='hs-keyglyph'>]</span> <span class='hs-conid'>[]</span>
+<a name="line-40"></a>
+<a name="line-41"></a>    <span class='hs-keyword'>let</span> <span class='hs-varid'>result</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>resultOf</span> <span class='hs-varid'>exit</span>
+<a name="line-42"></a>
+<a name="line-43"></a>    <span class='hs-varid'>return</span> <span class='hs-varop'>$</span> <span class='hs-conid'>(,)</span> <span class='hs-varid'>result</span> <span class='hs-varop'>$</span>
+<a name="line-44"></a>      <span class='hs-keyword'>case</span> <span class='hs-varid'>result</span> <span class='hs-keyword'>of</span>
+<a name="line-45"></a>        <span class='hs-conid'>Satisfied</span> <span class='hs-keyglyph'>-&gt;</span>
+<a name="line-46"></a>          <span class='hs-conid'>I</span><span class='hs-varop'>.</span><span class='hs-varid'>fromList</span> <span class='hs-varop'>$</span> <span class='hs-varid'>map</span> <span class='hs-layout'>(</span><span class='hs-varid'>parseLiteral</span> <span class='hs-varop'>.</span> <span class='hs-varid'>head</span> <span class='hs-varop'>.</span> <span class='hs-varid'>tail</span> <span class='hs-varop'>.</span> <span class='hs-varid'>words</span><span class='hs-layout'>)</span> <span class='hs-varop'>$</span> <span class='hs-varid'>tail</span> <span class='hs-varop'>$</span> <span class='hs-varid'>lines</span> <span class='hs-varid'>out</span>
+<a name="line-47"></a>        <span class='hs-keyword'>_</span> <span class='hs-keyglyph'>-&gt;</span>
+<a name="line-48"></a>          <span class='hs-conid'>I</span><span class='hs-varop'>.</span><span class='hs-varid'>empty</span>
 </pre></body>
 </html>
