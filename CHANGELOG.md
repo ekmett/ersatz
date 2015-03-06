@@ -1,7 +1,3 @@
-0.3.0.1
--------
-* Wider version bounds for `transformers` and `mtl`.
-
 0.3
 -----
 * Unified `Encoding` and `Decoding` into `Codec`
@@ -17,6 +13,7 @@
 * Added various generic `V1` instances
 * Added `Equatable` instances for `Map` and `IntMap`
 * Added `Ersatz.BitChar` module for computing with `Char` and `String`
+* Wider version bounds for `transformers` and `mtl`.
 
 0.2.6.1
 -----
