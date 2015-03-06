@@ -64,4 +64,10 @@ instance Bounded Result where
   minBound = Unsolved
   maxBound = Satisfied
 
+-- | A @'Solver' s m@ is responsible for invoking a solver and
+-- returning a 'Result' and a map of determined results.
+--
+-- * @s@ is typically 'SAT' or 'QSAT'
+--
+-- * @m@ is typically 'IO'
 type Solver s m = s -> m (Result, IntMap Bool)
