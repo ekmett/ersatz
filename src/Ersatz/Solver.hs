@@ -13,6 +13,8 @@ module Ersatz.Solver
   , solveWith
   ) where
 
+import Control.Applicative
+import Control.Monad
 import Control.Monad.State
 import Data.Default
 import Ersatz.Codec
@@ -21,7 +23,7 @@ import Ersatz.Solution
 import Ersatz.Solver.DepQBF
 import Ersatz.Solver.Minisat
 
-solveWith :: (Monad m, HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, Maybe (Decoded a))
+solveWith :: (Monad m, Alternative n, MonadPlus n, HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, n (Decoded a))
 solveWith solver m = do
   (a, problem) <- runStateT m def
   (res, litMap) <- solver problem
