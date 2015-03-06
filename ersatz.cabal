@@ -189,7 +189,6 @@ library
     Ersatz.Bit
     Ersatz.Bits
     Ersatz.BitChar
-    Ersatz.BitN
     Ersatz.Codec
     Ersatz.Equatable
     Ersatz.Internal.Formula

@@ -17,7 +17,7 @@ import Prelude hiding ((&&))
 import Data.Typeable (Typeable)
 
 import Ersatz.Bit
-import Ersatz.BitN
+import Ersatz.Bits
 import Ersatz.Codec
 import Ersatz.Equatable
 import Ersatz.Orderable
@@ -27,7 +27,7 @@ import Ersatz.Variable
 type BitString = [BitChar]
 
 -- | Encoding of the full range of 'Char' values.
-newtype BitChar = BitChar BitN
+newtype BitChar = BitChar Bits
   deriving (Show,Typeable)
 
 instance Codec BitChar where
@@ -51,6 +51,6 @@ instance Variable BitChar where
     do x:xs <- replicateM 21 (literally m)
 
        let x' = x && nor (take 4 xs)
-           n  = BitN (reverse (x':xs)) -- BitN is little endian
+           n  = Bits (reverse (x':xs)) -- Bits is little endian
 
        return (BitChar n)

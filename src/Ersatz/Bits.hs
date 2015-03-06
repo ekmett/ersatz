@@ -4,32 +4,45 @@
 {-# LANGUAGE Safe #-}
 --------------------------------------------------------------------
 -- |
--- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
+-- Copyright :  © Edward Kmett 2010-2015, © Eric Mertens 2014, Johan Kiviniemi 2013
 -- License   :  BSD3
 -- Maintainer:  Edward Kmett <ekmett@gmail.com>
 -- Stability :  experimental
 -- Portability: non-portable
 --
+-- 'Bits' is an arbitrary length natural number type
 --------------------------------------------------------------------
 module Ersatz.Bits
-  ( Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
+  ( 
+  -- * Fixed length bit vectors
+    Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
+  -- * Variable length bit vectors
+  , Bits(Bits)
+  , HasBits(..)
+  , isEven
+  , isOdd
+  , sumBit
+  , sumBits
+  -- * Adders
   , fullAdder, halfAdder
   ) where
 
-import Prelude hiding ((&&), (||), and, or, not)
-
 import Control.Applicative
-import Data.Bits (Bits, (.&.), (.|.), shiftL, shiftR)
-import Data.List (foldl')
-import Data.Typeable
+import Control.Monad.Trans.State (State, runState, get, put)
+import Data.Bits ((.&.), (.|.), shiftL, shiftR)
+import qualified Data.Bits as Data
+import Data.Foldable (Foldable, toList)
+import Data.List (unfoldr, foldl')
+import Data.Traversable (traverse)
+import Data.Typeable (Typeable)
 import Data.Word (Word8)
-import GHC.Generics
-
 import Ersatz.Bit
 import Ersatz.Codec
 import Ersatz.Equatable
 import Ersatz.Orderable
 import Ersatz.Variable
+import GHC.Generics
+import Prelude hiding (and, or, not, (&&), (||))
 
 -- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
 newtype Bit1 = Bit1 Bit deriving (Show,Typeable,Generic)
@@ -124,7 +137,6 @@ instance Codec Bit8 where
   decode s (Bit8 a b c d e f g h) = boolsToNum8 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
   encode i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
 
-
 boolsToNum1 :: Bool -> Word8
 boolsToNum1 = boolToNum
 
@@ -149,7 +161,7 @@ boolsToNum7 a b c d e f g = boolsToNum [a,b,c,d,e,f,g]
 boolsToNum8 :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Word8
 boolsToNum8 a b c d e f g h = boolsToNum [a,b,c,d,e,f,g,h]
 
-bitsOf :: (Num a, Bits a) => a -> [Bit]
+bitsOf :: (Num a, Data.Bits a) => a -> [Bit]
 bitsOf n = bool (numToBool (n .&. 1)) : bitsOf (n `shiftR` 1)
 {-# INLINE bitsOf #-}
 
@@ -158,7 +170,7 @@ numToBool 0 = False
 numToBool _ = True
 {-# INLINE numToBool #-}
 
-boolsToNum :: (Num a, Bits a) => [Bool] -> a
+boolsToNum :: (Num a, Data.Bits a) => [Bool] -> a
 boolsToNum = foldl' (\n a -> (n `shiftL` 1) .|. boolToNum a) 0
 {-# INLINE boolsToNum #-}
 
@@ -206,3 +218,186 @@ instance Num Bit2 where
   abs a = a
   signum (Bit2 a b) = Bit2 false (a || b)
   fromInteger k = Bit2 (bool (k .&. 2 /= 0)) (bool (k .&. 1 /= 0))
+
+-- suitable for comparisons and arithmetic. Bits are stored
+-- in little-endian order to enable phantom 'false' values
+-- to be truncated.
+newtype Bits = Bits { _getBits :: [Bit] } 
+  deriving Typeable
+
+instance Show Bits where
+  showsPrec d (Bits xs) = showParen (d > 10) $
+    showString "Bits " . showsPrec 11 xs
+
+instance Equatable Bits where
+  Bits xs === Bits ys = and (zipWithBits (===) xs ys)
+  Bits xs /== Bits ys = or  (zipWithBits (/==) xs ys)
+
+-- | Zip the component bits of a 'Bits' extending the
+-- shorter argument with 'false' values.
+zipWithBits :: (Bit -> Bit -> a) -> [Bit] -> [Bit] -> [a]
+zipWithBits _ []     []     = []
+zipWithBits f (x:xs) (y:ys) = f x y : zipWithBits f xs ys
+zipWithBits f xs     []     = map (`f` false) xs
+zipWithBits f []     ys     = map (false `f`) ys
+
+instance Orderable Bits where
+  Bits xs <?  Bits ys = orderHelper false xs ys
+  Bits xs <=? Bits ys = orderHelper true  xs ys
+
+orderHelper :: Bit -> [Bit] -> [Bit] -> Bit
+orderHelper c0 xs ys = foldl aux c0 (zipWithBits (,) xs ys)
+    where
+    aux c (x,y) = c && x === y || x <? y
+
+instance Codec Bits where
+  type Decoded Bits = Integer
+
+  decode s (Bits xs) =
+    do ys <- traverse (decode s) xs
+       -- bools to Integers
+       let zs = map (\x -> if x then 1 else 0) ys
+       -- Integers to Integer
+       return (foldr (\x acc -> x + 2 * acc) 0 zs)
+
+  encode = Bits . unfoldr step
+    where
+    step x =
+      case compare x 0 of
+        LT -> error "Bits/encode: Negative number"
+        EQ -> Nothing
+        GT -> Just (if odd x then true else false, x `div` 2)
+
+unbits :: HasBits a => a -> [Bit]
+unbits a = case bits a of Bits xs -> xs
+
+-- | Add two 'Bits' values given an incoming carry bit.
+addBits :: (HasBits a, HasBits b) => Bit -> a -> b -> Bits
+addBits c xs0 ys0 = Bits (add2 c (unbits xs0) (unbits ys0)) where
+  add2 cin []     ys    = add1 cin ys
+  add2 cin xs     []    = add1 cin xs
+  add2 cin (x:xs) (y:ys)= s : add2 cout xs ys where
+    (s,cout)            = fullAdder x y cin
+
+  add1 cin []           = [cin]
+  add1 cin (x:xs)       = s : add1 cout xs where
+    (s,cout)            = halfAdder cin x
+
+-- | Compute the sum of a source of 'Bits' values.
+sumBits :: (Foldable t, HasBits a) => t a -> Bits
+sumBits = sumBits' . map bits . toList
+
+sumBits' :: [Bits] -> Bits
+sumBits' []  = Bits []
+sumBits' [x] = x
+sumBits' xs0 = sumBits (merge xs0) where
+  merge [x] = [x]
+  merge []  = []
+  merge (x1:x2:xs) = addBits false x1 x2 : merge xs
+
+-- | Optimization of 'sumBits' enabled when summing
+-- individual 'Bit's.
+sumBit :: Foldable t => t Bit -> Bits
+sumBit t =
+  case runState (merge (map bits h2)) h1 of
+    (s,[]) -> s
+    _      -> error "Bits.betterSumBits: OOPS! Bad algorithm!"
+
+  where
+  ts = toList t
+  (h1,h2) = splitAt ((length ts-1) `div` 2) ts
+
+  spareBit = do
+    xs <- get
+    case xs of
+      []   -> return false
+      y:ys -> put ys >> return y
+
+  merge :: [Bits] -> State [Bit] Bits
+  merge [x] = return x
+  merge []  = return (Bits [])
+  merge xs  = merge =<< merge' xs
+
+  merge' :: [Bits] -> State [Bit] [Bits]
+  merge' []  = return []
+  merge' [x] = return [x]
+  merge' (x1:x2:xs) =
+    do cin <- spareBit
+       xs' <- merge' xs
+       return (addBits cin x1 x2 : xs')
+
+-- | Predicate for odd-valued 'Bits's.
+isOdd :: HasBits b => b -> Bit
+isOdd b = case unbits b of 
+  []    -> false
+  (x:_) -> x
+
+-- | Predicate for even-valued 'Bits's.
+isEven :: HasBits b => b -> Bit
+isEven = not . isOdd
+
+-- | 'HasBits' provides the 'bits' method for embedding
+-- fixed with numeric encoding types into the arbitrary width
+-- 'Bits' type.
+class HasBits a where
+  bits :: a -> Bits
+
+instance HasBits Bit where
+  bits x = Bits [x]
+
+instance HasBits Bit1 where
+  bits (Bit1 x0) = Bits [x0]
+
+instance HasBits Bit2 where
+  bits (Bit2 x1 x0) = Bits [x0,x1]
+
+instance HasBits Bit3 where
+  bits (Bit3 x2 x1 x0) = Bits [x0,x1,x2]
+
+instance HasBits Bit4 where
+  bits (Bit4 x3 x2 x1 x0) = Bits [x0,x1,x2,x3]
+
+instance HasBits Bit5 where
+  bits (Bit5 x4 x3 x2 x1 x0) = Bits [x0,x1,x2,x3,x4]
+
+instance HasBits Bit6 where
+  bits (Bit6 x5 x4 x3 x2 x1 x0) = Bits [x0,x1,x2,x3,x4,x5]
+
+instance HasBits Bit7 where
+  bits (Bit7 x6 x5 x4 x3 x2 x1 x0) = Bits [x0,x1,x2,x3,x4,x5,x6]
+
+instance HasBits Bit8 where
+  bits (Bit8 x7 x6 x5 x4 x3 x2 x1 x0) = Bits [x0,x1,x2,x3,x4,x5,x6,x7]
+
+instance HasBits Bits where
+  bits = id
+
+mulBits :: Bits -> Bits -> Bits
+mulBits (Bits xs) (Bits ys0)
+  = sumBits
+  $ zipWith aux xs (iterate times2 ys0)
+  where
+  times2 = (false:)
+  aux x ys = Bits (map (x &&) ys)
+
+instance Num Bits where
+  (+) = addBits false
+  (*) = mulBits
+  (-) = subBits
+  fromInteger = encode
+  signum (Bits xs) = Bits [or xs]
+  abs x = x
+
+fullSubtract :: Bit -> Bit -> Bit -> (Bit,Bit)
+fullSubtract c x y =
+  (x `xor` y `xor` c, x && y && c || not x && y || not x && c)
+
+subBits :: (HasBits a, HasBits b) => a -> b -> Bits
+subBits xs0 ys0 = Bits (map (not cN &&) ss) where
+  (cN, ss) = aux false (unbits xs0) (unbits ys0)
+
+  aux c [] [] = (c, [])
+  aux c [] ys = aux c [false] ys
+  aux c xs [] = aux c xs      [false]
+  aux c (x:xs) (y:ys) = fmap (z :) (aux cout xs ys) where
+    (z,cout) = fullSubtract c x y
