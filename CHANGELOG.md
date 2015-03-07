@@ -3,8 +3,8 @@
 * Unified `Encoding` and `Decoding` into `Codec`
 * Unified the `forall` and `exists` implementations into a single `literally`
   method in `Variable` class.
-* Added `Ersatz.BitN` for variable-sized bit arithmetic.
 * Added `Orderable` type class and instances
+* Added `Ersatz.Bits.Bits` for variable-sized bit arithmetic.
 * Renamed `Ersatz.Bits.half_adder` to `halfAdder`
 * Renamed `Ersatz.Bits.full_adder` to `fullAdder`
 * Added new examples
