@@ -82,7 +82,6 @@ extra-source-files:
   .travis.yml
   AUTHORS.md
   CHANGELOG.md
-  HLint.hs
   README.md
   notes/SPOILER.html
   notes/grid.pdf
