@@ -6,6 +6,8 @@ However, it then languished for 3 years after Don Stewart [@donsbot](https://git
 
 It was revived by [Johan Kiviniemi](mailto:ersatz@johan.kiviniemi.name) [@ion1](https://github.com/ion1) who got it into a working condition by implementing some missing parts, which inspired the original author into polishing it up and releasing it.
 
+Eric Mertens (@glguy](https://github.com/glguy) has been pouring code into it ever since then.
+
 Omission from this page is by no means an attempt to discount your contributions! Thank you for all of your help!
 
 -Edward Kmett

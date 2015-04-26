@@ -15,6 +15,7 @@ module Ersatz.Codec
   ) where
 
 import Control.Applicative
+import Control.Monad hiding (mapM)
 import Data.Array
 import Data.HashMap.Lazy (HashMap)
 import Data.IntMap (IntMap)
@@ -24,22 +25,24 @@ import Data.Traversable
 import Data.Tree (Tree)
 import Ersatz.Internal.Literal
 import Ersatz.Solution
+import Prelude hiding (mapM)
 
+-- | This class describes data types that can be marshaled to or from a SAT solver.
 class Codec a where
   type Decoded a :: *
   -- | Return a value based on the solution if one can be determined.
-  decode :: Solution -> a -> Maybe (Decoded a)
+  decode :: (Alternative f, MonadPlus f) => Solution -> a -> f (Decoded a)
   encode :: Decoded a -> a
 
 instance Codec Literal where
   type Decoded Literal = Bool
-  decode       = solutionLiteral
+  decode s a = maybe (pure False <|> pure True) pure (solutionLiteral s a)
   encode True  = literalTrue
   encode False = literalFalse
 
 instance Codec () where
   type Decoded () = ()
-  decode _ () = Just ()
+  decode _ () = pure ()
   encode   () = ()
 
 instance (Codec a, Codec b) => Codec (a,b) where
@@ -79,12 +82,12 @@ instance (Codec a, Codec b, Codec c, Codec d, Codec e, Codec f, Codec g, Codec h
 
 instance Codec a => Codec [a] where
   type Decoded [a] = [Decoded a]
-  decode = traverse . decode
+  decode = mapM . decode
   encode = map encode
 
 instance (Ix i, Codec e) => Codec (Array i e) where
   type Decoded (Array i e) = Array i (Decoded e)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance (Codec a, Codec b) => Codec (Either a b) where
@@ -96,30 +99,30 @@ instance (Codec a, Codec b) => Codec (Either a b) where
 
 instance Codec a => Codec (HashMap k a) where
   type Decoded (HashMap k a) = HashMap k (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance Codec a => Codec (IntMap a) where
   type Decoded (IntMap a) = IntMap (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance Codec a => Codec (Map k a) where
   type Decoded (Map k a) = Map k (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance Codec a => Codec (Maybe a) where
   type Decoded (Maybe a) = Maybe (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance Codec a => Codec (Seq a) where
   type Decoded (Seq a) = Seq (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode
 
 instance Codec a => Codec (Tree a) where
   type Decoded (Tree a) = Tree (Decoded a)
-  decode = traverse . decode
+  decode = mapM . decode
   encode = fmap encode

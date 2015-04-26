@@ -28,12 +28,17 @@ import qualified Data.IntMap as IntMap
 import System.IO
 import System.Process (readProcessWithExitCode)
 
+-- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m
 minisat = minisatPath "minisat"
 
+-- | 'Solver' for 'SAT' problems that tries to invoke the @cryptominisat@ executable from the @PATH@
 cryptominisat :: MonadIO m => Solver SAT m
 cryptominisat = minisatPath "cryptominisat"
 
+-- | 'Solver' for 'SAT' problems that tries to invoke a program that takes @minisat@ compatible arguments.
+--
+-- The 'FilePath' refers to the path to the executable.
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do

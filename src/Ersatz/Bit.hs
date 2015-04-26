@@ -115,7 +115,8 @@ instance Codec Bit where
   type Decoded Bit = Bool
   encode = bool
   decode sol b
-      = solutionStableName sol (unsafePerformIO (makeStableName' b))
+      = maybe (pure False <|> pure True) pure $ 
+        solutionStableName sol (unsafePerformIO (makeStableName' b))
      -- The StableName didn’t have an associated literal with a solution,
      -- recurse to compute the value.
     <|> case b of

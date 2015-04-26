@@ -1,10 +1,10 @@
 name:           ersatz
-version:        0.3.0.1
+version:        0.3
 license:        BSD3
 license-file:   LICENSE
-author:         Edward A. Kmett, Johan Kiviniemi
+author:         Edward A. Kmett, Eric Mertens, Johan Kiviniemi
 maintainer:     Edward A. Kmett <ekmett@gmail.com>
-copyright:      © 2010-2014 Edward Kmett, © 2013 Johan Kiviniemi
+copyright:      © 2010-2015 Edward A. Kmett, © 2014-2015 Eric Mertens, © 2013 Johan Kiviniemi
 stability:      experimental
 homepage:       http://github.com/ekmett/ersatz
 bug-reports:    http://github.com/ekmett/ersatz/issues
@@ -82,7 +82,6 @@ extra-source-files:
   .travis.yml
   AUTHORS.md
   CHANGELOG.md
-  HLint.hs
   README.md
   notes/SPOILER.html
   notes/grid.pdf
@@ -189,7 +188,6 @@ library
     Ersatz.Bit
     Ersatz.Bits
     Ersatz.BitChar
-    Ersatz.BitN
     Ersatz.Codec
     Ersatz.Equatable
     Ersatz.Internal.Formula

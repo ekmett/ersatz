@@ -1,14 +1,10 @@
-0.3.0.1
--------
-* Wider version bounds for `transformers` and `mtl`.
-
 0.3
 -----
 * Unified `Encoding` and `Decoding` into `Codec`
 * Unified the `forall` and `exists` implementations into a single `literally`
   method in `Variable` class.
-* Added `Ersatz.BitN` for variable-sized bit arithmetic.
 * Added `Orderable` type class and instances
+* Added `Ersatz.Bits.Bits` for variable-sized bit arithmetic.
 * Renamed `Ersatz.Bits.half_adder` to `halfAdder`
 * Renamed `Ersatz.Bits.full_adder` to `fullAdder`
 * Added new examples
@@ -17,6 +13,7 @@
 * Added various generic `V1` instances
 * Added `Equatable` instances for `Map` and `IntMap`
 * Added `Ersatz.BitChar` module for computing with `Char` and `String`
+* Wider version bounds for `transformers` and `mtl`.
 
 0.2.6.1
 -----
