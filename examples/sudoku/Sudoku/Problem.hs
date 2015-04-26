@@ -1,3 +1,5 @@
+{-# language FlexibleContexts #-}
+
 module Sudoku.Problem (problem, range) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
