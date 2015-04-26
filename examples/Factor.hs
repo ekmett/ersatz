@@ -1,20 +1,31 @@
+{-# language LambdaCase #-}
+
 import Ersatz
-import Ersatz.BitN
+import Ersatz.Bits
 import Control.Monad
 import Control.Monad.State
 
-problem :: (MonadState s m, HasSAT s) => m (BitN, BitN, BitN)
-problem = do
-  a <- liftM BitN (replicateM 5 exists)
-  b <- liftM BitN (replicateM 5 exists)
+import System.Environment
+
+problem :: (MonadState s m, HasSAT s) => Integer -> m (Bits, Bits, Bits)
+problem n = do
+  let w = log2 n
+  a <- liftM Bits (replicateM w exists)
+  b <- liftM Bits (replicateM w exists)
   let c = a * b
   assert (a /== encode   1)
   assert (b /== encode   1)
-  assert (c === encode 143)
+  assert (c === encode   n)
   return (a,b,c)
 
+log2 n = if n > 1 then succ $ log2 $ div n 2 else 1
+
 main :: IO ()
-main = do
+main = getArgs >>= \ case
+  [] -> run 143
+  [s] -> run $ read s
+
+run n = do
   putStrLn "Solution:"
-  (Satisfied, msol@(Just (a,b,c))) <- solveWith minisat problem
+  (Satisfied, msol@(Just (a,b,c))) <- solveWith minisat $ problem n
   putStrLn (show a ++ " * " ++ show b ++ " = " ++ show c)
