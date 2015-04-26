@@ -67,25 +67,8 @@ instance Boolean Bit where
   true  = Var literalTrue
   false = Var literalFalse
 
-  a@(Var (Literal (-1))) && _ = a
-  _ && b@(Var (Literal (-1))) = b
-  a && Var (Literal 1) = a
-  Var (Literal 1) && b = b
-  And as && And bs = And (as >< bs)
-  And as && b      = And (as |> b)
-  a            && And bs = And (a <| bs)
-  a            && b      = And (a <| b <| Seq.empty)
-
-  a || Var (Literal (-1)) = a
-  Var (Literal (-1)) || b = b
-
-  a@(Var (Literal 1)) || _ = a
-  _ || b@(Var (Literal 1)) = b
-
-  Or as || Or bs = Or (as >< bs)
-  Or as || b     = Or (as |> b)
-  a     || Or bs = Or (a <| bs)
-  a     || b     = Or (a <| b <| Seq.empty)
+  (&&) = and2
+  a || b = not (not a && not b)
 
   not (Not c) = c
   not (Var l) = Var (negateLiteral l)
@@ -106,6 +89,15 @@ instance Boolean Bit where
   choose f _ (Var (Literal (-1))) = f
   choose _ t (Var (Literal 1))    = t
   choose f t s = Mux f t s
+
+and2 a@(Var (Literal (-1))) _ = a
+and2 _ b@(Var (Literal (-1))) = b
+and2 a (Var (Literal 1)) = a
+and2 (Var (Literal 1)) b = b
+and2 (And as) (And bs) = And (as >< bs)
+and2 (And as) b      = And (as |> b)
+and2 a (And bs) = And (a <| bs)
+and2 a b = And (a <| b <| Seq.empty)
 
 instance Variable Bit where
   literally = liftM Var . literally
