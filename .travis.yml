@@ -16,6 +16,7 @@ matrix:
 
   allow_failures:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
+   - env: CABALVER=1.16 GHCVER=7.4.2 GHCOPTS="-Werror" JOPTS=""
 
 before_install:
  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
