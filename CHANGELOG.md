@@ -1,3 +1,7 @@
+0.3.1
+-----
+* Removed the explicit `Safe` annotations. They can't be maintained by mere mortals. Patches to mark packages upstream as `Trustworthy` will be accepted as needed.
+
 0.3
 -----
 * Unified `Encoding` and `Decoding` into `Codec`
