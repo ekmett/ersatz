@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -21,7 +22,9 @@ module Ersatz.Internal.Parser
 import Control.Applicative
 import Control.Monad.State
 import Data.Char (isDigit)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (traverse)
+#endif
 
 type Parser t a = StateT [t] [] a
 

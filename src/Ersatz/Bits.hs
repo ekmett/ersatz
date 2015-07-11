@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -30,9 +31,15 @@ import Control.Applicative
 import Control.Monad.Trans.State (State, runState, get, put)
 import Data.Bits ((.&.), (.|.), shiftL, shiftR)
 import qualified Data.Bits as Data
+#if __GLASGOW_HASKELL__ < 710
 import Data.Foldable (Foldable, toList)
+#else
+import Data.Foldable (toList)
+#endif
 import Data.List (unfoldr, foldl')
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (traverse)
+#endif
 import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import Ersatz.Bit
