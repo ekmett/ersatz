@@ -1,12 +1,12 @@
 import Ersatz
-import Ersatz.BitN
+import Ersatz.Bits
 import Control.Monad
 import Control.Monad.State
 
-problem :: (MonadState s m, HasSAT s) => m (BitN, BitN, BitN)
+problem :: (MonadState s m, HasSAT s) => m (Bits, Bits, Bits)
 problem = do
-  a <- liftM BitN (replicateM 5 exists)
-  b <- liftM BitN (replicateM 5 exists)
+  a <- liftM Bits (replicateM 5 exists)
+  b <- liftM Bits (replicateM 5 exists)
   let c = a * b
   assert (a /== encode   1)
   assert (b /== encode   1)
