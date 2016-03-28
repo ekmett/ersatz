@@ -28,7 +28,11 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad.State
+#if __GLASGOW_HASKELL__ < 710
 import Data.Foldable (Foldable, toList)
+#else
+import Data.Foldable (toList)
+#endif
 import qualified Data.Foldable as Foldable
 import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
@@ -272,10 +276,10 @@ class Boolean b where
   nor = not . or
 
   -- | The logical conjunction of the mapping of a function over several values.
-  all :: (Foldable t, Boolean b) => (a -> b) -> t a -> b
+  all :: Foldable t => (a -> b) -> t a -> b
 
   -- | The logical disjunction of the mapping of a function over several values.
-  any :: (Foldable t, Boolean b) => (a -> b) -> t a -> b
+  any :: Foldable t => (a -> b) -> t a -> b
 
   -- | Exclusive-or
   xor :: b -> b -> b

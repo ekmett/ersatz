@@ -5,7 +5,6 @@
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE Safe #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------

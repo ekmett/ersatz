@@ -45,7 +45,9 @@ module Ersatz.Problem
   ) where
 
 import Data.ByteString.Builder
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 import Control.Lens
 import Control.Monad
 #if !(MIN_VERSION_lens(4,0,0))
@@ -55,7 +57,9 @@ import Control.Monad.State
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Default
+#if __GLASGOW_HASKELL__ < 710
 import Data.Foldable (foldMap)
+#endif
 import Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as HashMap
 import Data.Int

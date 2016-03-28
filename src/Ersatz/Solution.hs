@@ -1,7 +1,7 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ImpredicativeTypes #-}
-{-# LANGUAGE Safe #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -17,7 +17,9 @@ module Ersatz.Solution
   , Solver
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 import Control.Lens
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)

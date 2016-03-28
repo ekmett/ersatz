@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -5,7 +6,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE Safe #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
@@ -27,11 +27,15 @@ module Ersatz.Internal.Formula
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   ) where
 
+#if __GLASGOW_HASKELL__ < 710
 import Control.Applicative
+#endif
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (intersperse)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Monoid
+#endif
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable

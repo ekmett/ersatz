@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -21,7 +22,9 @@ module Ersatz.Internal.Parser
 import Control.Applicative
 import Control.Monad.State
 import Data.Char (isDigit)
+#if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (traverse)
+#endif
 
 type Parser t a = StateT [t] [] a
 
@@ -40,14 +43,14 @@ token t = satisfy (== t)
 string :: Eq t => [t] -> Parser t [t]
 string = traverse token
 
-integer :: (Integral i, Read i) => Parser Char i
+integer :: (Num i, Read i) => Parser Char i
 integer = negation <*> natural
 
 negation :: Num n => Parser Char (n -> n)
 negation  =  negate <$ token '-'
          <|> pure id
 
-natural :: (Integral i, Read i) => Parser Char i
+natural :: Read i => Parser Char i
 natural = read <$> some (satisfy isDigit)
 
 eof :: Parser t ()

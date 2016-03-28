@@ -1,6 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE Safe #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -31,7 +31,11 @@ import Prelude hiding (mapM)
 class Codec a where
   type Decoded a :: *
   -- | Return a value based on the solution if one can be determined.
+#if __GLASGOW_HASKELL__ < 710
   decode :: (Alternative f, MonadPlus f) => Solution -> a -> f (Decoded a)
+#else
+  decode :: MonadPlus f => Solution -> a -> f (Decoded a)
+#endif
   encode :: Decoded a -> a
 
 instance Codec Literal where
