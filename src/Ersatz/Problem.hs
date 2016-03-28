@@ -75,6 +75,9 @@ import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
 import System.IO.Unsafe
 
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+
 ------------------------------------------------------------------------------
 -- SAT Problems
 ------------------------------------------------------------------------------
@@ -205,7 +208,7 @@ literalForall = do
 class DIMACS t where
   dimacsComments :: t -> [ByteString]
   dimacsNumVariables :: t -> Int
-  dimacsClauses :: t -> Set IntSet
+  dimacsClauses :: t -> Seq IntSet
 
 -- | QDIMACS file format pretty printer
 --
@@ -216,7 +219,7 @@ class QDIMACS t where
   qdimacsComments :: t -> [ByteString]
   qdimacsNumVariables :: t -> Int
   qdimacsQuantified :: t -> [Quant]
-  qdimacsClauses :: t -> Set IntSet
+  qdimacsClauses :: t -> Seq IntSet
 
 -- | WDIMACS file format pretty printer
 --
@@ -227,7 +230,7 @@ class WDIMACS t where
   wdimacsComments :: t -> [ByteString]
   wdimacsNumVariables :: t -> Int
   wdimacsTopWeight :: t -> Int64  -- ^ Specified to be 1 ≤ n < 2^63
-  wdimacsClauses :: t -> Set (Int64, IntSet)
+  wdimacsClauses :: t -> Seq (Int64, IntSet)
 
 -- | Generate a 'Builder' out of a 'DIMACS' problem.
 dimacs :: DIMACS t => t -> Builder
@@ -236,7 +239,7 @@ dimacs t = comments <> problem <> clauses
     comments = foldMap bComment (dimacsComments t)
     problem = bLine [ string7 "p cnf"
                     , intDec (dimacsNumVariables t)
-                    , intDec (Set.size tClauses)
+                    , intDec (Seq.length tClauses)
                     ]
     clauses = foldMap bClause tClauses
 
@@ -249,7 +252,7 @@ qdimacs t = comments <> problem <> quantified <> clauses
     comments = foldMap bComment (qdimacsComments t)
     problem = bLine [ string7 "p cnf"
                     , intDec (qdimacsNumVariables t)
-                    , intDec (Set.size tClauses)
+                    , intDec (Seq.length tClauses)
                     ]
     quantified = foldMap go tQuantGroups
       where go ls = bLine0 (q (head ls) : map (intDec . getQuant) ls)
@@ -272,7 +275,7 @@ wdimacs t = comments <> problem <> clauses
     comments = foldMap bComment (wdimacsComments t)
     problem = bLine [ string7 "p wcnf"
                     , intDec (wdimacsNumVariables t)
-                    , intDec (Set.size tClauses)
+                    , intDec (Seq.length tClauses)
                     , int64Dec (wdimacsTopWeight t)
                     ]
     clauses = foldMap (uncurry bWClause) tClauses
@@ -332,5 +335,5 @@ instance QDIMACS QSAT where
         | otherwise = Exists i : quants is jjs
   qdimacsClauses = satClauses
 
-satClauses :: HasSAT s => s -> Set IntSet
-satClauses s = Set.map clauseSet (formulaSet (s^.formula))
+satClauses :: HasSAT s => s -> Seq IntSet
+satClauses s = fmap clauseSet (formulaSet (s^.formula))

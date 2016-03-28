@@ -1,6 +1,6 @@
 # Ersatz
 
-[![Build Status](https://secure.travis-ci.org/ekmett/ersatz.png)](http://travis-ci.org/ekmett/ersatz)
+[![Build Status](https://secure.travis-ci.org/jwaldmann/ersatz.png)](http://travis-ci.org/jwaldmann/ersatz)
 
 Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad. It takes care of generating the normal form, encoding your problem, marshaling the data to an external solver, and parsing and interpreting the result into Haskell types.
 
@@ -18,7 +18,7 @@ half_adder :: Bit -> Bit -> (Bit, Bit)
 half_adder a b = (a `xor` b, a && b)
 ```
 
-as opposed to the following code in [satchmo](http://dfa.imn.htwk-leipzig.de/satchmo/):
+as opposed to the following code in [satchmo](https://hackage.haskell.org/package/satchmo/):
 
 
 ```haskell
