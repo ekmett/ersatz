@@ -21,26 +21,26 @@ main :: IO ( )
 main = do
   argv <- getArgs
   case argv of
-    [ d, k, n ] -> void $ mainf ( read d ) (read k) (read n) 
-    [ d, k ] -> do
-      let go d k n = do
-            ok <- mainf d k n 
-            when ok $ go d k (n+1) 
-      go (read d) (read k) 1 
-    [] -> void $ mainf 3 2 10 -- petersen
+    [ d, k, n, s ] ->
+      void $ mainf ( read d ) (read k) (read n) (read s)
+    [ d, k, n    ] ->
+      void $ mainf ( read d ) (read k) (read n) (read n)
+    [] -> void $ mainf 3 2 10 5 -- petersen
 
-mainf d k n = do
-  putStrLn $ unwords [ "degree <=", show d, "diameter <=", show k, "nodes ==", show n ]
-  (s, mg) <- solveWith minisat $ moore d k n 
+mainf d k n s = do
+  putStrLn $ unwords [ "degree <=", show d, "diameter <=", show k, "nodes ==", show n, "symmetry ==", show s ]
+  (s, mg) <- solveWith minisat $ moore d k n s
   case (s, mg) of
      (Satisfied, Just g) -> do printA g ; return True
      _ -> do return False
 
 moore :: (MonadState s m, HasSAT s )
-      => Int -> Int -> Int 
+      => Int -> Int -> Int -> Int
       -> m (R.Relation Int Int)
-moore d k n = do
-  g <- R.symmetric_relation ((0,0),(n-1,n-1))
+moore d k n s = do
+  -- g <- R.symmetric_relation ((0,0),(n-1,n-1))
+  g <- periodic_relation s ((0,0),(n-1,n-1))
+  assert $ R.symmetric g
   assert $ R.reflexive g 
   assert $ R.max_in_degree (d+1) g 
   assert $ R.max_out_degree (d+1) g 
@@ -48,6 +48,15 @@ moore d k n = do
   assert $ R.complete p 
   return g
 
+periodic_relation s bnd = do
+  r <- R.relation bnd
+  let normal (x,y) =
+        if (x >= s Prelude.&& y >= s)
+        then normal (x-s,y-s)  else (x,y)
+  return $ R.build bnd $ do
+    i <- A.range bnd
+    return (i, r R.! normal i)
+  
 -- | FIXME: this needs to go into a library
 printA :: A.Array (Int,Int) Bool -> IO ()
 printA a = putStrLn $ unlines $ do
