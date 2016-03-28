@@ -199,12 +199,16 @@ library
     Ersatz.Solver.DepQBF
     Ersatz.Solver.Minisat
     Ersatz.Variable
+    Ersatz.Counting
+    Ersatz.Relation
 
   other-modules:
     Ersatz.Internal.Parser
     Ersatz.Internal.StableName
     Ersatz.Solver.Common
-
+    Ersatz.Relation.Data
+    Ersatz.Relation.Op
+    Ersatz.Relation.Prop
 
 executable ersatz-regexp-grid
   -- description: An example program that solves the regular expression crossword problem <http://www.coinheist.com/rubik/a_regular_crossword/> using Ersatz.
@@ -297,3 +301,11 @@ test-suite hlint
     build-depends:
       base,
       hlint >= 1.7
+
+test-suite moore
+  Type: exitcode-stdio-1.0
+  hs-source-dirs: examples
+  Main-Is: Moore.hs
+  Build-Depends: base, array, mtl, ersatz
+  ghc-options: -rtsopts
+
