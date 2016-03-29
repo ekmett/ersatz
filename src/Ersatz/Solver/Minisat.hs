@@ -26,7 +26,7 @@ import Ersatz.Internal.Parser
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap.Strict as IntMap
 import System.IO
 import System.Process (readProcessWithExitCode)
 

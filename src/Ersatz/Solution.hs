@@ -23,7 +23,7 @@ import Control.Applicative
 import Control.Lens
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
+import qualified Data.IntMap.Strict as IntMap
 import Data.Ix
 import Data.Typeable
 import Ersatz.Internal.Literal
