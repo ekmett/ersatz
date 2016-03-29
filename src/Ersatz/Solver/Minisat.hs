@@ -31,7 +31,8 @@ import System.IO
 import System.Process (readProcessWithExitCode)
 
 import qualified Data.Attoparsec.ByteString.Char8 as  P
-import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B
+import Data.List ( foldl' )
 
 -- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m
@@ -52,7 +53,7 @@ minisatPath path problem = liftIO $
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath, solutionPath] []
-
+    
     sol <- parseSolutionFile solutionPath
 
     return (resultOf exit, sol)
@@ -64,12 +65,13 @@ parseSolutionFile path = handle handler (parseSolution <$> B.readFile path)
     handler _ = return IntMap.empty
 
 parseSolution :: B.ByteString -> IntMap Bool
-parseSolution s = case P.parseOnly ( assignment <* P.endOfInput ) s of
-    Left err -> IntMap.empty -- WRONG
-    Right ps -> IntMap.fromList ps
+parseSolution s =
+  case B.words s of
+    x : ys | x == "SAT" ->
+          foldl' ( \ m y -> let Just (v,_) = B.readInt y
+                            in  if 0 == v then m else IntMap.insert (abs v) (v>0) m
+                 ) IntMap.empty ys
+    _ -> IntMap.empty -- WRONG (should be Nothing)
 
-assignment :: P.Parser [(Int,Bool)]
-assignment = P.string "SAT" *> P.skipSpace
-   *> many ( do v <- P.signed P.decimal; guard $ v /= 0 ; P.skipSpace ; return (abs v, v > 0) )
-   <* P.string "0" <* P.skipSpace
 
+     
