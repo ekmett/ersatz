@@ -109,6 +109,7 @@ fromClause c = Formula { formulaSet = Seq.singleton c }
 formulaNot :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Formula
+{-# inlineable formulaNot #-}
 formulaNot (Literal out) (Literal inp) = formulaFromList cls
   where
     cls = [ [-out, -inp], [out, inp] ]
@@ -126,6 +127,7 @@ formulaNot (Literal out) (Literal inp) = formulaFromList cls
 formulaAnd :: Literal    -- ^ Output
            -> [Literal]  -- ^ Inputs
            -> Formula
+{-# inlineable formulaAnd #-}
 formulaAnd (Literal out) inpLs = formulaFromList cls
   where
     cls = (out : map negate inps) : map (\inp -> [-out, inp]) inps
@@ -145,6 +147,7 @@ formulaAnd (Literal out) inpLs = formulaFromList cls
 formulaOr :: Literal    -- ^ Output
           -> [Literal]  -- ^ Inputs
           -> Formula
+{-# inlineable formulaOr #-}
 formulaOr (Literal out) inpLs = formulaFromList cls
   where
     cls = (-out : inps)
@@ -190,6 +193,7 @@ formulaXor :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Literal  -- ^ Input
            -> Formula
+{-# inlineable formulaXor #-}
 formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
   where
     cls = [ [-out, -inpA, -inpB]
@@ -237,15 +241,17 @@ formulaMux :: Literal  -- ^ Output
            -> Literal  -- ^ True branch
            -> Literal  -- ^ Predicate/selector
            -> Formula
-formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
+{-# inlineable formulaMux #-}
+-- | with redundant clauses, cf. discussion in
+--   Een and Sorensen, Translating Pseudo Boolean Constraints ..., p. 7
+-- http://minisat.se/Papers.html
+formulaMux (Literal x) (Literal f) (Literal t) (Literal s) =
   formulaFromList cls
   where
-    cls = [ [-out,  inpF,  inpT]
-          , [-out,  inpF,  inpP]
-          , [-out,  inpT, -inpP]
-          , [ out, -inpF,  inpP]
-          , [ out, -inpT, -inpP]
+    cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x] 
+          , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  t, -x]
           ]
 
 formulaFromList :: [[Int]] -> Formula
+{-# inline formulaFromList #-}
 formulaFromList = foldMap (  fromClause . Clause . IntSet.fromList )
