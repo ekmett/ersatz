@@ -25,6 +25,7 @@ module Ersatz.Internal.Formula
   , Formula(..)
   , formulaEmpty, formulaLiteral
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
+  , formulaFAS, formulaFAC
   ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -251,6 +252,25 @@ formulaMux (Literal x) (Literal f) (Literal t) (Literal s) =
     cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x] 
           , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  t, -x]
           ]
+
+formulaFAS (Literal x) (Literal a) (Literal b) (Literal c) = 
+  formulaFromList cls
+  where
+    cls = 
+      [ [ a,  b,  c, -x], [-a, -b, -c, x]
+      , [ a, -b, -c, -x], [-a,  b,  c, x]
+      , [-a,  b, -c, -x], [ a, -b,  c, x]
+      , [-a, -b,  c, -x], [ a,  b, -c, x]
+      ]
+
+formulaFAC (Literal x) (Literal a) (Literal b) (Literal c) = 
+  formulaFromList cls
+  where
+    cls = 
+      [ [ -b, -c, x], [b, c, -x]
+      , [ -a, -c, x], [a, c, -x]
+      , [ -a, -b, x], [a, b, -x]
+      ]
 
 formulaFromList :: [[Int]] -> Formula
 {-# inline formulaFromList #-}

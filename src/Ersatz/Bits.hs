@@ -196,9 +196,9 @@ instance Num Bit1 where
 
 -- | Compute the sum and carry bit from adding three bits.
 fullAdder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
-fullAdder a b cin = (s2, c1 || c2)
-  where (s1,c1) = halfAdder a b
-        (s2,c2) = halfAdder s1 cin
+fullAdder a b c =
+  ( full_Adder_Sum a b c , full_Adder_Carry a b c )
+  -- let (s1,c1) = halfAdder a b ; (s2,c2) = halfAdder s1 c in (s2, c1||c2)
 
 -- | Compute the sum and carry bit from adding two bits.
 halfAdder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
