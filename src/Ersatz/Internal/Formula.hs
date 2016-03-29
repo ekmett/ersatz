@@ -41,6 +41,10 @@ import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Literal
 
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import Data.Foldable (toList)
+
 ------------------------------------------------------------------------------
 -- Clauses
 ------------------------------------------------------------------------------
@@ -63,7 +67,7 @@ instance Monoid Clause where
 ------------------------------------------------------------------------------
 
 -- | A conjunction of clauses
-newtype Formula = Formula { formulaSet :: Set Clause }
+newtype Formula = Formula { formulaSet :: Seq Clause }
   deriving (Eq, Ord, Typeable)
 
 instance Monoid Formula where
@@ -73,7 +77,7 @@ instance Monoid Formula where
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id
               . List.intersperse (showString " & ") . map (showsPrec 3)
-              . Set.toList . formulaSet
+              . Data.Foldable.toList . formulaSet
 
 instance Show Clause where
   showsPrec p = showParen (p > 1) . foldr (.) id
@@ -83,12 +87,15 @@ instance Show Clause where
 
 -- | A formula with no clauses
 formulaEmpty :: Formula
-formulaEmpty = Formula Set.empty
+formulaEmpty = mempty
 
 -- | Assert a literal
 formulaLiteral :: Literal -> Formula
-formulaLiteral (Literal l) =
-  Formula (Set.singleton (Clause (IntSet.singleton l)))
+formulaLiteral (Literal l) = fromClause (Clause (IntSet.singleton l))
+
+fromClause :: Clause -> Formula
+fromClause c = Formula { formulaSet = Seq.singleton c }
+
 
 -- | The boolean /not/ operation
 --
@@ -241,4 +248,4 @@ formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
           ]
 
 formulaFromList :: [[Int]] -> Formula
-formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
+formulaFromList = foldMap (  fromClause . Clause . IntSet.fromList )
