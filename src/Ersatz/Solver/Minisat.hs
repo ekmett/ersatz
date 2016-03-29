@@ -7,6 +7,9 @@
 -- Portability: non-portable
 --
 --------------------------------------------------------------------
+
+{-# language OverloadedStrings #-}
+
 module Ersatz.Solver.Minisat
   ( minisat
   , cryptominisat
@@ -26,6 +29,9 @@ import Ersatz.Solver.Common
 import qualified Data.IntMap as IntMap
 import System.IO
 import System.Process (readProcessWithExitCode)
+
+import qualified Data.Attoparsec.ByteString.Char8 as  P
+import qualified Data.ByteString as B
 
 -- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m
@@ -52,32 +58,18 @@ minisatPath path problem = liftIO $
     return (resultOf exit, sol)
 
 parseSolutionFile :: FilePath -> IO (IntMap Bool)
-parseSolutionFile path = handle handler (parseSolution <$> readFile path)
+parseSolutionFile path = handle handler (parseSolution <$> B.readFile path)
   where
     handler :: IOException -> IO (IntMap Bool)
     handler _ = return IntMap.empty
 
-parseSolution :: String -> IntMap Bool
-parseSolution input =
-  case runParser solution input of
-    s:_ -> s
-    _   -> IntMap.empty
+parseSolution :: B.ByteString -> IntMap Bool
+parseSolution s = case P.parseOnly ( assignment <* P.endOfInput ) s of
+    Left err -> IntMap.empty -- WRONG
+    Right ps -> IntMap.fromList ps
 
-solution :: Parser Char (IntMap Bool)
-solution = do
-  _ <- string "SAT\n"
-  IntMap.fromList <$> values
+assignment :: P.Parser [(Int,Bool)]
+assignment = P.string "SAT" *> P.skipSpace
+   *> many ( do v <- P.signed P.decimal; guard $ v /= 0 ; P.skipSpace ; return (abs v, v > 0) )
+   <* P.string "0" <* P.skipSpace
 
-values :: Parser Char [(Int, Bool)]
-values  = (value `sepBy` token ' ')
-       <* string " 0"
-       <* (() <$ token '\n' <|> eof)
-
-value :: Parser Char (Int, Bool)
-value = do
-  i <- integer
-  guard (i /= 0)
-  return (toPair i)
-  where
-    toPair n | n >= 0    = ( n, True)
-             | otherwise = (-n, False)
