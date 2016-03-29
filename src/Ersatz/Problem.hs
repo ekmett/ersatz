@@ -283,7 +283,7 @@ bComment :: ByteString -> Builder
 bComment bs = bLine [ char7 'c', byteString bs ]
 
 bClause :: IntSet -> Builder
-bClause ls = bLine0 (map intDec (IntSet.toList ls))
+bClause = IntSet.foldl' ( \ e i -> intDec i <> char7 ' ' <> e ) ( char7 '0' <> char7 '\n' ) 
 
 bWClause :: Int64 -> IntSet -> Builder
 bWClause w ls = bLine0 (int64Dec w : map intDec (IntSet.toList ls))
