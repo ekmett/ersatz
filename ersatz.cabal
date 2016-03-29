@@ -297,3 +297,10 @@ test-suite hlint
     build-depends:
       base,
       hlint >= 1.7
+
+test-suite speed
+  type: exitcode-stdio-1.0
+  main-is: Speed.hs
+  hs-source-dirs: tests
+  build-depends: base, ersatz
+            
