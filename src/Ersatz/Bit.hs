@@ -57,7 +57,7 @@ infixr 0 ==>
 -- value that can be determined by an external SAT solver.
 data Bit
   = And (Seq Bit)
-  | Or (Seq Bit)
+  | Or (Seq Bit) -- ^ not needed because of AIG conversion
   | Xor Bit Bit
   | Mux Bit Bit Bit
   | Not Bit
@@ -71,25 +71,8 @@ instance Boolean Bit where
   true  = Var literalTrue
   false = Var literalFalse
 
-  a@(Var (Literal (-1))) && _ = a
-  _ && b@(Var (Literal (-1))) = b
-  a && Var (Literal 1) = a
-  Var (Literal 1) && b = b
-  And as && And bs = And (as >< bs)
-  And as && b      = And (as |> b)
-  a            && And bs = And (a <| bs)
-  a            && b      = And (a <| b <| Seq.empty)
-
-  a || Var (Literal (-1)) = a
-  Var (Literal (-1)) || b = b
-
-  a@(Var (Literal 1)) || _ = a
-  _ || b@(Var (Literal 1)) = b
-
-  Or as || Or bs = Or (as >< bs)
-  Or as || b     = Or (as |> b)
-  a     || Or bs = Or (a <| bs)
-  a     || b     = Or (a <| b <| Seq.empty)
+  (&&) = and2
+  a || b = not (not a && not b)
 
   not (Not c) = c
   not (Var l) = Var (negateLiteral l)
@@ -99,17 +82,32 @@ instance Boolean Bit where
   Var (Literal (-1)) `xor` b = b
   a `xor` Var (Literal 1) = not a
   Var (Literal 1) `xor` b = not b
+  -- following 3 clauses might enable some AIG magic
+  Not a `xor` Not b = Xor a b
+  a `xor` Not b = Not (Xor a b)
+  Not a `xor` b = Not (Xor a b)
   a `xor` b    = Xor a b
 
   and = Foldable.foldl' (&&) true
-  or  = Foldable.foldl' (||) false
+  or  = not . and . map not . toList
 
   all p = Foldable.foldl' (\res b -> res && p b) true
-  any p = Foldable.foldl' (\res b -> res || p b) false
+  any p = not . all (not . p)
 
   choose f _ (Var (Literal (-1))) = f
   choose _ t (Var (Literal 1))    = t
+  choose t f (Not s) = choose f t s 
   choose f t s = Mux f t s
+
+and2 :: Bit -> Bit -> Bit
+and2 a@(Var (Literal (-1))) _ = a
+and2 _ b@(Var (Literal (-1))) = b
+and2 a (Var (Literal 1)) = a
+and2 (Var (Literal 1)) b = b
+and2 (And as) (And bs) = And (as >< bs)
+and2 (And as) b      = And (as |> b)
+and2 a (And bs) = And (a <| bs)
+and2 a b = And (a <| b <| Seq.empty)
 
 instance Variable Bit where
   literally = liftM Var . literally
@@ -169,7 +167,8 @@ runBit (Var l) = return l
 runBit b = generateLiteral b $ \out ->
   assertFormula =<< case b of
     And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
-    Or  bs    -> formulaOr  out `liftM` mapM runBit (toList bs)
+    Or  bs    -> error "should not happen (AIG)"
+              -- formulaOr  out `liftM` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
 
