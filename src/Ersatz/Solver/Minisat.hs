@@ -34,6 +34,8 @@ import qualified Data.Attoparsec.ByteString.Char8 as  P
 import qualified Data.ByteString.Char8 as B
 import Data.List ( foldl' )
 
+import qualified Data.Time.Clock as T
+
 -- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m
 minisat = minisatPath "minisat"
@@ -48,15 +50,22 @@ cryptominisat = minisatPath "cryptominisat"
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
-    withFile problemPath WriteMode $ \fh ->
+    timed "write dimacs" $ withFile problemPath WriteMode $ \fh ->
       hPutBuilder fh (dimacs problem)
 
-    (exit, _out, _err) <-
+    (exit, _out, _err) <- timed ("run minisat" ++ " (on " ++ show (dimacsNumVariables problem) ++ " vars)" ) $ 
       readProcessWithExitCode path [problemPath, solutionPath] []
     
-    sol <- parseSolutionFile solutionPath
+    sol <- timed "parse output" $ parseSolutionFile solutionPath
 
     return (resultOf exit, sol)
+
+timed msg action = do
+  start <- T.getCurrentTime
+  res <- action ; res `seq` return ()
+  end <- T.getCurrentTime
+  hPutStrLn stderr $ unwords [ "time", msg, show $ T.diffUTCTime end start ]
+  return res
 
 parseSolutionFile :: FilePath -> IO (IntMap Bool)
 parseSolutionFile path = handle handler (parseSolution <$> B.readFile path)
