@@ -57,7 +57,6 @@ infixr 0 ==>
 -- value that can be determined by an external SAT solver.
 data Bit
   = And (Seq Bit)
-  | Or (Seq Bit) -- ^ not needed because of AIG conversion
   | Xor Bit Bit
   | Mux Bit Bit Bit
   | Not Bit
@@ -123,7 +122,6 @@ instance Codec Bit where
      -- recurse to compute the value.
     <|> case b of
           And cs  -> andMaybeBools . toList $ decode sol <$> cs
-          Or cs   -> orMaybeBools  . toList $ decode sol <$> cs
           Xor x y -> xor <$> decode sol x <*> decode sol y
           Mux cf ct cp -> do
             p <- decode sol cp
@@ -167,8 +165,6 @@ runBit (Var l) = return l
 runBit b = generateLiteral b $ \out ->
   assertFormula =<< case b of
     And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
-    Or  bs    -> error "should not happen (AIG)"
-              -- formulaOr  out `liftM` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
 
