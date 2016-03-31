@@ -23,7 +23,6 @@ module Ersatz.Bit
   ( Bit(..)
   , assert
   , Boolean(..)
-  , full_Adder_Carry, full_Adder_Sum
   ) where
 
 import Prelude hiding ((&&),(||),not,and,or,all,any)
@@ -65,8 +64,6 @@ data Bit
   | Mux !Bit !Bit !Bit
   | Not !Bit
   | Var !Literal
-  | Full_Adder_Sum !Bit !Bit !Bit
-  | Full_Adder_Carry !Bit !Bit !Bit
   | Run ( forall m s . (MonadState s m, HasSAT s) => m Bit )
   deriving (Typeable)
 
@@ -117,13 +114,6 @@ and2 (And as) b      = And (as |> b)
 and2 a (And bs) = And (a <| bs)
 and2 a b = And (a <| b <| Seq.empty)
 
-full_Adder_Sum (Not a) b c = not (full_Adder_Sum a b c)
-full_Adder_Sum a (Not b) c = not (full_Adder_Sum a b c)
-full_Adder_Sum a b (Not c) = not (full_Adder_Sum a b c)
-full_Adder_Sum a b c = Full_Adder_Sum a b c
-
-full_Adder_Carry a b c = Full_Adder_Carry a b c
-     
 instance Variable Bit where
   literally = liftM Var . literally
 
@@ -187,9 +177,6 @@ runBit b = generateLiteral b $ \out ->
               -- formulaOr  out `liftM` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
-
-    Full_Adder_Sum   a b c -> liftM3 (formulaFAS out) (runBit a) (runBit b) (runBit c)
-    Full_Adder_Carry a b c -> liftM3 (formulaFAC out) (runBit a) (runBit b) (runBit c)
 
     -- Already handled above but GHC doesn't realize it.
     Not _ -> error "Unreachable"

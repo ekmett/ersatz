@@ -314,3 +314,9 @@ test-suite moore
   main-is: Moore.hs
   hs-source-dirs: tests
   build-depends: base, array, mtl, ersatz
+
+test-suite z001
+  type: exitcode-stdio-1.0
+  main-is: Z001.hs
+  hs-source-dirs: tests
+  build-depends: base, mtl, ersatz
