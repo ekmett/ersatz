@@ -7,6 +7,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -64,8 +66,11 @@ data Bit
   | Not !Bit
   | Var !Literal
   | Full_Adder_Sum !Bit !Bit !Bit
-  | Full_Adder_Carry !Bit !Bit !Bit  
-  deriving (Show, Typeable)
+  | Full_Adder_Carry !Bit !Bit !Bit
+  | Run ( forall m s . (MonadState s m, HasSAT s) => m Bit )
+  deriving (Typeable)
+
+instance Show Bit where -- dummy
 
 instance Boolean Bit where
   -- improve the stablemap this way
@@ -174,6 +179,7 @@ assert b = do
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
 runBit (Not c) = negateLiteral `liftM` runBit c
 runBit (Var l) = return l
+runBit (Run action) = action >>= runBit
 runBit b = generateLiteral b $ \out ->
   assertFormula =<< case b of
     And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
