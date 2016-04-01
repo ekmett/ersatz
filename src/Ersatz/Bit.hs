@@ -36,6 +36,7 @@ import Data.Foldable (Foldable, toList)
 import Data.Foldable (toList)
 #endif
 import qualified Data.Foldable as Foldable
+import qualified Data.Traversable as Traversable
 import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
 import Data.Typeable
@@ -161,6 +162,11 @@ instance Codec Bit where
 -- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
 -- of the current problem.
 assert :: (MonadState s m, HasSAT s) => Bit -> m ()
+assert (And bs) = Foldable.for_ bs assert
+-- the following (when switched on, False => True) produces extra clauses, why?
+assert (Not (And bs)) | False = do
+  ls <- Traversable.for bs runBit
+  assertFormula $ fromClause $ foldMap (fromLiteral . negateLiteral) ls
 assert b = do
   l <- runBit b
   assertFormula (formulaLiteral l)

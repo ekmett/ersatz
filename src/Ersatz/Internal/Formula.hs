@@ -20,10 +20,10 @@
 module Ersatz.Internal.Formula
   (
   -- * Clauses
-    Clause(..), clauseLiterals
+    Clause(..), clauseLiterals, fromLiteral
   -- * Formulas
   , Formula(..)
-  , formulaEmpty, formulaLiteral
+  , formulaEmpty, formulaLiteral, fromClause
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
   , formulaFAS, formulaFAC
   ) where
@@ -62,6 +62,9 @@ clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 instance Monoid Clause where
   mempty = Clause mempty
   mappend (Clause x) (Clause y) = Clause (mappend x y)
+
+fromLiteral :: Literal -> Clause
+fromLiteral l = Clause { clauseSet = IntSet.singleton $ literalId l }
 
 ------------------------------------------------------------------------------
 -- Formulas

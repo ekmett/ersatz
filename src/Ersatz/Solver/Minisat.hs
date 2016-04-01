@@ -50,7 +50,9 @@ cryptominisat = minisatPath "cryptominisat"
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
-    timed ( "write dimacs" ++ " (" ++ show (dimacsNumVariables problem) ++ " vars)" ) $ withFile problemPath WriteMode $ \fh ->
+    timed ( "write dimacs" ++ " (" ++ show (dimacsNumVariables problem) ++ " variables, "
+                                   ++ show (length $ dimacsClauses problem) ++ " clauses" ++ ")" )
+         $ withFile problemPath WriteMode $ \fh ->
       hPutBuilder fh (dimacs problem)
 
     (exit, _out, _err) <- timed "run minisat" $ 

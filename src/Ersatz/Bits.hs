@@ -199,6 +199,7 @@ fullAdder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
 fullAdder a b c =
   -- ( full_Adder_Sum a b c , full_Adder_Carry a b c )
   let (s1,c1) = halfAdder a b ; (s2,c2) = halfAdder s1 c in (s2, c1||c2)
+  -- following does not work (formula generation does not stop), why?
   {-
   ( Run $ exists >>= \ x -> do
       assert (     a ||     b ||     c || not x ) ; assert ( not a || not b || not c || x )
