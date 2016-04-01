@@ -8,6 +8,10 @@ wip
 .*.swp
 .*.swo
 *.o
+*.p_o
 *.hi
+*.p_hi
 *~
 *#
+*.prof
+*.hp

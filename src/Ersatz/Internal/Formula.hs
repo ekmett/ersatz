@@ -20,11 +20,12 @@
 module Ersatz.Internal.Formula
   (
   -- * Clauses
-    Clause(..), clauseLiterals
+    Clause(..), clauseLiterals, fromLiteral
   -- * Formulas
   , Formula(..)
-  , formulaEmpty, formulaLiteral
+  , formulaEmpty, formulaLiteral, fromClause
   , formulaNot, formulaAnd, formulaOr, formulaXor, formulaMux
+  , formulaFAS, formulaFAC
   ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -40,6 +41,10 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Literal
+
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
+import Data.Foldable (toList)
 
 ------------------------------------------------------------------------------
 -- Clauses
@@ -58,12 +63,15 @@ instance Monoid Clause where
   mempty = Clause mempty
   mappend (Clause x) (Clause y) = Clause (mappend x y)
 
+fromLiteral :: Literal -> Clause
+fromLiteral l = Clause { clauseSet = IntSet.singleton $ literalId l }
+
 ------------------------------------------------------------------------------
 -- Formulas
 ------------------------------------------------------------------------------
 
 -- | A conjunction of clauses
-newtype Formula = Formula { formulaSet :: Set Clause }
+newtype Formula = Formula { formulaSet :: Seq Clause }
   deriving (Eq, Ord, Typeable)
 
 instance Monoid Formula where
@@ -73,7 +81,7 @@ instance Monoid Formula where
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id
               . List.intersperse (showString " & ") . map (showsPrec 3)
-              . Set.toList . formulaSet
+              . Data.Foldable.toList . formulaSet
 
 instance Show Clause where
   showsPrec p = showParen (p > 1) . foldr (.) id
@@ -83,12 +91,15 @@ instance Show Clause where
 
 -- | A formula with no clauses
 formulaEmpty :: Formula
-formulaEmpty = Formula Set.empty
+formulaEmpty = mempty
 
 -- | Assert a literal
 formulaLiteral :: Literal -> Formula
-formulaLiteral (Literal l) =
-  Formula (Set.singleton (Clause (IntSet.singleton l)))
+formulaLiteral (Literal l) = fromClause (Clause (IntSet.singleton l))
+
+fromClause :: Clause -> Formula
+fromClause c = Formula { formulaSet = Seq.singleton c }
+
 
 -- | The boolean /not/ operation
 --
@@ -102,6 +113,7 @@ formulaLiteral (Literal l) =
 formulaNot :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Formula
+{-# inlineable formulaNot #-}
 formulaNot (Literal out) (Literal inp) = formulaFromList cls
   where
     cls = [ [-out, -inp], [out, inp] ]
@@ -119,6 +131,7 @@ formulaNot (Literal out) (Literal inp) = formulaFromList cls
 formulaAnd :: Literal    -- ^ Output
            -> [Literal]  -- ^ Inputs
            -> Formula
+{-# inlineable formulaAnd #-}
 formulaAnd (Literal out) inpLs = formulaFromList cls
   where
     cls = (out : map negate inps) : map (\inp -> [-out, inp]) inps
@@ -138,6 +151,7 @@ formulaAnd (Literal out) inpLs = formulaFromList cls
 formulaOr :: Literal    -- ^ Output
           -> [Literal]  -- ^ Inputs
           -> Formula
+{-# inlineable formulaOr #-}
 formulaOr (Literal out) inpLs = formulaFromList cls
   where
     cls = (-out : inps)
@@ -183,6 +197,7 @@ formulaXor :: Literal  -- ^ Output
            -> Literal  -- ^ Input
            -> Literal  -- ^ Input
            -> Formula
+{-# inlineable formulaXor #-}
 formulaXor (Literal out) (Literal inpA) (Literal inpB) = formulaFromList cls
   where
     cls = [ [-out, -inpA, -inpB]
@@ -230,15 +245,36 @@ formulaMux :: Literal  -- ^ Output
            -> Literal  -- ^ True branch
            -> Literal  -- ^ Predicate/selector
            -> Formula
-formulaMux (Literal out) (Literal inpF) (Literal inpT) (Literal inpP) =
+{-# inlineable formulaMux #-}
+-- | with redundant clauses, cf. discussion in
+--   Een and Sorensen, Translating Pseudo Boolean Constraints ..., p. 7
+-- http://minisat.se/Papers.html
+formulaMux (Literal x) (Literal f) (Literal t) (Literal s) =
   formulaFromList cls
   where
-    cls = [ [-out,  inpF,  inpT]
-          , [-out,  inpF,  inpP]
-          , [-out,  inpT, -inpP]
-          , [ out, -inpF,  inpP]
-          , [ out, -inpT, -inpP]
+    cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x] 
+          , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  t, -x]
           ]
 
+formulaFAS (Literal x) (Literal a) (Literal b) (Literal c) = 
+  formulaFromList cls
+  where
+    cls = 
+      [ [ a,  b,  c, -x], [-a, -b, -c, x]
+      , [ a, -b, -c, -x], [-a,  b,  c, x]
+      , [-a,  b, -c, -x], [ a, -b,  c, x]
+      , [-a, -b,  c, -x], [ a,  b, -c, x]
+      ]
+
+formulaFAC (Literal x) (Literal a) (Literal b) (Literal c) = 
+  formulaFromList cls
+  where
+    cls = 
+      [ [ -b, -c, x], [b, c, -x]
+      , [ -a, -c, x], [a, c, -x]
+      , [ -a, -b, x], [a, b, -x]
+      ]
+
 formulaFromList :: [[Int]] -> Formula
-formulaFromList = Formula . Set.fromList . map (Clause . IntSet.fromList)
+{-# inline formulaFromList #-}
+formulaFromList = foldMap (  fromClause . Clause . IntSet.fromList )

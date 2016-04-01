@@ -7,6 +7,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -34,6 +36,7 @@ import Data.Foldable (Foldable, toList)
 import Data.Foldable (toList)
 #endif
 import qualified Data.Foldable as Foldable
+import qualified Data.Traversable as Traversable
 import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
 import Data.Typeable
@@ -56,12 +59,24 @@ infixr 0 ==>
 -- | A 'Bit' provides a reference to a possibly indeterminate boolean
 -- value that can be determined by an external SAT solver.
 data Bit
-  = And (Seq Bit)
-  | Xor Bit Bit
-  | Mux Bit Bit Bit
-  | Not Bit
+  = And !(Seq Bit)
+  | Xor !Bit !Bit
+  | Mux !Bit !Bit !Bit
+  | Not !Bit
   | Var !Literal
-  deriving (Show, Typeable)
+  | Run ( forall m s . (MonadState s m, HasSAT s) => m Bit )
+  deriving (Typeable)
+
+instance Show Bit where
+  showsPrec d (And xs)  = showParen (d > 10) $
+    showString "And " . showsPrec 11 xs
+  showsPrec d (Xor x y) = showParen (d > 10) $
+    showString "Xor " . showsPrec 11 x . showChar ' ' . showsPrec 11 y
+  showsPrec d (Mux x y z) = showParen (d > 10) $
+    showString "Mux " . showsPrec 11 x . showChar ' ' . showsPrec 11 y . showChar ' ' . showsPrec 11 z
+  showsPrec d (Not x)  = showParen (d > 10) $ showString "Not " . showsPrec 11 x
+  showsPrec d (Var x)  = showParen (d > 10) $ showString "Var " . showsPrec 11 x
+  showsPrec d (Run x)  = showParen (d > 10) $ showString "Run ..."
 
 instance Boolean Bit where
   -- improve the stablemap this way
@@ -154,6 +169,11 @@ instance Codec Bit where
 -- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
 -- of the current problem.
 assert :: (MonadState s m, HasSAT s) => Bit -> m ()
+assert (And bs) = Foldable.for_ bs assert
+-- the following (when switched on, False => True) produces extra clauses, why?
+assert (Not (And bs)) | False = do
+  ls <- Traversable.for bs runBit
+  assertFormula $ fromClause $ foldMap (fromLiteral . negateLiteral) ls
 assert b = do
   l <- runBit b
   assertFormula (formulaLiteral l)
@@ -162,6 +182,7 @@ assert b = do
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
 runBit (Not c) = negateLiteral `liftM` runBit c
 runBit (Var l) = return l
+runBit (Run action) = action >>= runBit
 runBit b = generateLiteral b $ \out ->
   assertFormula =<< case b of
     And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)

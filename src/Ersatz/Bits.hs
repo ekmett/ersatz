@@ -196,9 +196,24 @@ instance Num Bit1 where
 
 -- | Compute the sum and carry bit from adding three bits.
 fullAdder :: Bit -> Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
-fullAdder a b cin = (s2, c1 || c2)
-  where (s1,c1) = halfAdder a b
-        (s2,c2) = halfAdder s1 cin
+fullAdder a b c =
+  -- ( full_Adder_Sum a b c , full_Adder_Carry a b c )
+  let (s1,c1) = halfAdder a b ; (s2,c2) = halfAdder s1 c in (s2, c1||c2)
+  -- following does not work (formula generation does not stop), why?
+  {-
+  ( Run $ exists >>= \ x -> do
+      assert (     a ||     b ||     c || not x ) ; assert ( not a || not b || not c || x )
+      assert (     a || not b || not c || not x ) ; assert ( not a ||     b ||     c || x )
+      assert ( not a ||     b || not c || not x ) ; assert (     a || not b ||     c || x )
+      assert ( not a || not b ||     c || not x ) ; assert (     a ||     b || not c || x )
+      return x
+  , Run $ exists >>= \ x -> do
+      assert ( not b || not c || x ) ; assert ( b || c || not x )
+      assert ( not a || not c || x ) ; assert ( a || c || not x )
+      assert ( not a || not b || x ) ; assert ( a || b || not x )
+      return x
+  )
+  -}
 
 -- | Compute the sum and carry bit from adding two bits.
 halfAdder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)

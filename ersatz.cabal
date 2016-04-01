@@ -178,7 +178,8 @@ library
     process              >= 1.1      && < 1.3,
     temporary            >= 1.1      && < 1.3,
     transformers         >= 0.3      && < 0.5,
-    unordered-containers == 0.2.*
+    unordered-containers == 0.2.*,
+    attoparsec
 
   if impl(ghc >= 7.4 && < 7.6)
     build-depends: ghc-prim
@@ -199,12 +200,16 @@ library
     Ersatz.Solver.DepQBF
     Ersatz.Solver.Minisat
     Ersatz.Variable
+    Ersatz.Counting
+    Ersatz.Relation
 
   other-modules:
     Ersatz.Internal.Parser
     Ersatz.Internal.StableName
     Ersatz.Solver.Common
-
+    Ersatz.Relation.Data
+    Ersatz.Relation.Prop
+    Ersatz.Relation.Op
 
 executable ersatz-regexp-grid
   -- description: An example program that solves the regular expression crossword problem <http://www.coinheist.com/rubik/a_regular_crossword/> using Ersatz.
@@ -297,3 +302,21 @@ test-suite hlint
     build-depends:
       base,
       hlint >= 1.7
+
+test-suite speed
+  type: exitcode-stdio-1.0
+  main-is: Speed.hs
+  hs-source-dirs: tests
+  build-depends: base, ersatz
+
+test-suite moore
+  type: exitcode-stdio-1.0
+  main-is: Moore.hs
+  hs-source-dirs: tests
+  build-depends: base, array, mtl, ersatz
+
+test-suite z001
+  type: exitcode-stdio-1.0
+  main-is: Z001.hs
+  hs-source-dirs: tests
+  build-depends: base, mtl, ersatz
