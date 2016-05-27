@@ -37,8 +37,6 @@ import qualified Data.List as List (intersperse)
 #if __GLASGOW_HASKELL__ < 710
 import Data.Monoid
 #endif
-import Data.Set (Set)
-import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Literal
 
@@ -252,24 +250,26 @@ formulaMux :: Literal  -- ^ Output
 formulaMux (Literal x) (Literal f) (Literal t) (Literal s) =
   formulaFromList cls
   where
-    cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x] 
+    cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x]
           , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  t, -x]
           ]
 
-formulaFAS (Literal x) (Literal a) (Literal b) (Literal c) = 
+formulaFAS :: Literal -> Literal -> Literal -> Literal -> Formula
+formulaFAS (Literal x) (Literal a) (Literal b) (Literal c) =
   formulaFromList cls
   where
-    cls = 
+    cls =
       [ [ a,  b,  c, -x], [-a, -b, -c, x]
       , [ a, -b, -c, -x], [-a,  b,  c, x]
       , [-a,  b, -c, -x], [ a, -b,  c, x]
       , [-a, -b,  c, -x], [ a,  b, -c, x]
       ]
 
-formulaFAC (Literal x) (Literal a) (Literal b) (Literal c) = 
+formulaFAC :: Literal -> Literal -> Literal -> Literal -> Formula
+formulaFAC (Literal x) (Literal a) (Literal b) (Literal c) =
   formulaFromList cls
   where
-    cls = 
+    cls =
       [ [ -b, -c, x], [b, c, -x]
       , [ -a, -c, x], [a, c, -x]
       , [ -a, -b, x], [a, b, -x]

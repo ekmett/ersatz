@@ -3,14 +3,10 @@ sudo: false
 
 matrix:
   include:
-    - env: CABALVER=1.18 GHCVER=7.8.4 GHCOPTS="-Werror" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-1.18, ghc-7.8.4], sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.1 GHCOPTS="" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.1],sources: [hvr-ghc]}}
-    - env: CABALVER=1.22 GHCVER=7.10.2 GHCOPTS="" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.2],sources: [hvr-ghc]}}
-    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-head,ghc-head],  sources: [hvr-ghc]}}
+    - env: CABALVER=1.22 GHCVER=7.10.3 GHCOPTS="" JOPTS="-j2"
+      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.3],sources: [hvr-ghc]}}
+    - env: CABALVER=1.24 GHCVER=8.0.1 GHCOPTS="" JOPTS="-j2"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1],  sources: [hvr-ghc]}}
 
   allow_failures:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
@@ -25,7 +21,6 @@ install:
  - $CABAL install --constraint=transformers\ installed happy alex
  - export PATH=$HOME/.cabal/bin:$PATH
  - $CABAL install $JOPTS --enable-tests --only-dependencies --force
- - if [ "$GHCVER" = "7.10.1" ]; then cabal install Cabal-1.22.4.0; fi;
 
 script:
  - $CABAL configure -v2 --enable-tests

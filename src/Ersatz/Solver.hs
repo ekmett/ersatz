@@ -14,7 +14,6 @@ module Ersatz.Solver
   , solveWith
   ) where
 
-import Control.Applicative
 import Control.Monad
 import Control.Monad.State
 import Data.Default

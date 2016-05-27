@@ -17,12 +17,9 @@ module Ersatz.Solver.Minisat
   ) where
 
 import Data.ByteString.Builder
-import Control.Applicative
 import Control.Exception (IOException, handle)
-import Control.Monad
 import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
-import Ersatz.Internal.Parser
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
@@ -30,11 +27,8 @@ import qualified Data.IntMap.Strict as IntMap
 import System.IO
 import System.Process (readProcessWithExitCode)
 
-import qualified Data.Attoparsec.ByteString.Char8 as  P
 import qualified Data.ByteString.Char8 as B
 import Data.List ( foldl' )
-
-import qualified Data.Time.Clock as T
 
 -- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m
@@ -50,24 +44,15 @@ cryptominisat = minisatPath "cryptominisat"
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
-    timed ( "write dimacs" ++ " (" ++ show (dimacsNumVariables problem) ++ " variables, "
-                                   ++ show (length $ dimacsClauses problem) ++ " clauses" ++ ")" )
-         $ withFile problemPath WriteMode $ \fh ->
+    withFile problemPath WriteMode $ \fh ->
       hPutBuilder fh (dimacs problem)
 
-    (exit, _out, _err) <- timed "run minisat" $ 
+    (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath, solutionPath] []
-    
-    sol <- timed "parse output" $ parseSolutionFile solutionPath
+
+    sol <- parseSolutionFile solutionPath
 
     return (resultOf exit, sol)
-
-timed msg action = do
-  start <- T.getCurrentTime
-  res <- action ; res `seq` return ()
-  end <- T.getCurrentTime
-  hPutStrLn stderr $ unwords [ "time", msg, show $ T.diffUTCTime end start ]
-  return res
 
 parseSolutionFile :: FilePath -> IO (IntMap Bool)
 parseSolutionFile path = handle handler (parseSolution <$> B.readFile path)
@@ -83,6 +68,3 @@ parseSolution s =
                             in  if 0 == v then m else IntMap.insert (abs v) (v>0) m
                  ) IntMap.empty ys
     _ -> IntMap.empty -- WRONG (should be Nothing)
-
-
-     

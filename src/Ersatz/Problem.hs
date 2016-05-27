@@ -67,8 +67,6 @@ import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List
 import Data.Monoid
-import Data.Set (Set)
-import qualified Data.Set as Set
 import Data.Typeable
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
@@ -285,7 +283,7 @@ bComment :: ByteString -> Builder
 bComment bs = bLine [ char7 'c', byteString bs ]
 
 bClause :: IntSet -> Builder
-bClause = IntSet.foldl' ( \ e i -> intDec i <> char7 ' ' <> e ) ( char7 '0' <> char7 '\n' ) 
+bClause = IntSet.foldl' ( \ e i -> intDec i <> char7 ' ' <> e ) ( char7 '0' <> char7 '\n' )
 
 bWClause :: Int64 -> IntSet -> Builder
 bWClause w ls = bLine0 (int64Dec w : map intDec (IntSet.toList ls))

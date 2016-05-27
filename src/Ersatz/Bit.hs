@@ -76,7 +76,7 @@ instance Show Bit where
     showString "Mux " . showsPrec 11 x . showChar ' ' . showsPrec 11 y . showChar ' ' . showsPrec 11 z
   showsPrec d (Not x)  = showParen (d > 10) $ showString "Not " . showsPrec 11 x
   showsPrec d (Var x)  = showParen (d > 10) $ showString "Var " . showsPrec 11 x
-  showsPrec d (Run x)  = showParen (d > 10) $ showString "Run ..."
+  showsPrec d (Run _)  = showParen (d > 10) $ showString "Run ..."
 
 instance Boolean Bit where
   -- improve the stablemap this way
@@ -131,7 +131,7 @@ instance Codec Bit where
   type Decoded Bit = Bool
   encode = bool
   decode sol b
-      = maybe (pure False <|> pure True) pure $ 
+      = maybe (pure False <|> pure True) pure $
         solutionStableName sol (unsafePerformIO (makeStableName' b))
      -- The StableName didn’t have an associated literal with a solution,
      -- recurse to compute the value.
@@ -143,20 +143,13 @@ instance Codec Bit where
             decode sol $ if p then ct else cf
           Not c'  -> not <$> decode sol c'
           Var l   -> decode sol l
+          Run _ -> mzero
     where
       andMaybeBools :: [Maybe Bool] -> Maybe Bool
       andMaybeBools mbs
         | any not knowns = Just False  -- One is known to be false.
         | null unknowns  = Just True   -- All are known to be true.
         | otherwise      = Nothing     -- Unknown.
-        where
-          (unknowns, knowns) = partitionMaybes mbs
-
-      orMaybeBools :: [Maybe Bool] -> Maybe Bool
-      orMaybeBools mbs
-        | or knowns     = Just True   -- One is known to be true.
-        | null unknowns = Just False  -- All are known to be false.
-        | otherwise     = Nothing     -- Unknown.
         where
           (unknowns, knowns) = partitionMaybes mbs
 
@@ -192,6 +185,7 @@ runBit b = generateLiteral b $ \out ->
     -- Already handled above but GHC doesn't realize it.
     Not _ -> error "Unreachable"
     Var _ -> error "Unreachable"
+    Run _ -> error "Unreachable"
 
 class GBoolean f where
   gbool :: Bool -> f a
