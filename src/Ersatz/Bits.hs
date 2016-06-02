@@ -380,11 +380,13 @@ instance HasBits Bits where
 
 mulBits :: Bits -> Bits -> Bits
 mulBits (Bits xs) (Bits ys0)
-  = sumBits
+  = takeBits (length xs + length ys0)
+  $ sumBits
   $ zipWith aux xs (iterate times2 ys0)
   where
   times2 = (false:)
   aux x ys = Bits (map (x &&) ys)
+  takeBits n (Bits ys) = Bits (take n ys)
 
 instance Num Bits where
   (+) = addBits false

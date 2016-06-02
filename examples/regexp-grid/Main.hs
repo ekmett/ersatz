@@ -11,7 +11,7 @@ import RegexpGrid.Types
 
 main :: IO ()
 main = do
-  (res, msol) <- solveWith cryptominisat problem
+  (res, msol) <- solveWith minisat problem
   when (res /= Satisfied) (fail (show res))
   case msol of
     Nothing  -> fail "Sol was Nothing"
