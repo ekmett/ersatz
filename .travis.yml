@@ -4,9 +4,9 @@ sudo: false
 matrix:
   include:
     - env: CABALVER=1.22 GHCVER=7.10.3 GHCOPTS="" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.3],sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.3, minisat],sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=8.0.1 GHCOPTS="" JOPTS="-j2"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1],  sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.1, minisat],  sources: [hvr-ghc]}}
 
   allow_failures:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
