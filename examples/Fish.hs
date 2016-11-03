@@ -41,7 +41,7 @@ main =
      forM_ people $ \who ->
        putStrLn (who ++ ": " ++ unwords (attributesForPerson solution who))
 
-     (Unsatisfied, _) <- solveWith minisat $
+     (Unsatisfied, Just _) <- solveWith minisat $
        do p <- puzzle
           assert (encode solution /== p)
 
