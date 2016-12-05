@@ -251,7 +251,7 @@ formulaMux (Literal x) (Literal f) (Literal t) (Literal s) =
   formulaFromList cls
   where
     cls = [ [-s, -t,  x], [ s, -f,  x], {- red -} [-t, -f,  x]
-          , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  t, -x]
+          , [-s,  t, -x], [ s,  f, -x], {- red -} [ t,  f, -x]
           ]
 
 formulaFAS :: Literal -> Literal -> Literal -> Literal -> Formula
