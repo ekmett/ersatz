@@ -147,6 +147,12 @@ data-files:
   data/dimacs/phole/hole7.cnf
   data/dimacs/phole/hole8.cnf
 
+custom-setup
+  setup-depends:
+    base          >= 4.3 && <5,
+    Cabal         >= 1.10,
+    cabal-doctest >= 1 && <1.1
+
 source-repository head
   type: git
   location: git://github.com/ekmett/ersatz.git
