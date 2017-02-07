@@ -22,6 +22,7 @@
 module Ersatz.Bit
   ( Bit(..)
   , assert
+  , assertClause
   , Boolean(..)
   ) where
 
@@ -170,6 +171,13 @@ assert (Not (And bs)) | False = do
 assert b = do
   l <- runBit b
   assertFormula (formulaLiteral l)
+
+-- | @assertClause xs@ is @assert $ or xs@ but does create
+-- exactly one clause (and no auxiliary literal)
+assertClause :: (MonadState s m, HasSAT s, Foldable f) => f Bit -> m ()
+assertClause bs = do
+  ls <- forM (toList bs) runBit
+  assertFormula $ fromClause $ foldMap fromLiteral ls
 
 -- | Convert a 'Bit' to a 'Literal'.
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
