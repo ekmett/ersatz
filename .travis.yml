@@ -15,13 +15,16 @@ matrix:
   include:
     - env: CABALVER=1.24 GHCVER=7.10.3 GHCOPTS="" JOPTS="-j2"
       compiler: ": #GHC 7.10.3"
-      addons: {apt: {packages: [cabal-install-1.22, ghc-7.10.3, minisat],sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.3,minisat],sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=8.0.2 GHCOPTS="" JOPTS="-j2"
       compiler: ": #GHC 8.0.2"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2, minisat],  sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.0.2,minisat],sources: [hvr-ghc]}}
+    - env: CABALVER=1.24 GHCVER=8.2.1 GHCOPTS="" JOPTS="-j2"
+      compiler: ": #GHC 8.2.1"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-8.2.1,minisat],sources: [hvr-ghc]}}
     - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
       compiler: ": #GHC head"
-      addons: {apt: {packages: [cabal-install-head,ghc-head, minisat],   sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-head,ghc-head,minisat],sources: [hvr-ghc]}}
 
   allow_failures:
    - env: CABALVER=head GHCVER=head GHCOPTS="" JOPTS="-j2"
@@ -80,7 +83,7 @@ script:
 # If there are no other `.tar.gz` files in `dist`, this can be even simpler:
 # `cabal install --force-reinstalls dist/*-*.tar.gz`
  - SRC_TGZ=$(cabal info . | awk '{print $2;exit}').tar.gz &&
-   (cd dist && cabal install --force-reinstalls "$SRC_TGZ")
+   (cd dist && cabal install $JOPTS --ghc-options=$GHCOPTS --force-reinstalls "$SRC_TGZ")
 
 notifications:
   irc:
