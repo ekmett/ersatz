@@ -65,7 +65,7 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
   .
   @ersatz-regexp-grid@
   .
-  This solves the \"regular crossword puzzle\" (<grid.pdf>) from the 2013 MIT mystery hunt.
+  This solves the \"regular crossword puzzle\" (<https://github.com/ekmett/ersatz/raw/master/notes/grid.pdf grid.pdf>) from the 2013 MIT mystery hunt.
   .
   > % time ersatz-regexp-grid
   .
