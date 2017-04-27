@@ -1,7 +1,12 @@
 next
 ----
+* Performance improvements for CNF printing and parsing
+* Add the `Ersatz.Counting`, `Ersatz.Relation`, `Ersatz.Relation.Data`,
+  `Ersatz.Relation.Prop`, and `Ersatz.Relation.Op` modules
+* Eliminate the `Or` constructor from `Bit` towards using AIG
+* Fix error in the SAT encoding of the `choose` function
 * Revamp `Setup.hs` to use `cabal-doctest`. This makes it build
-  with `Cabal-1.25`, and makes the `doctest`s work with `cabal new-build` and
+  with `Cabal-2.0`, and makes the `doctest`s work with `cabal new-build` and
   sandboxes.
 
 0.3.1
