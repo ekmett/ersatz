@@ -1,5 +1,5 @@
-next
-----
+0.4
+---
 * Performance improvements for CNF printing and parsing
 * Add the `Ersatz.Counting`, `Ersatz.Relation`, `Ersatz.Relation.Data`,
   `Ersatz.Relation.Prop`, and `Ersatz.Relation.Op` modules
