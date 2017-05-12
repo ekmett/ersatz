@@ -1,6 +1,6 @@
 # Ersatz
 
-[![Build Status](https://secure.travis-ci.org/ekmett/ersatz.png)](http://travis-ci.org/ekmett/ersatz)
+[![Hackage](https://img.shields.io/hackage/v/ersatz.svg)](https://hackage.haskell.org/package/ersatz) [![Build Status](https://secure.travis-ci.org/ekmett/ersatz.png)](http://travis-ci.org/ekmett/ersatz)
 
 Ersatz is a library for generating QSAT (CNF/QBF) problems using a monad. It takes care of generating the normal form, encoding your problem, marshaling the data to an external solver, and parsing and interpreting the result into Haskell types.
 
