@@ -83,6 +83,7 @@ extra-source-files:
   AUTHORS.md
   CHANGELOG.md
   README.md
+  Warning.hs
   notes/SPOILER.html
   notes/grid.pdf
   notes/papers.md
