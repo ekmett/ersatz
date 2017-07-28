@@ -1,5 +1,5 @@
 name:           ersatz
-version:        0.4
+version:        0.4.1
 license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Eric Mertens, Johan Kiviniemi
@@ -290,7 +290,7 @@ test-suite doctests
     base < 5,
     directory >= 1.0,
     doctest >= 0.9.1,
-    ersatz
+    ersatz,
     filepath
   ghc-options: -Wall -threaded
   hs-source-dirs: tests
