@@ -1,3 +1,7 @@
+next
+----
+* Add a library dependency on the `doctests` test suite
+
 0.4
 ---
 * Performance improvements for CNF printing and parsing
