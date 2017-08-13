@@ -65,7 +65,7 @@ reflexive r = and $ do
     x <- range (a,c)
     return $ r ! (x,x)
 
-regular, regular_in_degree, regular_out_degree, max_in_degree, min_in_degree, max_out_degree, min_out_degree :: ( Ix a ) => Int -> Relation a a -> Bit
+regular, regular_in_degree, regular_out_degree, max_in_degree, min_in_degree, max_out_degree, min_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
 regular deg r = and [ regular_in_degree deg r, regular_out_degree deg r ]
 
