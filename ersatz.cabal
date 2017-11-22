@@ -75,7 +75,7 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
 
 build-type:     Custom
 cabal-version:  >= 1.10
-tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.1
+tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2
 extra-source-files:
   .ghci
   .gitignore
