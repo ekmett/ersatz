@@ -45,28 +45,18 @@ module Ersatz.Problem
   ) where
 
 import Data.ByteString.Builder
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Control.Lens
 import Control.Monad
-#if !(MIN_VERSION_lens(4,0,0))
-import Control.Monad.Identity
-#endif
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as Lazy
 import Data.Default
-#if __GLASGOW_HASKELL__ < 710
-import Data.Foldable (foldMap)
-#endif
 import Data.HashMap.Lazy (HashMap)
 import qualified Data.HashMap.Lazy as HashMap
 import Data.Int
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List
-import Data.Monoid
 import Data.Typeable
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
@@ -74,6 +64,16 @@ import Ersatz.Internal.StableName
 import System.IO.Unsafe
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
+
+#if !(MIN_VERSION_base(4,8,0))
+import Control.Applicative
+import Data.Foldable (foldMap)
+import Data.Monoid
+#endif
+
+#if !(MIN_VERSION_lens(4,0,0))
+import Control.Monad.Identity
+#endif
 
 ------------------------------------------------------------------------------
 -- SAT Problems

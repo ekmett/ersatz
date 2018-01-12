@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -41,12 +42,18 @@ data ReBitResult = ReBitResult
 makeLenses ''ReBitState
 makeLenses ''ReBitResult
 
+instance Semigroup ReBitResult where
+  ReBitResult fieldsA bitA <> ReBitResult fieldsB bitB =
+    ReBitResult (fieldsA <> fieldsB) (bitA && bitB)
+  {-# INLINE (<>) #-}
+
 instance Monoid ReBitResult where
   mempty = ReBitResult mempty true
   {-# INLINE mempty #-}
-  ReBitResult fieldsA bitA `mappend` ReBitResult fieldsB bitB =
-    ReBitResult (fieldsA <> fieldsB) (bitA && bitB)
+#if !(MIN_VERSION_base(4,11,0))
+  mappend = (<>)
   {-# INLINE mappend #-}
+#endif
 
 problem :: (Applicative m, MonadState s m, HasSAT s) => m (Map Pos Field)
 problem = do

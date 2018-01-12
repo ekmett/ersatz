@@ -1,5 +1,6 @@
 next
 ----
+* Add `Semigroup` instances for `Clause` and `Formula`.
 * Generalize `regular`, `regular_in_degree`, `regular_out_degree`,
   `max_in_degree`, `min_in_degree`, `max_out_degree`, and `min_out_degree` to
   work over heterogeneous relations

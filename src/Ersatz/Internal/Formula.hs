@@ -28,21 +28,24 @@ module Ersatz.Internal.Formula
   , formulaFAS, formulaFAC
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (intersperse)
-#if __GLASGOW_HASKELL__ < 710
-import Data.Monoid
-#endif
 import Data.Typeable
 import Ersatz.Internal.Literal
 
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import Data.Foldable (toList)
+
+#if !(MIN_VERSION_base(4,8,0))
+import Control.Applicative
+import Data.Monoid (Monoid(..))
+#endif
+
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
+#endif
 
 ------------------------------------------------------------------------------
 -- Clauses
@@ -57,9 +60,14 @@ newtype Clause = Clause { clauseSet :: IntSet }
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Clause is) = Literal <$> IntSet.toList is
 
+instance Semigroup Clause where
+  Clause x <> Clause y = Clause (x <> y)
+
 instance Monoid Clause where
   mempty = Clause mempty
-  mappend (Clause x) (Clause y) = Clause (mappend x y)
+#if !(MIN_VERSION_base(4,11,0))
+  mappend = (<>)
+#endif
 
 fromLiteral :: Literal -> Clause
 fromLiteral l = Clause { clauseSet = IntSet.singleton $ literalId l }
@@ -72,9 +80,14 @@ fromLiteral l = Clause { clauseSet = IntSet.singleton $ literalId l }
 newtype Formula = Formula { formulaSet :: Seq Clause }
   deriving (Eq, Ord, Typeable)
 
+instance Semigroup Formula where
+  Formula x <> Formula y = Formula (x <> y)
+
 instance Monoid Formula where
   mempty = Formula mempty
-  mappend (Formula x) (Formula y) = Formula (mappend x y)
+#if !(MIN_VERSION_base(4,11,0))
+  mappend = (<>)
+#endif
 
 instance Show Formula where
   showsPrec p = showParen (p > 2) . foldr (.) id
