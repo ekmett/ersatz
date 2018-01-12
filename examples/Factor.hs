@@ -1,5 +1,6 @@
+module Main where
+
 import Ersatz
-import Ersatz.Bits
 import Control.Monad
 import Control.Monad.State
 
@@ -16,5 +17,5 @@ problem = do
 main :: IO ()
 main = do
   putStrLn "Solution:"
-  (Satisfied, msol@(Just (a,b,c))) <- solveWith minisat problem
+  (Satisfied, Just (a,b,c)) <- solveWith minisat problem
   putStrLn (show a ++ " * " ++ show b ++ " = " ++ show c)

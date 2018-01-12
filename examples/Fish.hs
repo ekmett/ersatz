@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 {-
 • There are 5 houses that are each a different colour.
 • There is a person of a different nationality in each house.
@@ -41,7 +43,7 @@ main =
      forM_ people $ \who ->
        putStrLn (who ++ ": " ++ unwords (attributesForPerson solution who))
 
-     (Unsatisfied, _) <- solveWith minisat $
+     (Unsatisfied, _ :: IO ()) <- solveWith minisat $
        do p <- puzzle
           assert (encode solution /== p)
 
