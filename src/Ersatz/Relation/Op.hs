@@ -5,8 +5,11 @@ module Ersatz.Relation.Op
 ( mirror
 , union
 , complement
+, difference
 , product, power
 , intersection
+, reflexive_closure
+, symmetric_closure
 )
 
 where
@@ -27,6 +30,10 @@ complement :: ( Ix a , Ix b ) => Relation a b -> Relation a b
 complement r =
     build (bounds r) $ do i <- indices r ; return ( i, not $ r!i )
 
+difference :: ( Ix a , Ix b )
+        => Relation a b -> Relation a b ->  Relation a b
+difference r s =
+    intersection r $ complement s
 
 union :: ( Ix a , Ix b )
         => Relation a b -> Relation a b ->  Relation a b
@@ -66,3 +73,10 @@ intersection r s = build ( bounds r ) $ do
         i <- indices r
         return (i, and [ r!i, s!i ] )
 
+reflexive_closure :: Ix a => Relation a a -> Relation a a
+reflexive_closure t =
+    union t $ identity $ bounds t
+
+symmetric_closure :: Ix a => Relation a a -> Relation a a
+symmetric_closure r =
+    union r $ mirror r

@@ -3,6 +3,7 @@ module Ersatz.Relation.Prop
 
 ( implies
 , symmetric
+, anti_symmetric
 , transitive
 , irreflexive
 , reflexive
@@ -15,6 +16,7 @@ module Ersatz.Relation.Prop
 , min_out_degree
 , empty
 , complete
+, total
 , disjoint
 , equals
 )
@@ -44,6 +46,9 @@ empty r = and $ do
 complete :: (Ix a, Ix b) => Relation a b -> Bit
 complete r = empty $ complement r
 
+total :: ( Ix a) => Relation a a -> Bit
+total r = complete $ symmetric_closure r
+
 disjoint :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 disjoint r s = empty $ intersection r s
 
@@ -52,6 +57,9 @@ equals r s = and [implies r s, implies s r]
 
 symmetric :: ( Ix a) => Relation a a -> Bit
 symmetric r = implies r ( mirror r )
+
+anti_symmetric :: ( Ix a) => Relation a a -> Bit
+anti_symmetric r = implies (intersection r (mirror r)) (identity (bounds r))
 
 irreflexive :: ( Ix a ) => Relation a a -> Bit
 irreflexive r = and $ do
