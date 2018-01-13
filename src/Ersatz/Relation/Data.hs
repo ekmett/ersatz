@@ -3,6 +3,7 @@
 module Ersatz.Relation.Data ( Relation
 , relation, symmetric_relation
 , build
+, buildFrom
 , identity
 , bounds, (!), indices, assocs, elems
 , table
@@ -47,16 +48,20 @@ symmetric_relation bnd = do
                    ++ [ ((q,p), x) | p /= q ]
     return $ build bnd $ concat pairs
 
-identity :: ( Ix a )
-         => ((a,a),(a,a)) ->  Relation a a
-identity bnd = build bnd $ flip map (A.range bnd) $ \ (i,j) ->
-        ((i,j), if i == j then true else false )
-
 build :: ( Ix a, Ix b )
       => ((a,b),(a,b))
       -> [ ((a,b), Bit ) ]
       -> Relation a b
 build bnd pairs = Relation $ A.array bnd pairs
+
+buildFrom :: (Ix a, Ix b)
+          => (a -> b -> Bit) -> ((a,b),(a,b)) -> Relation a b
+buildFrom p bnd = build bnd $ flip map (A.range bnd) $ \ (i,j) ->
+    ((i,j), p i j)
+
+identity :: (Ix a)
+         => ((a,a),(a,a)) -> Relation a a
+identity = buildFrom (\ i j -> bool $ i == j)
 
 
 bounds :: (Ix a, Ix b) => Relation a b -> ((a,b),(a,b))
