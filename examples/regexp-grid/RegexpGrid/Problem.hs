@@ -10,11 +10,14 @@ import Prelude hiding ((&&), (||), not, and, or, all, any)
 
 import Control.Applicative
 import Control.Monad.Reader
-import Control.Monad.RWS.Strict
+import Control.Monad.RWS.Strict hiding ((<>))
 import Control.Lens
 import Data.Foldable (asum)
 import Data.Map (Map)
 import qualified Data.Map as Map
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
+#endif
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import Ersatz

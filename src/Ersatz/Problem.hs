@@ -68,7 +68,11 @@ import qualified Data.Sequence as Seq
 #if !(MIN_VERSION_base(4,8,0))
 import Control.Applicative
 import Data.Foldable (foldMap)
-import Data.Monoid
+import Data.Monoid (Monoid(..))
+#endif
+
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
 #endif
 
 #if !(MIN_VERSION_lens(4,0,0))
