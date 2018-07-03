@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.4.3 [2018.07.03]
+------------------
 * Make the test suite compile on GHC 8.6.
 * Allow building with `containers-0.6`.
 
