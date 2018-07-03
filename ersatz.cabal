@@ -75,7 +75,11 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
 
 build-type:     Custom
 cabal-version:  >= 1.10
-tested-with:    GHC == 7.10.3, GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.3
+tested-with:    GHC == 7.10.3
+              , GHC == 8.0.2
+              , GHC == 8.2.2
+              , GHC == 8.4.3
+              , GHC == 8.6.1
 extra-source-files:
   .ghci
   .gitignore
@@ -178,7 +182,7 @@ library
     array                >= 0.2      && < 0.6,
     base                 >= 4.8      && < 5,
     bytestring           >= 0.10.4.0 && < 0.12,
-    containers           >= 0.2.0.1  && < 0.6,
+    containers           >= 0.2.0.1  && < 0.7,
     data-default         >= 0.5      && < 0.8,
     lens                 >= 3.8      && < 5,
     mtl                  >= 1.1      && < 2.3,
