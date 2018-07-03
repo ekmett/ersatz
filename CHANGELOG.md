@@ -1,3 +1,8 @@
+next [????.??.??]
+-----------------
+* Make the test suite compile on GHC 8.6.
+* Allow building with `containers-0.6`.
+
 0.4.2
 -----
 * Add `Semigroup` instances for `Clause` and `Formula`.

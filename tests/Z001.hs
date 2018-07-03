@@ -1,7 +1,7 @@
 {-# language KindSignatures, DataKinds, FlexibleContexts #-}
 {-# language GeneralizedNewtypeDeriving #-}
 {-# language TypeFamilies, ScopedTypeVariables #-}
-
+{-# language UndecidableInstances #-}
 {-# language NoMonomorphismRestriction #-}
 
 import Prelude hiding ( not, and, or, (&&), (||) )
@@ -36,7 +36,7 @@ instance (KnownNat dim, Unknown a, Codec a, Num (Decoded a))
         row f = ( encode f : ) <$> replicateM (d-1) unknown
     m <- (:) <$> row 1 <*> replicateM (d-2) (row 0)
     return $ Restricted $ Matrix
-       $ m ++ encode [ replicate (d-1) 0 ++ [1] ] 
+       $ m ++ encode [ replicate (d-1) 0 ++ [1] ]
 
 class Unknown a where
   unknown :: (MonadState s m, HasSAT s) => m a
@@ -48,12 +48,12 @@ newtype Matrix (dim::Nat)  a = Matrix [[a]]
 instance Codec a => Codec (Matrix dim a) where
   type Decoded (Matrix dim a) = Matrix dim (Decoded a)
   decode s (Matrix xss) = Matrix <$> decode s xss
-    
+
 instance (KnownNat dim, Unknown a) => Unknown (Matrix dim a) where
   unknown = do
     let d = fromIntegral $ natVal (Proxy :: Proxy dim)
     Matrix <$> replicateM d (replicateM d unknown)
-    
+
 instance Num a => Num (Matrix dim a) where
   Matrix xss + Matrix yss
     = Matrix $ zipWith (zipWith (+)) xss yss
@@ -81,7 +81,7 @@ gt a b = ge a b && topright a >? topright b
 -- Bitvectors of fixed length, with non-overflowing arithmetics
 -- (if overflow occurs, constraint is unsatisfiable)
 
-newtype NBV ( n :: Nat ) = NBV Bits 
+newtype NBV ( n :: Nat ) = NBV Bits
   deriving ( Show, Equatable, Orderable, HasBits )
 
 instance KnownNat w => Unknown (NBV w) where
@@ -91,10 +91,10 @@ instance KnownNat w => Unknown (NBV w) where
 
 positive (NBV (Bits bs)) = or bs
 
-nbv n (Bits bs) = 
+nbv n (Bits bs) =
   let (p : re, post) = splitAt n bs
   in  NBV $ Bits $ Run ( assert (not $ or post) *> return p )
-                 : re 
+                 : re
 
 instance KnownNat n => Num (NBV n) where
   fromInteger = encode
