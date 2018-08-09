@@ -1,3 +1,8 @@
+next [????.??.??]
+-----------------
+* Avoid the use of failable pattern matches in `do`-notation to support
+  building with GHC 8.6, which enables `MonadFailDesugaring`.
+
 0.4.3 [2018.07.03]
 ------------------
 * Make the test suite compile on GHC 8.6.

@@ -48,7 +48,8 @@ instance Variable BitChar where
        -- Char upperbound is 0x10ffff, so only set
        -- the high bit when the next 4 bits are 0
 
-    do x:xs <- replicateM 21 (literally m)
+    do x  <- literally m
+       xs <- replicateM 20 (literally m)
 
        let x' = x && nor (take 4 xs)
            n  = Bits (reverse (x':xs)) -- Bits is little endian
