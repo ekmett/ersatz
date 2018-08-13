@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.4.4 [2018.08.13]
+------------------
 * Avoid the use of failable pattern matches in `do`-notation to support
   building with GHC 8.6, which enables `MonadFailDesugaring`.
 
