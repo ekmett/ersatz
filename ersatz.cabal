@@ -301,20 +301,6 @@ test-suite doctests
   ghc-options: -Wall -threaded
   hs-source-dirs: tests
 
-test-suite hlint
-  type: exitcode-stdio-1.0
-  main-is: hlint.hs
-  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
-  hs-source-dirs: tests
-  default-language: Haskell2010
-
-  if !flag(test-hlint)
-    buildable: False
-  else
-    build-depends:
-      base,
-      hlint >= 1.7
-
 test-suite speed
   type: exitcode-stdio-1.0
   main-is: Speed.hs
