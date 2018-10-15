@@ -8,7 +8,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_HADDOCK not-home #-}
 --------------------------------------------------------------------
 -- |
@@ -103,14 +102,14 @@ instance Boolean Bit where
   a `xor` b    = Xor a b
 
   and = Foldable.foldl' (&&) true
-  or  = not . and . map not . toList
+  or  = not . all not . toList
 
   all p = Foldable.foldl' (\res b -> res && p b) true
   any p = not . all (not . p)
 
   choose f _ (Var (Literal (-1))) = f
   choose _ t (Var (Literal 1))    = t
-  choose t f (Not s) = choose f t s 
+  choose t f (Not s) = choose f t s
   choose f t s = Mux f t s
 
 and2 :: Bit -> Bit -> Bit
@@ -124,7 +123,7 @@ and2 a (And bs) = And (a <| bs)
 and2 a b = And (a <| b <| Seq.empty)
 
 instance Variable Bit where
-  literally = liftM Var . literally
+  literally = fmap Var . literally
 
 -- a Bit you don't assert is actually a boolean function that you can evaluate later after compilation
 instance Codec Bit where
@@ -173,12 +172,12 @@ assert b = do
 
 -- | Convert a 'Bit' to a 'Literal'.
 runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
-runBit (Not c) = negateLiteral `liftM` runBit c
+runBit (Not c) = negateLiteral `fmap` runBit c
 runBit (Var l) = return l
 runBit (Run action) = action >>= runBit
 runBit b = generateLiteral b $ \out ->
   assertFormula =<< case b of
-    And bs    -> formulaAnd out `liftM` mapM runBit (toList bs)
+    And bs    -> formulaAnd out `fmap` mapM runBit (toList bs)
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
 
@@ -309,7 +308,6 @@ class Boolean b where
          -> b
   choose f t s = (f && not s) || (t && s)
 
-#ifndef HLINT
   default bool :: (Generic b, GBoolean (Rep b)) => Bool -> b
   bool = to . gbool
 
@@ -330,7 +328,6 @@ class Boolean b where
 
   default xor :: (Generic b, GBoolean (Rep b)) => b -> b -> b
   xor x y = to (from x `gxor` from y)
-#endif
 
 instance Boolean Bool where
   bool = id

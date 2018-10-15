@@ -44,8 +44,8 @@ symmetric_relation bnd = do
         guard $ p <= q
         return $ do
             x <- exists
-            return $ [ ((p,q), x ) ]
-                   ++ [ ((q,p), x) | p /= q ]
+            return $   ((p,q), x)
+                   : [ ((q,p), x) | p /= q ]
     return $ build bnd $ concat pairs
 
 build :: ( Ix a, Ix b )

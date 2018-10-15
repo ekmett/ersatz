@@ -12,7 +12,7 @@
 module Ersatz.BitChar where
 
 import Data.Char (chr,ord)
-import Control.Monad (liftM, replicateM)
+import Control.Monad (replicateM)
 import Prelude hiding ((&&))
 import Data.Typeable (Typeable)
 
@@ -33,7 +33,7 @@ newtype BitChar = BitChar Bits
 instance Codec BitChar where
   type Decoded BitChar = Char
   encode                = BitChar . fromIntegral . ord
-  decode s (BitChar xs) = liftM (chr . fromIntegral) (decode s xs)
+  decode s (BitChar xs) = fmap (chr . fromIntegral) (decode s xs)
 
 instance Equatable BitChar where
   BitChar xs === BitChar ys = xs === ys

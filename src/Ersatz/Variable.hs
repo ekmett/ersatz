@@ -47,27 +47,24 @@ instance (GVariable f, GVariable g) => GVariable (f :*: g) where
   gliterally m = liftM2 (:*:) (gliterally m) (gliterally m)
 
 instance Variable a => GVariable (K1 i a) where
-  gliterally = liftM K1 . literally
+  gliterally = fmap K1 . literally
 
 instance GVariable f => GVariable (M1 i c f) where
-  gliterally = liftM M1 . gliterally
+  gliterally = fmap M1 . gliterally
 
 -- | Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'.
 class Variable t where
   literally :: (HasSAT s, MonadState s m) => m Literal -> m t
-
-#ifndef HLINT
   default literally ::
     (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
     m Literal -> m t
   literally = genericLiterally
-#endif
 
 genericLiterally ::
   (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
   m Literal -> m t
-genericLiterally = liftM to . gliterally
+genericLiterally = fmap to . gliterally
 
 instance Variable Literal where
   literally = id

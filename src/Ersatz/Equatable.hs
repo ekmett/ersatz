@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -36,10 +35,8 @@ infix  4 ===, /==
 class Equatable t where
   -- | Compare for equality within the SAT problem.
   (===) :: t -> t -> Bit
-#ifndef HLINT
   default (===) :: (Generic t, GEquatable (Rep t)) => t -> t -> Bit
   a === b = from a ===# from b
-#endif
 
   -- | Compare for inequality within the SAT problem.
   (/==) :: t -> t -> Bit

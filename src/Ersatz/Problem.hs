@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
@@ -46,7 +45,6 @@ module Ersatz.Problem
 
 import Data.ByteString.Builder
 import Control.Lens
-import Control.Monad
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as Lazy
@@ -131,7 +129,7 @@ dimacsSAT :: StateT SAT Identity a -> Lazy.ByteString
 dimacsSAT = toLazyByteString . dimacs . snd . runSAT'
 
 literalExists :: (MonadState s m, HasSAT s) => m Literal
-literalExists = liftM Literal $ lastAtom <+= 1
+literalExists = fmap Literal $ lastAtom <+= 1
 {-# INLINE literalExists #-}
 
 assertFormula :: (MonadState s m, HasSAT s) => Formula -> m ()
