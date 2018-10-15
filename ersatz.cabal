@@ -168,12 +168,6 @@ flag examples
   default: True
   manual: True
 
--- You can enable the hlint test suite with -ftest-hlint
-flag test-hlint
-  default: False
-  manual: True
-
-
 library
   ghc-options: -Wall
   hs-source-dirs: src
