@@ -144,5 +144,5 @@ script:
   # hlint
   - (cd ersatz-* && hlint src --cpp-ansi --cpp-define=HLINT)
 
-# REGENDATA ["-o",".travis.yml","--ghc-head","--irc-channel=irc.freenode.org#haskell-lens","--no-no-tests-no-bench","--no-unconstrained","cabal.project","minisat"]
+# REGENDATA ["--output=.travis.yml","--config=cabal.haskell-ci","cabal.project"]
 # EOF
