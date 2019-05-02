@@ -9,6 +9,7 @@ module RegexpGrid.Problem (problem) where
 import Prelude hiding ((&&), (||), not, and, or, all, any)
 
 import Control.Applicative
+import qualified Control.Monad.Fail as Fail
 import Control.Monad.Reader
 import Control.Monad.RWS.Strict hiding ((<>))
 import Control.Lens
@@ -58,14 +59,16 @@ instance Monoid ReBitResult where
   {-# INLINE mappend #-}
 #endif
 
-problem :: (Applicative m, MonadState s m, HasSAT s) => m (Map Pos Field)
+problem :: (Applicative m, Fail.MonadFail m, MonadState s m, HasSAT s)
+        => m (Map Pos Field)
 problem = do
   -- Allocate a literal for each field.
   fieldMap <- Map.fromList <$> mapM (\pos -> (pos,) <$> exists) [minBound..]
   runReaderT problem' fieldMap
   return fieldMap
 
-problem' :: (MonadState s m, HasSAT s) => ReaderT (Map Pos Field) m ()
+problem' :: (Fail.MonadFail m, MonadState s m, HasSAT s)
+         => ReaderT (Map Pos Field) m ()
 problem' = do
   r [P00,P01,P02,P03,P04,P05,P06] ".*H.*H.*"
   r [P10,P11,P12,P13,P14,P15,P16,P17] "(DI|NS|TH|OM)*"
@@ -109,7 +112,7 @@ problem' = do
   r [P7b,P6b,P5a,P49,P38,P27,P16,P05] "[^M]*M[^M]*"
   r [P6c,P5b,P4a,P39,P28,P17,P06] "(S|MM|HHH)*"
 
-r :: (MonadState s m, HasSAT s)
+r :: (Fail.MonadFail m, MonadState s m, HasSAT s)
   => [Pos] -> String -> ReaderT (Map Pos Field) m ()
 r poss regexpStr = do
   fieldMap <- ask

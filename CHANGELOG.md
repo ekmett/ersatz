@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Allow `ersatz-regexp-grid` to build with `base-4.13` (GHC 8.8).
+
 0.4.4 [2018.08.13]
 ------------------
 * Avoid the use of failable pattern matches in `do`-notation to support
