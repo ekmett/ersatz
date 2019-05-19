@@ -13,6 +13,7 @@
 module Ersatz.Solver.Minisat
   ( minisat
   , cryptominisat
+  , cryptominisat5
   , minisatPath
   ) where
 
@@ -68,3 +69,22 @@ parseSolution s =
                             in  if 0 == v then m else IntMap.insert (abs v) (v>0) m
                  ) IntMap.empty ys
     _ -> IntMap.empty -- WRONG (should be Nothing)
+
+cryptominisat5 :: MonadIO m => Solver SAT m
+cryptominisat5 problem = liftIO $
+  withTempFiles ".cnf" "" $ \problemPath _ -> do
+    withFile problemPath WriteMode $ \fh ->
+      hPutBuilder fh (dimacs problem)
+
+    (exit, out, _err) <-
+      readProcessWithExitCode "cryptominisat5" [problemPath] []
+
+    let sol = parseSolution5 out
+
+    return (resultOf exit, sol)
+
+parseSolution5 :: String -> IntMap Bool
+parseSolution5 txt = IntMap.fromList [(abs v, v > 0) | v <- vars, v /= 0]
+  where
+    vlines = [l | ('v':l) <- lines txt]
+    vars = map read (foldMap words vlines)
