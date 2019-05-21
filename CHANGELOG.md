@@ -1,3 +1,7 @@
+0.4.6 [2019.05.20]
+------------------
+* Add support for `cryptominisat5`
+
 0.4.5 [2019.05.02]
 ------------------
 * Allow `ersatz-regexp-grid` to build with `base-4.13` (GHC 8.8).

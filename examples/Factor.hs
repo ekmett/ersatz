@@ -17,5 +17,5 @@ problem = do
 main :: IO ()
 main = do
   putStrLn "Solution:"
-  (Satisfied, Just (a,b,c)) <- solveWith minisat problem
+  (Satisfied, Just (a,b,c)) <- solveWith cryptominisat5 problem
   putStrLn (show a ++ " * " ++ show b ++ " = " ++ show c)

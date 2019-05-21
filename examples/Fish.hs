@@ -39,7 +39,7 @@ import Ersatz
 
 main :: IO ()
 main =
-  do (Satisfied, Just solution) <- solveWith minisat puzzle
+  do (Satisfied, Just solution) <- solveWith cryptominisat5 puzzle
      forM_ people $ \who ->
        putStrLn (who ++ ": " ++ unwords (attributesForPerson solution who))
 

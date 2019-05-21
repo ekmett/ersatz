@@ -14,7 +14,7 @@ main = do
 
 mainf n = do
   putStrLn $ unwords [ "n",  show n ]
-  (s, mgs) <- solveWith minisat $ do
+  (s, mgs) <- solveWith cryptominisat5 $ do
       gs <- replicateM n exists
       forM_ (zip gs $ tail gs) $ \ (x,y) -> assert ( x /== y )
       return (gs :: [Bit])
