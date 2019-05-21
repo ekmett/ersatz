@@ -14,6 +14,8 @@ module Ersatz.Solver.Minisat
   ( minisat
   , cryptominisat
   , minisatPath
+  , cryptominisat5
+  , cryptominisat5Path
   ) where
 
 import Data.ByteString.Builder
@@ -68,3 +70,29 @@ parseSolution s =
                             in  if 0 == v then m else IntMap.insert (abs v) (v>0) m
                  ) IntMap.empty ys
     _ -> IntMap.empty -- WRONG (should be Nothing)
+
+-- | 'Solver' for 'SAT' problems that tries to invoke the @cryptominisat5@ executable from the @PATH@
+cryptominisat5 :: MonadIO m => Solver SAT m
+cryptominisat5 = cryptominisat5Path "cryptominisat5"
+
+-- | 'Solver' for 'SAT' problems that tries to invoke a program that takes @cryptominisat5@ compatible arguments.
+--
+-- The 'FilePath' refers to the path to the executable.
+cryptominisat5Path :: MonadIO m => FilePath -> Solver SAT m
+cryptominisat5Path path problem = liftIO $
+  withTempFiles ".cnf" "" $ \problemPath _ -> do
+    withFile problemPath WriteMode $ \fh ->
+      hPutBuilder fh (dimacs problem)
+
+    (exit, out, _err) <-
+      readProcessWithExitCode path [problemPath] []
+
+    let sol = parseSolution5 out
+
+    return (resultOf exit, sol)
+
+parseSolution5 :: String -> IntMap Bool
+parseSolution5 txt = IntMap.fromList [(abs v, v > 0) | v <- vars, v /= 0]
+  where
+    vlines = [l | ('v':l) <- lines txt]
+    vars = map read (foldMap words vlines)
