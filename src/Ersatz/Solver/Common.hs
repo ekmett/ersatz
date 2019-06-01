@@ -40,7 +40,7 @@ resultOf (ExitFailure 20) = Unsatisfied
 resultOf _                = Unsolved
 
 -- | This error is thrown by 'trySolvers' when no solvers are found.
-data NoSolvers = NoSolvers deriving Show
+data NoSolvers = NoSolvers [IOError] deriving Show
 
 instance Exception NoSolvers where
   displayException _ = "no ersatz solvers were found"
@@ -49,11 +49,14 @@ instance Exception NoSolvers where
 -- a missing executable the next solver will be tried. Throws
 -- 'NoSolvers' exception if none of the given solvers were installed.
 trySolvers :: [Solver s IO] -> Solver s IO
-trySolvers [] _ = throwIO NoSolvers
-trySolvers (solver:solvers) problem =
-  do res <- tryIOError (solver problem)
-     case res of
-       Left e
-         | isDoesNotExistError e -> trySolvers solvers problem
-         | otherwise             -> ioError e
-       Right x                   -> return x
+trySolvers solvers problem = foldr runSolver noSolvers solvers []
+  where
+    noSolvers = throwIO . NoSolvers . reverse
+
+    runSolver solver next es =
+      do res <- tryIOError (solver problem)
+         case res of
+           Left e
+             | isDoesNotExistError e -> next (e:es)
+             | otherwise             -> ioError e
+           Right x                   -> return x
