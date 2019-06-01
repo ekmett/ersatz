@@ -4,7 +4,7 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.3.20190429
+# version: 0.3.20190521
 #
 language: c
 dist: xenial
@@ -36,9 +36,8 @@ matrix:
     - compiler: ghc-8.8.1
       addons: {"apt":{"sources":["hvr-ghc"],"packages":["ghc-8.8.1","cabal-install-3.0","minisat"]}}
       env: GHCHEAD=true
-#   This compiler times out trying to build scientific
-#   - compiler: ghc-8.6.5
-#     addons: {"apt":{"sources":["hvr-ghc"],"packages":["ghc-8.6.5","cabal-install-2.4","minisat"]}}
+    - compiler: ghc-8.6.5
+      addons: {"apt":{"sources":["hvr-ghc"],"packages":["ghc-8.6.5","cabal-install-2.4","minisat"]}}
     - compiler: ghc-8.4.4
       addons: {"apt":{"sources":["hvr-ghc"],"packages":["ghc-8.4.4","cabal-install-2.4","minisat"]}}
     - compiler: ghc-8.2.2
@@ -120,7 +119,6 @@ install:
   - cat $CABALHOME/config
   - rm -fv cabal.project cabal.project.local cabal.project.freeze
   - travis_retry ${CABAL} v2-update -v
-  - if [ $HCNUMVER -eq 80605 ] ; then ${CABAL} v2-install -w ${HC} -j2 hlint --constraint='hlint ==2.1.*' | color_cabal_output ; fi
   # Generate cabal.project
   - rm -rf cabal.project cabal.project.local cabal.project.freeze
   - touch cabal.project
@@ -165,10 +163,6 @@ script:
   - ${CABAL} v2-build -w ${HC} ${TEST} ${BENCH} all | color_cabal_output
   # Testing...
   - ${CABAL} v2-test -w ${HC} ${TEST} ${BENCH} all | color_cabal_output
-  # HLint..
-  - if [ $HCNUMVER -eq 80605 ] ; then (cd ersatz-* && hlint --cpp-ansi --cpp-define=HLINT src) ; fi
-  - if [ $HCNUMVER -eq 80605 ] ; then (cd ersatz-* && hlint --cpp-ansi --cpp-define=HLINT examples/sudoku) ; fi
-  - if [ $HCNUMVER -eq 80605 ] ; then (cd ersatz-* && hlint --cpp-ansi --cpp-define=HLINT examples/regexp-grid) ; fi
   # cabal check...
   - (cd ersatz-* && ${CABAL} -vnormal check)
   # haddock...

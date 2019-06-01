@@ -1,3 +1,5 @@
+- arguments: [--cpp-define=HLINT, --cpp-ansi]
+
 - ignore:
     name: Use camelCase
 
