@@ -24,9 +24,13 @@ import Ersatz.Solver.DepQBF
 import Ersatz.Solver.Minisat
 
 #if __GLASGOW_HASKELL__ < 710
-solveWith :: (Monad m, Alternative n, MonadPlus n, HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, n (Decoded a))
+solveWith ::
+  (Monad m, Alternative n, MonadPlus n, HasSAT s, Default s, Codec a) =>
+  Solver s m -> StateT s m a -> m (Result, n (Decoded a))
 #else
-solveWith :: (Monad m, MonadPlus n, HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, n (Decoded a))
+solveWith ::
+  (Monad m, MonadPlus n, HasSAT s, Default s, Codec a) =>
+  Solver s m -> StateT s m a -> m (Result, n (Decoded a))
 #endif
 solveWith solver m = do
   (a, problem) <- runStateT m def

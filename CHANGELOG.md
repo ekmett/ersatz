@@ -1,3 +1,7 @@
+0.4.7
+-----
+* Add `anyminisat` and `trySolvers`
+
 0.4.6 [2019.05.20]
 ------------------
 * Add support for `cryptominisat5`

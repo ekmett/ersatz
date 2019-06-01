@@ -38,7 +38,7 @@ main = do
 
 mainf d k n s = do
   putStrLn $ unwords [ "degree <=", show d, "diameter <=", show k, "nodes ==", show n, "symmetry ==", show s ]
-  (s, mg) <- solveWith cryptominisat5 $ moore d k n s
+  (s, mg) <- solveWith anyminisat $ moore d k n s
   case (s, mg) of
      (Satisfied, Just g) -> do printA g ; return True
      _ -> do return False

@@ -16,6 +16,7 @@ module Ersatz.Solver.Minisat
   , minisatPath
   , cryptominisat5
   , cryptominisat5Path
+  , anyminisat
   ) where
 
 import Data.ByteString.Builder
@@ -31,6 +32,10 @@ import System.Process (readProcessWithExitCode)
 
 import qualified Data.ByteString.Char8 as B
 import Data.List ( foldl' )
+
+-- | Hybrid 'Solver' that tries to use: 'cryptominisat5', 'cryptominisat', and 'minisat'
+anyminisat :: Solver SAT IO
+anyminisat = trySolvers [cryptominisat5, cryptominisat, minisat]
 
 -- | 'Solver' for 'SAT' problems that tries to invoke the @minisat@ executable from the @PATH@
 minisat :: MonadIO m => Solver SAT m

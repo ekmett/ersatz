@@ -15,7 +15,7 @@ import Control.Monad ( replicateM, forM_ )
 import Control.Monad.State
 
 main = do
-  (Satisfied, Just ms) <- solveWith cryptominisat5 $ do
+  (Satisfied, Just ms) <- solveWith anyminisat $ do
     [ Restricted a, Restricted b ]
         :: [ Restricted 5 (NBV 3) ] <- replicateM 2 unknown
     -- assert $ gt (a^2 * b^2) (b^3 * a^3)
