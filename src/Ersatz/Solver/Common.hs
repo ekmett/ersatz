@@ -40,7 +40,7 @@ resultOf (ExitFailure 20) = Unsatisfied
 resultOf _                = Unsolved
 
 -- | This error is thrown by 'trySolvers' when no solvers are found.
-data NoSolvers = NoSolvers [IOError] deriving Show
+newtype NoSolvers = NoSolvers [IOError] deriving Show
 
 instance Exception NoSolvers where
   displayException _ = "no ersatz solvers were found"
