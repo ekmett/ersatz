@@ -20,7 +20,7 @@ import Control.Exception (Exception(..), throwIO)
 import Control.Monad.IO.Class
 import Ersatz.Solution
 import System.Exit (ExitCode(..))
-import System.IO.Error (isDoesNotExistError, tryIOError, ioError)
+import System.IO.Error (isDoesNotExistError, tryIOError)
 import System.IO.Temp (withSystemTempDirectory)
 
 withTempFiles :: MonadIO m
