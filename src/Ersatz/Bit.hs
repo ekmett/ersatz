@@ -22,6 +22,7 @@ module Ersatz.Bit
   ( Bit(..)
   , assert
   , assertClause
+  , assertImplies
   , Boolean(..)
   ) where
 
@@ -164,6 +165,9 @@ instance Codec Bit where
 assert :: MonadSAT s m => Bit -> m ()
 assert (And bs) = Foldable.for_ bs assert
 -- the following (when switched on, False => True) produces extra clauses, why?
+-- probably because of this:
+-- if the sub-expresion (And bs) is shared,
+-- we traverse it several times.
 assert (Not (And bs)) | let b = False in b = do
   ls <- Traversable.for bs runBit
   assertFormula $ fromClause $ foldMap (fromLiteral . negateLiteral) ls
@@ -171,12 +175,24 @@ assert b = do
   l <- runBit b
   assertFormula (formulaLiteral l)
 
--- | @assertClause xs@ is @assert $ or xs@ but does create
--- exactly one clause (and no auxiliary literal)
-assertClause :: (MonadState s m, HasSAT s, Foldable f) => f Bit -> m ()
+-- | @assertClause bs@ is semantically equivalent to @assert (or bs)@
+-- but it will generate only one clause
+-- (the Tseitin transform for @or bs@ would create more)
+assertClause :: (MonadState s m, HasSAT s, Traversable f) => f Bit -> m ()
 assertClause bs = do
-  ls <- forM (toList bs) runBit
+  ls <- traverse runBit bs
   assertFormula $ fromClause $ foldMap fromLiteral ls
+
+-- | @assertImplies bs cs@ is semantically equivalent to @assert (and bs) (or cs)@
+-- but it will generate only one clause.
+assertImplies
+  :: (MonadState s m, HasSAT s, Traversable f, Traversable g)
+  => f Bit -> g Bit -> m ()
+assertImplies bs cs = do
+  bls <- traverse runBit bs
+  cls <- traverse runBit cs
+  assertFormula $ fromClause
+    $ foldMap (fromLiteral . negateLiteral) bls <> foldMap fromLiteral cls
 
 -- | Convert a 'Bit' to a 'Literal'.
 runBit :: MonadSAT s m => Bit -> m Literal
