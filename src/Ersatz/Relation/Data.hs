@@ -12,7 +12,7 @@ module Ersatz.Relation.Data ( Relation
 import Ersatz.Bit
 import Ersatz.Codec
 import Ersatz.Variable (exists)
-import Ersatz.Problem (HasSAT)
+import Ersatz.Problem (MonadSAT)
 
 import qualified Data.Array as A
 import Data.Array ( Array, Ix )
@@ -25,7 +25,7 @@ instance (Ix a, Ix b) => Codec (Relation a b) where
   decode s (Relation a) = decode s a
   encode a = Relation $ encode a
 
-relation :: ( Ix a, Ix b, MonadState s m, HasSAT s )
+relation :: ( Ix a, Ix b, MonadSAT s m )
          => ((a,b),(a,b)) -> m ( Relation a b )
 relation bnd = do
     pairs <- sequence $ do
@@ -36,7 +36,7 @@ relation bnd = do
     return $ build bnd pairs
 
 symmetric_relation ::
-  (HasSAT s, MonadState s m, Ix b) =>
+  (MonadSAT s m, Ix b) =>
   ((b, b), (b, b)) -> m (Relation b b)
 symmetric_relation bnd = do
     pairs <- sequence $ do

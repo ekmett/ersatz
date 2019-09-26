@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 #ifndef MIN_VERSION_lens
@@ -27,6 +28,7 @@ module Ersatz.Problem
   -- * SAT
     SAT(SAT)
   , HasSAT(..)
+  , MonadSAT
   , runSAT, runSAT', dimacsSAT
   , literalExists
   , assertFormula
@@ -34,6 +36,7 @@ module Ersatz.Problem
   -- * QSAT
   , QSAT(QSAT)
   , HasQSAT(..)
+  , MonadQSAT
   , runQSAT, runQSAT', qdimacsQSAT
   , literalForall
   -- * DIMACS pretty printing
@@ -76,6 +79,9 @@ import Data.Semigroup (Semigroup(..))
 #if !(MIN_VERSION_lens(4,0,0))
 import Control.Monad.Identity
 #endif
+
+type MonadSAT  s m = (HasSAT  s, MonadState s m)
+type MonadQSAT s m = (HasQSAT s, MonadState s m)
 
 ------------------------------------------------------------------------------
 -- SAT Problems
@@ -128,15 +134,15 @@ runSAT' = runIdentity . runSAT
 dimacsSAT :: StateT SAT Identity a -> Lazy.ByteString
 dimacsSAT = toLazyByteString . dimacs . snd . runSAT'
 
-literalExists :: (MonadState s m, HasSAT s) => m Literal
+literalExists :: MonadSAT s m => m Literal
 literalExists = fmap Literal $ lastAtom <+= 1
 {-# INLINE literalExists #-}
 
-assertFormula :: (MonadState s m, HasSAT s) => Formula -> m ()
+assertFormula :: MonadSAT s m => Formula -> m ()
 assertFormula xs = formula <>= xs
 {-# INLINE assertFormula #-}
 
-generateLiteral :: (MonadState s m, HasSAT s) => a -> (Literal -> m ()) -> m Literal
+generateLiteral :: MonadSAT s m => a -> (Literal -> m ()) -> m Literal
 generateLiteral a f = do
   let sn = unsafePerformIO (makeStableName' a)
   use (stableMap.at sn) >>= \ ml -> case ml of
@@ -188,7 +194,7 @@ runQSAT' = runIdentity . runQSAT
 qdimacsQSAT :: StateT QSAT Identity a -> Lazy.ByteString
 qdimacsQSAT = toLazyByteString . qdimacs . snd . runQSAT'
 
-literalForall :: (MonadState s m, HasQSAT s) => m Literal
+literalForall :: MonadQSAT s m => m Literal
 literalForall = do
    l <- lastAtom <+= 1
    universals.contains l .= True

@@ -28,7 +28,6 @@ CLUES
 module Main where
 
 import Control.Monad       (forM_, mzero, mplus)
-import Control.Monad.State (MonadState)
 import Data.List           (tails)
 import Data.Map            (Map,(!))
 import Data.Traversable    (sequence)
@@ -75,7 +74,7 @@ houses = ["one"    ,"two"   ,"three" ,"four"    ,"five"      ]
 -- | Construct a map of attribute associations for every combination
 -- of attributes.
 defineVariables ::
-  (HasSAT s, MonadState s m, Variable a) =>
+  (MonadSAT s m, Variable a) =>
   m (Map (String,String) a)
 defineVariables
   = sequence
@@ -176,7 +175,7 @@ validAssignment v
 -- | Construct an assignment of attribute associations that satisfies
 -- all of the constraints of the puzzle.
 puzzle ::
-  (MonadState s m, HasSAT s) =>
+  MonadSAT s m =>
   m (Map (String,String) Bit)
 puzzle =
   do v <- defineVariables

@@ -24,21 +24,20 @@ module Ersatz.Variable
   ) where
 
 import Control.Monad
-import Control.Monad.State.Class
 import Ersatz.Internal.Literal
 import Ersatz.Problem
 import GHC.Generics
 
-exists :: (Variable a, MonadState s m, HasSAT s)  => m a
+exists :: (Variable a, MonadSAT s m)  => m a
 exists = literally literalExists
 
 #ifndef HLINT
-forall :: (Variable a, MonadState s m, HasQSAT s)  => m a
+forall :: (Variable a, MonadQSAT s m)  => m a
 forall = literally literalForall
 #endif
 
 class GVariable f where
-  gliterally :: (MonadState s m, HasSAT s) => m Literal -> m (f a)
+  gliterally :: MonadSAT s m => m Literal -> m (f a)
 
 instance GVariable U1 where
   gliterally _ = return U1
@@ -55,14 +54,14 @@ instance GVariable f => GVariable (M1 i c f) where
 -- | Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'.
 class Variable t where
-  literally :: (HasSAT s, MonadState s m) => m Literal -> m t
+  literally :: MonadSAT s m => m Literal -> m t
   default literally ::
-    (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
+    (MonadSAT s m, Generic t, GVariable (Rep t)) =>
     m Literal -> m t
   literally = genericLiterally
 
 genericLiterally ::
-  (HasSAT s, MonadState s m, Generic t, GVariable (Rep t)) =>
+  (MonadSAT s m, Generic t, GVariable (Rep t)) =>
   m Literal -> m t
 genericLiterally = fmap to . gliterally
 

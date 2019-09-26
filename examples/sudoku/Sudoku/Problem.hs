@@ -8,7 +8,6 @@ import Prelude hiding ((&&), (||), not, and, or, all, any)
 import Control.Applicative
 #endif
 import Control.Monad.Reader
-import Control.Monad.State
 import Data.Array (Array, (!))
 import qualified Data.Array as Array
 import Data.Word
@@ -25,7 +24,7 @@ data Env = Env { envCellArray :: Grid    -- ^ The puzzle.
                }
   deriving Show
 
-problem :: (Applicative m, MonadState s m, HasSAT s)
+problem :: (Applicative m, MonadSAT s m)
         => Array Index Word8 -> m Grid
 problem initValues = do
   cellArray <-  Array.listArray range
@@ -40,13 +39,13 @@ problem initValues = do
 
   return cellArray
 
-problem' :: (MonadState s m, HasSAT s) => ReaderT Env m ()
+problem' :: MonadSAT s m => ReaderT Env m ()
 problem' = do
   legalValues
   mapM_ allDifferent (subsquares ++ horizontal ++ vertical)
 
 -- | Assert that each cell must have one of the legal values.
-legalValues :: (MonadState s m, HasSAT s) => ReaderT Env m ()
+legalValues :: MonadSAT s m => ReaderT Env m ()
 legalValues = mapM_ legalValue . Array.elems =<< asks envCellArray
   where
     legalValue cell = do
@@ -54,8 +53,7 @@ legalValues = mapM_ legalValue . Array.elems =<< asks envCellArray
       assert $ any (cell ===) values
 
 -- | Assert that each cell in a group must have a different value.
-allDifferent :: (MonadState s m, HasSAT s)
-             => [(Word8,Word8)] -> ReaderT Env m ()
+allDifferent :: MonadSAT s m => [(Word8,Word8)] -> ReaderT Env m ()
 allDifferent indices = do
   cellArray <- asks envCellArray
   let pairs = [ (cellArray ! a, cellArray ! b)
