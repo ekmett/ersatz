@@ -1,3 +1,7 @@
+0.4.8 [2019.09.26]
+------------------
+* Add `MonadSAT` and `MonadQSAT`
+
 0.4.7 [2019.06.01]
 ------------------
 * Add `anyminisat` and `trySolvers`
