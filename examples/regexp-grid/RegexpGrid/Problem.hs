@@ -59,7 +59,7 @@ instance Monoid ReBitResult where
   {-# INLINE mappend #-}
 #endif
 
-problem :: (Applicative m, Fail.MonadFail m, MonadState s m, HasSAT s)
+problem :: (Applicative m, Fail.MonadFail m, MonadSAT s m)
         => m (Map Pos Field)
 problem = do
   -- Allocate a literal for each field.
@@ -67,7 +67,7 @@ problem = do
   runReaderT problem' fieldMap
   return fieldMap
 
-problem' :: (Fail.MonadFail m, MonadState s m, HasSAT s)
+problem' :: (Fail.MonadFail m, MonadSAT s m)
          => ReaderT (Map Pos Field) m ()
 problem' = do
   r [P00,P01,P02,P03,P04,P05,P06] ".*H.*H.*"
@@ -112,7 +112,7 @@ problem' = do
   r [P7b,P6b,P5a,P49,P38,P27,P16,P05] "[^M]*M[^M]*"
   r [P6c,P5b,P4a,P39,P28,P17,P06] "(S|MM|HHH)*"
 
-r :: (Fail.MonadFail m, MonadState s m, HasSAT s)
+r :: (Fail.MonadFail m, MonadSAT s m)
   => [Pos] -> String -> ReaderT (Map Pos Field) m ()
 r poss regexpStr = do
   fieldMap <- ask

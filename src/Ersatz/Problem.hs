@@ -80,7 +80,10 @@ import Data.Semigroup (Semigroup(..))
 import Control.Monad.Identity
 #endif
 
+-- | Constraint synonym for types that carry a SAT state.
 type MonadSAT  s m = (HasSAT  s, MonadState s m)
+
+-- | Constraint synonym for types that carry a QSAT state.
 type MonadQSAT s m = (HasQSAT s, MonadState s m)
 
 ------------------------------------------------------------------------------
@@ -120,12 +123,12 @@ instance Default SAT where
   def = SAT 1 (formulaLiteral literalTrue) HashMap.empty
 
 -- | Run a 'SAT'-generating state computation. Useful e.g. in ghci for
--- disambiguating the type of a 'MonadState', 'HasSAT' value.
+-- disambiguating the type of a 'MonadSAT' value.
 runSAT :: StateT SAT m a -> m (a, SAT)
 runSAT s = runStateT s def
 
 -- | Run a 'SAT'-generating state computation in the 'Identity' monad. Useful
--- e.g. in ghci for disambiguating the type of a 'MonadState', 'HasSAT' value.
+-- e.g. in ghci for disambiguating the type of a 'MonadSAT' value.
 runSAT' :: StateT SAT Identity a -> (a, SAT)
 runSAT' = runIdentity . runSAT
 
