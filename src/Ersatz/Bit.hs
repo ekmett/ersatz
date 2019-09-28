@@ -63,7 +63,7 @@ data Bit
   | Mux !Bit !Bit !Bit
   | Not !Bit
   | Var !Literal
-  | Run ( forall m s . (MonadState s m, HasSAT s) => m Bit )
+  | Run ( forall m s . MonadSAT s m => m Bit )
   deriving (Typeable)
 
 instance Show Bit where
@@ -160,7 +160,7 @@ instance Codec Bit where
 
 -- | Assert claims that 'Bit' must be 'true' in any satisfying interpretation
 -- of the current problem.
-assert :: (MonadState s m, HasSAT s) => Bit -> m ()
+assert :: MonadSAT s m => Bit -> m ()
 assert (And bs) = Foldable.for_ bs assert
 -- the following (when switched on, False => True) produces extra clauses, why?
 assert (Not (And bs)) | False = do
@@ -171,7 +171,7 @@ assert b = do
   assertFormula (formulaLiteral l)
 
 -- | Convert a 'Bit' to a 'Literal'.
-runBit :: (MonadState s m, HasSAT s) => Bit -> m Literal
+runBit :: MonadSAT s m => Bit -> m Literal
 runBit (Not c) = negateLiteral `fmap` runBit c
 runBit (Var l) = return l
 runBit (Run action) = action >>= runBit

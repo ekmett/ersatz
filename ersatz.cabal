@@ -1,5 +1,5 @@
 name:           ersatz
-version:        0.4.7
+version:        0.4.8
 license:        BSD3
 license-file:   LICENSE
 author:         Edward A. Kmett, Eric Mertens, Johan Kiviniemi
@@ -308,12 +308,12 @@ test-suite moore
   type: exitcode-stdio-1.0
   main-is: Moore.hs
   hs-source-dirs: tests
-  build-depends: base, array, mtl, ersatz
+  build-depends: base, array, ersatz
   default-language: Haskell2010
 
 test-suite z001
   type: exitcode-stdio-1.0
   main-is: Z001.hs
   hs-source-dirs: tests
-  build-depends: base, mtl, ersatz
+  build-depends: base, ersatz
   default-language: Haskell2010

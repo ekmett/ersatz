@@ -12,7 +12,6 @@ import GHC.TypeLits
 import Data.Proxy
 import Data.List ( transpose )
 import Control.Monad ( replicateM, forM_ )
-import Control.Monad.State
 
 main = do
   (Satisfied, Just ms) <- solveWith anyminisat $ do
@@ -39,7 +38,7 @@ instance (KnownNat dim, Unknown a, Codec a, Num (Decoded a))
        $ m ++ encode [ replicate (d-1) 0 ++ [1] ]
 
 class Unknown a where
-  unknown :: (MonadState s m, HasSAT s) => m a
+  unknown :: MonadSAT s m => m a
 
 -- | square matrices
 newtype Matrix (dim::Nat)  a = Matrix [[a]]

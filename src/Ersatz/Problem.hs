@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
 #ifndef MIN_VERSION_lens
@@ -27,6 +28,7 @@ module Ersatz.Problem
   -- * SAT
     SAT(SAT)
   , HasSAT(..)
+  , MonadSAT
   , runSAT, runSAT', dimacsSAT
   , literalExists
   , assertFormula
@@ -34,6 +36,7 @@ module Ersatz.Problem
   -- * QSAT
   , QSAT(QSAT)
   , HasQSAT(..)
+  , MonadQSAT
   , runQSAT, runQSAT', qdimacsQSAT
   , literalForall
   -- * DIMACS pretty printing
@@ -77,6 +80,12 @@ import Data.Semigroup (Semigroup(..))
 import Control.Monad.Identity
 #endif
 
+-- | Constraint synonym for types that carry a SAT state.
+type MonadSAT  s m = (HasSAT  s, MonadState s m)
+
+-- | Constraint synonym for types that carry a QSAT state.
+type MonadQSAT s m = (HasQSAT s, MonadState s m)
+
 ------------------------------------------------------------------------------
 -- SAT Problems
 ------------------------------------------------------------------------------
@@ -114,12 +123,12 @@ instance Default SAT where
   def = SAT 1 (formulaLiteral literalTrue) HashMap.empty
 
 -- | Run a 'SAT'-generating state computation. Useful e.g. in ghci for
--- disambiguating the type of a 'MonadState', 'HasSAT' value.
+-- disambiguating the type of a 'MonadSAT' value.
 runSAT :: StateT SAT m a -> m (a, SAT)
 runSAT s = runStateT s def
 
 -- | Run a 'SAT'-generating state computation in the 'Identity' monad. Useful
--- e.g. in ghci for disambiguating the type of a 'MonadState', 'HasSAT' value.
+-- e.g. in ghci for disambiguating the type of a 'MonadSAT' value.
 runSAT' :: StateT SAT Identity a -> (a, SAT)
 runSAT' = runIdentity . runSAT
 
@@ -128,15 +137,15 @@ runSAT' = runIdentity . runSAT
 dimacsSAT :: StateT SAT Identity a -> Lazy.ByteString
 dimacsSAT = toLazyByteString . dimacs . snd . runSAT'
 
-literalExists :: (MonadState s m, HasSAT s) => m Literal
+literalExists :: MonadSAT s m => m Literal
 literalExists = fmap Literal $ lastAtom <+= 1
 {-# INLINE literalExists #-}
 
-assertFormula :: (MonadState s m, HasSAT s) => Formula -> m ()
+assertFormula :: MonadSAT s m => Formula -> m ()
 assertFormula xs = formula <>= xs
 {-# INLINE assertFormula #-}
 
-generateLiteral :: (MonadState s m, HasSAT s) => a -> (Literal -> m ()) -> m Literal
+generateLiteral :: MonadSAT s m => a -> (Literal -> m ()) -> m Literal
 generateLiteral a f = do
   let sn = unsafePerformIO (makeStableName' a)
   use (stableMap.at sn) >>= \ ml -> case ml of
@@ -188,7 +197,7 @@ runQSAT' = runIdentity . runQSAT
 qdimacsQSAT :: StateT QSAT Identity a -> Lazy.ByteString
 qdimacsQSAT = toLazyByteString . qdimacs . snd . runQSAT'
 
-literalForall :: (MonadState s m, HasQSAT s) => m Literal
+literalForall :: MonadQSAT s m => m Literal
 literalForall = do
    l <- lastAtom <+= 1
    universals.contains l .= True

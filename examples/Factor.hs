@@ -2,9 +2,8 @@ module Main where
 
 import Ersatz
 import Control.Monad
-import Control.Monad.State
 
-problem :: (MonadState s m, HasSAT s) => m (Bits, Bits, Bits)
+problem :: MonadSAT s m => m (Bits, Bits, Bits)
 problem = do
   a <- liftM Bits (replicateM 5 exists)
   b <- liftM Bits (replicateM 5 exists)

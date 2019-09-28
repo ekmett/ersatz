@@ -24,7 +24,6 @@ import qualified Ersatz.Relation as R
 import qualified Data.Array as A
 import System.Environment (getArgs)
 import Control.Monad ( void, when, forM )
-import Control.Monad.State
 
 main :: IO ( )
 main = do
@@ -43,9 +42,10 @@ mainf d k n s = do
      (Satisfied, Just g) -> do printA g ; return True
      _ -> do return False
 
-moore :: (MonadState s m, HasSAT s )
-      => Int -> Int -> Int -> Int
-      -> m (R.Relation Int Int)
+moore ::
+  MonadSAT s m =>
+  Int -> Int -> Int -> Int ->
+  m (R.Relation Int Int)
 moore d k n s = do
   -- g <- R.symmetric_relation ((0,0),(n-1,n-1))
   g <- periodic_relation s ((0,0),(n-1,n-1))
