@@ -4,7 +4,5 @@ unconstrained:          False
 apt:                    minisat
 copy-fields:            all
 irc-channels:           irc.freenode.org#haskell-lens
-
--- hlint is disabled for the time being until
--- https://github.com/haskell-CI/haskell-ci/issues/277 is resolved
--- hlint:                  True
+hlint:                  True
+hlint-download-binary:  True
