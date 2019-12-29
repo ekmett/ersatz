@@ -92,7 +92,7 @@ out_degree_helper f deg r = and $ do
     x <- range ( a , c )
     return $ f deg $ do
         y <- range (b,d)
-        return $ r !(x,y)
+        return $ r ! (x,y)
 
 transitive :: ( Ix a )
            => Relation a a -> Bit

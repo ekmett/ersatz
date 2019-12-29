@@ -48,7 +48,7 @@ product a b =
         ((_ ,bl),(_ ,br)) = bounds b
         bnd = ((ao,bl),(au,br))
     in  build bnd $ do
-          i @ (x,z) <- range bnd
+          i@(x,z) <- range bnd
           return (i, or $ do
                 y <- range ( al, ar )
                 return $ and [ a!(x,y), b!(y,z) ]
