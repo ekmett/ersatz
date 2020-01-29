@@ -5,3 +5,5 @@
 
 - ignore:
     name: Use lambda-case
+
+- ignore: {name: Hoist not, within: [Ersatz.Bit]} # This is how we define `any`, ya dingus
