@@ -1,11 +1,8 @@
-next [????.??.??]
------------------
-* Achieve forward compatibility with
-  [GHC proposal 229](https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0229-whitespace-bang-patterns.rst).
-
-0.4.8 [2019.09.26]
+0.4.8 [????.??.??]
 ------------------
 * Add `MonadSAT` and `MonadQSAT`
+* Achieve forward compatibility with
+  [GHC proposal 229](https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0229-whitespace-bang-patterns.rst).
 
 0.4.7 [2019.06.01]
 ------------------
