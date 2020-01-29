@@ -1,4 +1,4 @@
-0.4.8 [????.??.??]
+0.4.8 [2020.01.29]
 ------------------
 * Add `MonadSAT` and `MonadQSAT`
 * Achieve forward compatibility with
