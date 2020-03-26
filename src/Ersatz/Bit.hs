@@ -163,7 +163,7 @@ instance Codec Bit where
 assert :: MonadSAT s m => Bit -> m ()
 assert (And bs) = Foldable.for_ bs assert
 -- the following (when switched on, False => True) produces extra clauses, why?
-assert (Not (And bs)) | False = do
+assert (Not (And bs)) | id False = do
   ls <- Traversable.for bs runBit
   assertFormula $ fromClause $ foldMap (fromLiteral . negateLiteral) ls
 assert b = do
