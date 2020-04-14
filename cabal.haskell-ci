@@ -1,4 +1,3 @@
-ghc-head:               True
 no-tests-no-benchmarks: False
 unconstrained:          False
 apt:                    minisat
@@ -6,3 +5,4 @@ copy-fields:            all
 irc-channels:           irc.freenode.org#haskell-lens
 hlint:                  True
 hlint-download-binary:  True
+error-missing-methods:  none
