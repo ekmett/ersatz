@@ -51,6 +51,10 @@ import Ersatz.Variable
 import GHC.Generics
 import System.IO.Unsafe
 
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
+#endif
+
 infixr 3 &&, &&#
 infixr 2 ||, ||#
 infixr 0 ==>
