@@ -14,6 +14,8 @@
 
 {-# language FlexibleContexts #-}
 
+module Main where
+
 import Prelude hiding ( not, or, and )
 import qualified Prelude
 
