@@ -181,10 +181,12 @@ runBit b = generateLiteral b $ \out ->
     Xor x y   -> liftM2 (formulaXor out) (runBit x) (runBit y)
     Mux x y p -> liftM3 (formulaMux out) (runBit x) (runBit y) (runBit p)
 
-    -- Already handled above but GHC doesn't realize it.
+#if __GLASGOW_HASKELL__ < 900
+    -- Already handled above, but pre-9.0 GHCs don't realize this.
     Not _ -> error "Unreachable"
     Var _ -> error "Unreachable"
     Run _ -> error "Unreachable"
+#endif
 
 class GBoolean f where
   gbool :: Bool -> f a
