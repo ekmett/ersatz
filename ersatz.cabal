@@ -85,7 +85,6 @@ tested-with:    GHC == 7.10.3
 extra-source-files:
   .gitignore
   .hlint.yaml
-  .travis.yml
   AUTHORS.md
   CHANGELOG.md
   README.md
@@ -93,8 +92,6 @@ extra-source-files:
   notes/SPOILER.html
   notes/grid.pdf
   notes/papers.md
-  travis/cabal-apt-install
-  travis/config
 
 data-files:
   data/dimacs/bf/bf0432-007.cnf
