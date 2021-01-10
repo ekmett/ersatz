@@ -1,3 +1,7 @@
+next [yyyy.mm.dd]
+-----------------
+* Change to `build-type: Simple`
+
 0.4.8 [2020.01.29]
 ------------------
 * Add `MonadSAT` and `MonadQSAT`
