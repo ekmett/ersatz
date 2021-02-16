@@ -47,6 +47,7 @@ newtype Matrix (dim::Nat)  a = Matrix [[a]]
 instance Codec a => Codec (Matrix dim a) where
   type Decoded (Matrix dim a) = Matrix dim (Decoded a)
   decode s (Matrix xss) = Matrix <$> decode s xss
+  encode = error "encode not implemented for Matrix"
 
 instance (KnownNat dim, Unknown a) => Unknown (Matrix dim a) where
   unknown = do
@@ -60,6 +61,10 @@ instance Num a => Num (Matrix dim a) where
     = Matrix $ for xss $ \ row ->
         for (transpose yss) $ \ col ->
           sum $ zipWith (*) row col
+  (-)         = error "(-) not implemented for Matrix"
+  abs         = error "abs not implemented for Matrix"
+  signum      = error "signum not implemented for Matrix"
+  fromInteger = error "fromInteger not implemented for Matrix"
 
 for = flip map
 
@@ -101,6 +106,9 @@ instance KnownNat n => Num (NBV n) where
     nbv (fromIntegral (natVal (Proxy :: Proxy n))) $ a + b
   NBV a * NBV b =
     nbv (fromIntegral (natVal (Proxy :: Proxy n))) $ a * b
+  (-)    = error "(-) not implemented for NBV"
+  abs    = error "abs not implemented for NBV"
+  signum = error "signum not implemented for NBV"
 
 instance KnownNat n => Codec (NBV n) where
   type Decoded (NBV n) = Integer
