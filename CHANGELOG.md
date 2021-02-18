@@ -1,5 +1,5 @@
-next [yyyy.mm.dd]
------------------
+0.4.9 [2021.02.17]
+------------------
 * Allow building with `lens-5.*`.
 * Change to `build-type: Simple`
 
