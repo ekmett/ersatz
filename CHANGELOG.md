@@ -1,5 +1,6 @@
 next [yyyy.mm.dd]
 -----------------
+* Allow building with `lens-5.*`.
 * Change to `build-type: Simple`
 
 0.4.8 [2020.01.29]

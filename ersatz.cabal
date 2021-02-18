@@ -172,7 +172,7 @@ library
     bytestring           >= 0.10.4.0 && < 0.12,
     containers           >= 0.2.0.1  && < 0.7,
     data-default         >= 0.5      && < 0.8,
-    lens                 >= 3.8      && < 5,
+    lens                 >= 3.8      && < 6,
     mtl                  >= 1.1      && < 2.3,
     process              >= 1.1      && < 1.7,
     semigroups           >= 0.16     && < 1,
