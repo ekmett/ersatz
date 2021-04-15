@@ -13,7 +13,7 @@
 -- 'Bits' is an arbitrary length natural number type
 --------------------------------------------------------------------
 module Ersatz.Bits
-  ( 
+  (
   -- * Fixed length bit vectors
     Bit1(..), Bit2(..), Bit3(..), Bit4(..), Bit5(..), Bit6(..), Bit7(..), Bit8(..)
   -- * Variable length bit vectors
@@ -37,6 +37,7 @@ import Data.Foldable (Foldable, toList)
 import Data.Foldable (toList)
 #endif
 import Data.List (unfoldr, foldl')
+import Data.Stream.Infinite (Stream(..))
 #if __GLASGOW_HASKELL__ < 710
 import Data.Traversable (traverse)
 #endif
@@ -106,42 +107,42 @@ instance Variable Bit8
 instance Codec Bit1 where
   type Decoded Bit1 = Word8
   decode s (Bit1 a) = boolsToNum1 <$> decode s a
-  encode i = Bit1 a where (a:_) = bitsOf i
+  encode i = Bit1 a where (a:>_) = bitsOf i
 
 instance Codec Bit2 where
   type Decoded Bit2 = Word8
   decode s (Bit2 a b) = boolsToNum2 <$> decode s a <*> decode s b
-  encode i = Bit2 a b where (b:a:_) = bitsOf i
+  encode i = Bit2 a b where (b:>a:>_) = bitsOf i
 
 instance Codec Bit3 where
   type Decoded Bit3 = Word8
   decode s (Bit3 a b c) = boolsToNum3 <$> decode s a <*> decode s b <*> decode s c
-  encode i = Bit3 a b c where (c:b:a:_) = bitsOf i
+  encode i = Bit3 a b c where (c:>b:>a:>_) = bitsOf i
 
 instance Codec Bit4 where
   type Decoded Bit4 = Word8
   decode s (Bit4 a b c d) = boolsToNum4 <$> decode s a <*> decode s b <*> decode s c <*> decode s d
-  encode i = Bit4 a b c d where (d:c:b:a:_) = bitsOf i
+  encode i = Bit4 a b c d where (d:>c:>b:>a:>_) = bitsOf i
 
 instance Codec Bit5 where
   type Decoded Bit5 = Word8
   decode s (Bit5 a b c d e) = boolsToNum5 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e
-  encode i = Bit5 a b c d e where (e:d:c:b:a:_) = bitsOf i
+  encode i = Bit5 a b c d e where (e:>d:>c:>b:>a:>_) = bitsOf i
 
 instance Codec Bit6 where
   type Decoded Bit6 = Word8
   decode s (Bit6 a b c d e f) = boolsToNum6 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f
-  encode i = Bit6 a b c d e f where (f:e:d:c:b:a:_) = bitsOf i
+  encode i = Bit6 a b c d e f where (f:>e:>d:>c:>b:>a:>_) = bitsOf i
 
 instance Codec Bit7 where
   type Decoded Bit7 = Word8
   decode s (Bit7 a b c d e f g) = boolsToNum7 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g
-  encode i = Bit7 a b c d e f g where (g:f:e:d:c:b:a:_) = bitsOf i
+  encode i = Bit7 a b c d e f g where (g:>f:>e:>d:>c:>b:>a:>_) = bitsOf i
 
 instance Codec Bit8 where
   type Decoded Bit8 = Word8
   decode s (Bit8 a b c d e f g h) = boolsToNum8 <$> decode s a <*> decode s b <*> decode s c <*> decode s d <*> decode s e <*> decode s f <*> decode s g <*> decode s h
-  encode i = Bit8 a b c d e f g h where (h:g:f:e:d:c:b:a:_) = bitsOf i
+  encode i = Bit8 a b c d e f g h where (h:>g:>f:>e:>d:>c:>b:>a:>_) = bitsOf i
 
 boolsToNum1 :: Bool -> Word8
 boolsToNum1 = boolToNum
@@ -167,8 +168,8 @@ boolsToNum7 a b c d e f g = boolsToNum [a,b,c,d,e,f,g]
 boolsToNum8 :: Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Word8
 boolsToNum8 a b c d e f g h = boolsToNum [a,b,c,d,e,f,g,h]
 
-bitsOf :: (Num a, Data.Bits a) => a -> [Bit]
-bitsOf n = bool (numToBool (n .&. 1)) : bitsOf (n `shiftR` 1)
+bitsOf :: (Num a, Data.Bits a) => a -> Stream Bit
+bitsOf n = bool (numToBool (n .&. 1)) :> bitsOf (n `shiftR` 1)
 {-# INLINE bitsOf #-}
 
 numToBool :: (Eq a, Num a) => a -> Bool
@@ -243,7 +244,7 @@ instance Num Bit2 where
 -- suitable for comparisons and arithmetic. Bits are stored
 -- in little-endian order to enable phantom 'false' values
 -- to be truncated.
-newtype Bits = Bits { _getBits :: [Bit] } 
+newtype Bits = Bits { _getBits :: [Bit] }
   deriving Typeable
 
 instance Show Bits where
@@ -349,7 +350,7 @@ sumBit t =
 
 -- | Predicate for odd-valued 'Bits's.
 isOdd :: HasBits b => b -> Bit
-isOdd b = case unbits b of 
+isOdd b = case unbits b of
   []    -> false
   (x:_) -> x
 

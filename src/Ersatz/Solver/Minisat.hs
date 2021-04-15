@@ -71,8 +71,9 @@ parseSolution :: B.ByteString -> IntMap Bool
 parseSolution s =
   case B.words s of
     x : ys | x == "SAT" ->
-          foldl' ( \ m y -> let Just (v,_) = B.readInt y
-                            in  if 0 == v then m else IntMap.insert (abs v) (v>0) m
+          foldl' ( \ m y -> case B.readInt y of
+                              Just (v,_) -> if 0 == v then m else IntMap.insert (abs v) (v>0) m
+                              Nothing    -> error $ "parseSolution: Expected an Int, received " ++ show y
                  ) IntMap.empty ys
     _ -> IntMap.empty -- WRONG (should be Nothing)
 
