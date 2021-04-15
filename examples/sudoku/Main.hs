@@ -9,7 +9,7 @@ import Control.Applicative
 import Control.Monad
 import Data.Array (Array, (!))
 import qualified Data.Array as Array
-import Data.List
+import qualified Data.List as List
 import Data.Word
 import Ersatz
 
@@ -51,7 +51,7 @@ render sol = unlines . renderGroups top divider bottom
     bottom  = bar "└" "───────" "┴" "┘"
 
     bar begin fill middle end =
-      begin ++ intercalate middle (replicate 3 fill) ++ end
+      begin ++ List.intercalate middle (replicate 3 fill) ++ end
 
 renderLine :: Array (Word8,Word8) Word8 -> Word8 -> String
 renderLine sol y = unwords . renderGroups "│" "│" "│"
@@ -62,6 +62,6 @@ renderLine sol y = unwords . renderGroups "│" "│" "│"
 
 renderGroups :: a -> a -> a -> [a] -> [a]
 renderGroups begin middle end values =
-  [begin] ++ intercalate [middle] (chunks 3 values) ++ [end]
+  [begin] ++ List.intercalate [middle] (chunks 3 values) ++ [end]
   where
-    chunks n = unfoldr $ \xs -> splitAt n xs <$ guard (not (null xs))
+    chunks n = List.unfoldr $ \xs -> splitAt n xs <$ guard (not (null xs))

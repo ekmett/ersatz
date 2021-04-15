@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Allow the test suite to build with recent GHCs.
+
 0.4.9 [2021.02.17]
 ------------------
 * Allow building with `lens-5.*`.
