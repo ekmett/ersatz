@@ -13,7 +13,7 @@ import qualified Control.Monad.Fail as Fail
 import Control.Monad.Reader
 import Control.Monad.RWS.Strict hiding ((<>))
 import Control.Lens
-import Data.Foldable (asum)
+import qualified Data.Foldable as F (asum)
 import Data.Map (Map)
 import qualified Data.Map as Map
 #if !(MIN_VERSION_base(4,11,0))
@@ -162,7 +162,7 @@ reBit (Reject cs next) = do
 
 -- A choice of regexps. The 'Alternative' sum of all of them.
 reBit (Choice res next) = do
-  asum (map reBit res)
+  F.asum (map reBit res)
   reBit next
 
 -- Capture a group.
