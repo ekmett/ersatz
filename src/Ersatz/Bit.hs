@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE Rank2Types #-}
@@ -29,16 +28,11 @@ import qualified Prelude
 
 import Control.Applicative
 import Control.Monad.State
-#if __GLASGOW_HASKELL__ < 710
-import Data.Foldable (Foldable, toList)
-#else
 import Data.Foldable (toList)
-#endif
 import qualified Data.Foldable as Foldable
 import qualified Data.Traversable as Traversable
 import Data.Sequence (Seq, (<|), (|>), (><))
 import qualified Data.Sequence as Seq
-import Data.Typeable
 import Ersatz.Codec
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
@@ -64,7 +58,6 @@ data Bit
   | Not !Bit
   | Var !Literal
   | Run ( forall m s . MonadSAT s m => m Bit )
-  deriving (Typeable)
 
 instance Show Bit where
   showsPrec d (And xs)  = showParen (d > 10) $

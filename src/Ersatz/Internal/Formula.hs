@@ -2,7 +2,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
@@ -29,17 +28,11 @@ module Ersatz.Internal.Formula
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List (intersperse)
-import Data.Typeable
 import Ersatz.Internal.Literal
 
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 import Data.Foldable (toList)
-
-#if !(MIN_VERSION_base(4,8,0))
-import Control.Applicative
-import Data.Monoid (Monoid(..))
-#endif
 
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup (Semigroup(..))
@@ -52,7 +45,7 @@ import Data.Semigroup (Semigroup(..))
 -- | A disjunction of possibly negated atoms. Negated atoms are represented
 -- by negating the identifier.
 newtype Clause = Clause { clauseSet :: IntSet }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 
 -- | Extract the (possibly negated) atoms referenced by a 'Clause'.
 clauseLiterals :: Clause -> [Literal]
@@ -76,7 +69,7 @@ fromLiteral l = Clause { clauseSet = IntSet.singleton $ literalId l }
 
 -- | A conjunction of clauses
 newtype Formula = Formula { formulaSet :: Seq Clause }
-  deriving (Eq, Ord, Typeable)
+  deriving (Eq, Ord)
 
 instance Semigroup Formula where
   Formula x <> Formula y = Formula (x <> y)

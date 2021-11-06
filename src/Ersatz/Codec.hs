@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE TypeFamilies #-}
 --------------------------------------------------------------------
@@ -19,6 +18,7 @@ import Control.Monad hiding (mapM)
 import Data.Array
 import Data.HashMap.Lazy (HashMap)
 import Data.IntMap (IntMap)
+import Data.Kind
 import Data.Map (Map)
 import Data.Sequence (Seq)
 import Data.Traversable
@@ -29,13 +29,9 @@ import Prelude hiding (mapM)
 
 -- | This class describes data types that can be marshaled to or from a SAT solver.
 class Codec a where
-  type Decoded a :: *
+  type Decoded a :: Type
   -- | Return a value based on the solution if one can be determined.
-#if __GLASGOW_HASKELL__ < 710
-  decode :: (Alternative f, MonadPlus f) => Solution -> a -> f (Decoded a)
-#else
   decode :: MonadPlus f => Solution -> a -> f (Decoded a)
-#endif
   encode :: Decoded a -> a
 
 instance Codec Literal where

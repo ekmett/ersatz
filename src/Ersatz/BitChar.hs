@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
 --------------------------------------------------------------------
 -- |
@@ -14,7 +13,6 @@ module Ersatz.BitChar where
 import Data.Char (chr,ord)
 import Control.Monad (replicateM)
 import Prelude hiding ((&&))
-import Data.Typeable (Typeable)
 
 import Ersatz.Bit
 import Ersatz.Bits
@@ -28,7 +26,7 @@ type BitString = [BitChar]
 
 -- | Encoding of the full range of 'Char' values.
 newtype BitChar = BitChar Bits
-  deriving (Show,Typeable)
+  deriving Show
 
 instance Codec BitChar where
   type Decoded BitChar = Char

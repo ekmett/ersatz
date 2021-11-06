@@ -1,18 +1,12 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module RegexpGrid.Types
 ( Pos (..)
 , Field (..)
 ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Data.Char (chr, ord)
-import Data.Typeable
 import Ersatz
 import GHC.Generics
 
@@ -34,7 +28,7 @@ data Pos =             P00|P01|P02|P03|P04|P05|P06
 -- 5 bits are enough for A–Z. (The subset of the alphabet used by the regexps
 -- also requires 5 bits. For simplicity, just use the full alphabet.)
 newtype Field = Field Bit5
-  deriving (Show, Typeable, Generic)
+  deriving (Show, Generic)
 
 instance Boolean   Field
 instance Variable  Field

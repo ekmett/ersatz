@@ -1,18 +1,16 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 
 module Sudoku.Cell (Cell(..)) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
 
-import Data.Typeable (Typeable)
 import Data.Word
 import Ersatz
 import GHC.Generics
 
 newtype Cell = Cell Bit4
-  deriving (Show, Typeable, Generic)
+  deriving (Show, Generic)
 
 instance Boolean   Cell
 instance Variable  Cell

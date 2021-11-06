@@ -1,6 +1,7 @@
 next [????.??.??]
 -----------------
 * Allow the test suite to build with recent GHCs.
+* Drop support for pre-8.0 versions of GHC.
 
 0.4.9 [2021.02.17]
 ------------------

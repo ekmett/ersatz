@@ -75,13 +75,12 @@ description:    A monad for expressing SAT or QSAT problems using observable sha
 
 build-type:     Simple
 cabal-version:  >= 1.10
-tested-with:    GHC == 7.10.3
-              , GHC == 8.0.2
+tested-with:    GHC == 8.0.2
               , GHC == 8.2.2
               , GHC == 8.4.4
               , GHC == 8.6.5
               , GHC == 8.8.4
-              , GHC == 8.10.4
+              , GHC == 8.10.7
               , GHC == 9.0.1
 extra-source-files:
   .gitignore
@@ -162,18 +161,16 @@ flag examples
 
 library
   ghc-options: -Wall
-  if impl(ghc >= 8.6)
-    ghc-options: -Wno-star-is-type
   hs-source-dirs: src
   default-language: Haskell2010
 
   build-depends:
     array                >= 0.2      && < 0.6,
-    base                 >= 4.8      && < 5,
+    base                 >= 4.9      && < 5,
     bytestring           >= 0.10.4.0 && < 0.12,
     containers           >= 0.2.0.1  && < 0.7,
     data-default         >= 0.5      && < 0.8,
-    lens                 >= 3.8      && < 6,
+    lens                 >= 4        && < 6,
     mtl                  >= 1.1      && < 2.3,
     process              >= 1.1      && < 1.7,
     semigroups           >= 0.16     && < 1,
@@ -182,9 +179,6 @@ library
     transformers         >= 0.3      && < 0.6,
     unordered-containers == 0.2.*,
     attoparsec
-
-  if impl(ghc >= 7.4 && < 7.6)
-    build-depends: ghc-prim
 
   exposed-modules:
     Ersatz
@@ -225,8 +219,6 @@ executable ersatz-regexp-grid
       mtl,
       parsec >= 3.1 && < 3.2,
       semigroups
-    if impl(ghc >= 7.4 && < 7.6)
-      build-depends: ghc-prim
   else
     buildable: False
   main-is: Main.hs
@@ -246,8 +238,6 @@ executable ersatz-sudoku
       base < 5,
       ersatz,
       mtl
-    if impl(ghc >= 7.4 && < 7.6)
-      build-depends: ghc-prim
   else
     buildable: False
   default-language: Haskell2010

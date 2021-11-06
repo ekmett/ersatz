@@ -4,15 +4,11 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE ConstraintKinds #-}
 
 {-# OPTIONS_HADDOCK not-home #-}
-#ifndef MIN_VERSION_lens
-#define MIN_VERSION_lens(x,y,z) 1
-#endif
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -57,7 +53,6 @@ import Data.Int
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List
-import Data.Typeable
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
@@ -65,18 +60,8 @@ import System.IO.Unsafe
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
 
-#if !(MIN_VERSION_base(4,8,0))
-import Control.Applicative
-import Data.Foldable (foldMap)
-import Data.Monoid (Monoid(..))
-#endif
-
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup (Semigroup(..))
-#endif
-
-#if !(MIN_VERSION_lens(4,0,0))
-import Control.Monad.Identity
 #endif
 
 -- | Constraint synonym for types that carry a SAT state.
@@ -93,7 +78,7 @@ data SAT = SAT
   { _lastAtom  :: {-# UNPACK #-} !Int      -- ^ The id of the last atom allocated
   , _formula   :: !Formula                 -- ^ a set of clauses to assert
   , _stableMap :: !(HashMap (StableName ()) Literal)  -- ^ a mapping used during 'Bit' expansion
-  } deriving Typeable
+  }
 
 class HasSAT s where
   sat :: Lens' s SAT
@@ -164,7 +149,7 @@ generateLiteral a f = do
 data QSAT = QSAT
   { _universals :: !IntSet -- ^ a set indicating which literals are universally quantified
   , _qsatSat    :: SAT     -- ^ The rest of the information, in 'SAT'
-  } deriving (Show,Typeable)
+  } deriving Show
 
 class HasSAT t => HasQSAT t where
   qsat       :: Lens' t QSAT
@@ -308,7 +293,6 @@ bLine bs = mconcat (List.intersperse (char7 ' ') bs) <> char7 '\n'
 data Quant
   = Exists { getQuant :: {-# UNPACK #-} !Int }
   | Forall { getQuant :: {-# UNPACK #-} !Int }
-  deriving Typeable
 
 instance DIMACS SAT where
   dimacsComments _ = []

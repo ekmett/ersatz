@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -15,15 +13,11 @@ module Ersatz.Solution
   , Solver
   ) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Control.Lens
 import qualified Data.HashMap.Lazy as HashMap
 import Data.IntMap (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Ix
-import Data.Typeable
 import Ersatz.Internal.Literal
 import Ersatz.Problem
 import System.Mem.StableName (StableName)
@@ -31,7 +25,7 @@ import System.Mem.StableName (StableName)
 data Solution = Solution
   { solutionLiteral    :: Literal -> Maybe Bool
   , solutionStableName :: StableName () -> Maybe Bool
-  } deriving Typeable
+  }
 
 solutionFrom :: HasSAT s => IntMap Bool -> s -> Solution
 solutionFrom litMap qbf = Solution lookupLit lookupSN
