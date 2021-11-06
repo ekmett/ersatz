@@ -1,7 +1,5 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2015, © Eric Mertens 2014, Johan Kiviniemi 2013
@@ -31,17 +29,9 @@ import Control.Applicative
 import Control.Monad.Trans.State (State, runState, get, put)
 import Data.Bits ((.&.), (.|.), shiftL, shiftR)
 import qualified Data.Bits as Data
-#if __GLASGOW_HASKELL__ < 710
-import Data.Foldable (Foldable, toList)
-#else
 import Data.Foldable (toList)
-#endif
 import Data.List (unfoldr, foldl')
 import Data.Stream.Infinite (Stream(..))
-#if __GLASGOW_HASKELL__ < 710
-import Data.Traversable (traverse)
-#endif
-import Data.Typeable (Typeable)
 import Data.Word (Word8)
 import Ersatz.Bit
 import Ersatz.Codec
@@ -52,21 +42,21 @@ import GHC.Generics
 import Prelude hiding (and, or, not, (&&), (||))
 
 -- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
-newtype Bit1 = Bit1 Bit deriving (Show,Typeable,Generic)
+newtype Bit1 = Bit1 Bit deriving (Show,Generic)
 -- | A container of 2 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit2 = Bit2 !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit2 = Bit2 !Bit !Bit deriving (Show,Generic)
 -- | A container of 3 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit3 = Bit3 !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit3 = Bit3 !Bit !Bit !Bit deriving (Show,Generic)
 -- | A container of 4 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit4 = Bit4 !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit4 = Bit4 !Bit !Bit !Bit !Bit deriving (Show,Generic)
 -- | A container of 5 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit5 = Bit5 !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit5 = Bit5 !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
 -- | A container of 6 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit6 = Bit6 !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit6 = Bit6 !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
 -- | A container of 7 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit7 = Bit7 !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit7 = Bit7 !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
 -- | A container of 8 'Bit's that 'encode's from and 'decode's to 'Word8'
-data Bit8 = Bit8 !Bit !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Typeable,Generic)
+data Bit8 = Bit8 !Bit !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
 
 instance Boolean Bit1
 instance Boolean Bit2
@@ -245,7 +235,6 @@ instance Num Bit2 where
 -- in little-endian order to enable phantom 'false' values
 -- to be truncated.
 newtype Bits = Bits { _getBits :: [Bit] }
-  deriving Typeable
 
 instance Show Bits where
   showsPrec d (Bits xs) = showParen (d > 10) $

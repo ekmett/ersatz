@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
 --------------------------------------------------------------------
 -- |
 -- Copyright :  © Edward Kmett 2010-2014, Johan Kiviniemi 2013
@@ -14,13 +13,11 @@ module Ersatz.Internal.Literal
   , literalFalse, literalTrue
   ) where
 
-import Data.Typeable
-
 -- | A naked possibly-negated Atom, present in the target 'Ersatz.Solver.Solver'.
 --
 -- The literals @-1@ and @1@ are dedicated for the constant 'False' and the
 -- constant 'True' respectively.
-newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord,Typeable)
+newtype Literal = Literal { literalId :: Int } deriving (Eq,Ord)
 
 instance Show Literal where
   showsPrec i = showsPrec i . literalId

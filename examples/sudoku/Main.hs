@@ -1,11 +1,7 @@
-{-# LANGUAGE CPP #-}
 module Main (main) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative
-#endif
 import Control.Monad
 import Data.Array (Array, (!))
 import qualified Data.Array as Array

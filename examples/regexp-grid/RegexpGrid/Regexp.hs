@@ -1,11 +1,7 @@
-{-# LANGUAGE CPP #-}
 -- | A parser for a subset of the regular expression syntax.
 
 module RegexpGrid.Regexp (Regexp (..), parseRegexp) where
 
-#if __GLASGOW_HASKELL__ < 710
-import Control.Applicative hiding ((<|>), many)
-#endif
 import Control.Monad
 import Data.Char
 import Text.Parsec
