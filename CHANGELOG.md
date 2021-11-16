@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.4.10 [2021.11.16]
+-------------------
 * Allow the test suite to build with recent GHCs.
 * Drop support for pre-8.0 versions of GHC.
 
