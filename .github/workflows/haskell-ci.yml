@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.13.20211030
+# version: 0.13.20211114
 #
-# REGENDATA ("0.13.20211030",["github","cabal.project"])
+# REGENDATA ("0.13.20211114",["github","cabal.project"])
 #
 name: Haskell-CI
 on:
@@ -20,12 +20,19 @@ jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
     runs-on: ubuntu-18.04
+    timeout-minutes:
+      60
     container:
       image: buildpack-deps:bionic
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       matrix:
         include:
+          - compiler: ghc-9.2.1
+            compilerKind: ghc
+            compilerVersion: 9.2.1
+            setup-method: ghcup
+            allow-failure: false
           - compiler: ghc-9.0.1
             compilerKind: ghc
             compilerVersion: 9.0.1
@@ -142,6 +149,10 @@ jobs:
           repository hackage.haskell.org
             url: http://hackage.haskell.org/
           EOF
+          cat >> $CABAL_CONFIG <<EOF
+          program-default-options
+            ghc-options: $GHCJOBS +RTS -M3G -RTS
+          EOF
           cat $CABAL_CONFIG
       - name: versions
         run: |
@@ -154,7 +165,7 @@ jobs:
       - name: cache (tools)
         uses: actions/cache@v2
         with:
-          key: ${{ runner.os }}-${{ matrix.compiler }}-tools-582bfe5c
+          key: ${{ runner.os }}-${{ matrix.compiler }}-tools-98d26823
           path: ~/.haskell-ci-tools
       - name: install cabal-plan
         run: |
@@ -167,10 +178,10 @@ jobs:
           cabal-plan --version
       - name: install hlint
         run: |
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint >=3.3 && <3.4' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then if [ ! -e $HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint ]; then echo "Downloading HLint version $HLINTVER"; mkdir -p $HOME/.haskell-ci-tools; curl --write-out 'Status Code: %{http_code} Redirects: %{num_redirects} Total time: %{time_total} Total Dsize: %{size_download}\n' --silent --location --output $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz "https://github.com/ndmitchell/hlint/releases/download/v$HLINTVER/hlint-$HLINTVER-x86_64-linux.tar.gz"; tar -xzv -f $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz -C $HOME/.haskell-ci-tools; fi ; fi
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then mkdir -p $CABAL_DIR/bin && ln -sf "$HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint" $CABAL_DIR/bin/hlint ; fi
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then hlint --version ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then HLINTVER=$(cd /tmp && (${CABAL} v2-install -v $ARG_COMPILER --dry-run hlint  --constraint='hlint >=3.3 && <3.4' |  perl -ne 'if (/\bhlint-(\d+(\.\d+)*)\b/) { print "$1"; last; }')); echo "HLint version $HLINTVER" ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then if [ ! -e $HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint ]; then echo "Downloading HLint version $HLINTVER"; mkdir -p $HOME/.haskell-ci-tools; curl --write-out 'Status Code: %{http_code} Redirects: %{num_redirects} Total time: %{time_total} Total Dsize: %{size_download}\n' --silent --location --output $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz "https://github.com/ndmitchell/hlint/releases/download/v$HLINTVER/hlint-$HLINTVER-x86_64-linux.tar.gz"; tar -xzv -f $HOME/.haskell-ci-tools/hlint-$HLINTVER.tar.gz -C $HOME/.haskell-ci-tools; fi ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then mkdir -p $CABAL_DIR/bin && ln -sf "$HOME/.haskell-ci-tools/hlint-$HLINTVER/hlint" $CABAL_DIR/bin/hlint ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then hlint --version ; fi
       - name: checkout
         uses: actions/checkout@v2
         with:
@@ -225,9 +236,9 @@ jobs:
           $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: hlint
         run: |
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint src) ; fi
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint examples/sudoku) ; fi
-          if [ $((HCNUMVER >= 90000)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint examples/regexp-grid) ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint src) ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint examples/sudoku) ; fi
+          if [ $((HCNUMVER >= 90000 && HCNUMVER < 90200)) -ne 0 ] ; then (cd ${PKGDIR_ersatz} && hlint examples/regexp-grid) ; fi
       - name: cabal check
         run: |
           cd ${PKGDIR_ersatz} || false
