@@ -19,7 +19,8 @@ module Ersatz.Internal.Parser
   ) where
 
 import Control.Applicative
-import Control.Monad.State
+import Control.Monad (guard)
+import Control.Monad.Trans.State
 import Data.Char (isDigit)
 
 type Parser t a = StateT [t] [] a

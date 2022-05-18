@@ -27,7 +27,7 @@ import Prelude hiding ((&&),(||),not,and,or,all,any)
 import qualified Prelude
 
 import Control.Applicative
-import Control.Monad.State
+import Control.Monad (MonadPlus(..), liftM2, liftM3)
 import Data.Foldable (toList)
 import qualified Data.Foldable as Foldable
 import qualified Data.Traversable as Traversable

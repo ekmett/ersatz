@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Allow building with `mtl-2.3.*` and `transformers-0.6.*`.
+
 0.4.10 [2021.11.16]
 -------------------
 * Allow the test suite to build with recent GHCs.

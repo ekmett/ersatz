@@ -14,9 +14,9 @@ import Ersatz.Codec
 import Ersatz.Variable (exists)
 import Ersatz.Problem (MonadSAT)
 
+import Control.Monad (guard)
 import qualified Data.Array as A
 import Data.Array ( Array, Ix )
-import Control.Monad.State
 
 newtype Relation a b = Relation (A.Array (a, b) Bit)
 

@@ -172,12 +172,12 @@ library
     containers           >= 0.2.0.1  && < 0.7,
     data-default         >= 0.5      && < 0.8,
     lens                 >= 4        && < 6,
-    mtl                  >= 1.1      && < 2.3,
+    mtl                  >= 1.1      && < 2.4,
     process              >= 1.1      && < 1.7,
     semigroups           >= 0.16     && < 1,
     streams              >= 3.3      && < 4,
     temporary            >= 1.1      && < 1.4,
-    transformers         >= 0.3      && < 0.6,
+    transformers         >= 0.3      && < 0.7,
     unordered-containers == 0.2.*,
     attoparsec
 
