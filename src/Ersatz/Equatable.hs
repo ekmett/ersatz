@@ -24,7 +24,7 @@ import Prelude hiding ((&&),(||),not,and,or,all,any)
 
 import Ersatz.Bit
 import GHC.Generics
-import GHC.Natural
+import Numeric.Natural
 import Data.IntMap (IntMap)
 import Data.Foldable (toList)
 import Data.Map (Map)
