@@ -70,6 +70,10 @@ instance Equatable v => Equatable (Seq.Seq v) where
     | Seq.length x == Seq.length y = toList x === toList y
     | otherwise                    = false
 
+-- manually written because ancient GHC didn't have the generics instance
+instance Equatable a => Equatable (Tree.Tree a) where
+  Tree.Node x xs === Tree.Node y ys = x === y && xs === ys
+
 instance (Equatable a, Equatable b) => Equatable (a,b)
 instance (Equatable a, Equatable b, Equatable c) => Equatable (a,b,c)
 instance (Equatable a, Equatable b, Equatable c, Equatable d) => Equatable (a,b,c,d)
@@ -80,7 +84,6 @@ instance Equatable a => Equatable (Maybe a)
 instance Equatable a => Equatable [a]
 instance Equatable a => Equatable (NonEmpty a)
 instance (Equatable a, Equatable b) => Equatable (Either a b)
-instance Equatable a => Equatable (Tree.Tree a)
 
 class GEquatable f where
   (===#) :: f a -> f a -> Bit
