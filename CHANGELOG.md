@@ -1,6 +1,6 @@
 0.4.12 [2022.07.30]
 -------------------
-* Add Equatable instances for more base and containers types
+* Add `Equatable` and `Orderable` instances for more base and containers types
 * Add solver support for `z3`
 
 0.4.11 [2022.05.18]
