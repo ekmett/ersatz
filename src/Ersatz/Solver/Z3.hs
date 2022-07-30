@@ -13,14 +13,10 @@ module Ersatz.Solver.Z3
   ) where
 
 import Data.ByteString.Builder
-import Control.Applicative
 import Control.Monad.IO.Class
-import Data.IntMap (IntMap)
-import Ersatz.Internal.Parser
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.Common
-import qualified Data.IntMap as IntMap
 import System.IO
 import System.Process (readProcessWithExitCode)
 
@@ -45,24 +41,4 @@ z3Path path problem = liftIO $
                     "s UNSATISFIABLE":_ -> Unsatisfied
                     _                   -> Unsolved
 
-    return (result, parseSolution out)
-
-parseSolution :: String -> IntMap Bool
-parseSolution input =
-  case runParser solution input of
-    s:_ -> s
-    _   -> IntMap.empty
-
-solution :: Parser Char (IntMap Bool)
-solution = do
-  _ <- string "s SATISFIABLE\nv "
-  IntMap.fromList <$> values
-
-values :: Parser Char [(Int, Bool)]
-values  = many value <* token '\n' <* eof
-
-value :: Parser Char (Int, Bool)
-value = toPair <$> integer <* token ' '
-  where
-    toPair n | n >= 0    = ( n, True)
-             | otherwise = (-n, False)
+    return (result, parseSolution5 out)

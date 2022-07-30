@@ -96,9 +96,3 @@ cryptominisat5Path path problem = liftIO $
     let sol = parseSolution5 out
 
     return (resultOf exit, sol)
-
-parseSolution5 :: String -> IntMap Bool
-parseSolution5 txt = IntMap.fromList [(abs v, v > 0) | v <- vars, v /= 0]
-  where
-    vlines = [l | ('v':l) <- lines txt]
-    vars = map read (foldMap words vlines)
