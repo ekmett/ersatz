@@ -10,6 +10,7 @@
 module Ersatz.Solver
   ( module Ersatz.Solver.DepQBF
   , module Ersatz.Solver.Minisat
+  , module Ersatz.Solver.Z3
   , solveWith
   ) where
 
@@ -21,6 +22,7 @@ import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.DepQBF
 import Ersatz.Solver.Minisat
+import Ersatz.Solver.Z3
 
 solveWith ::
   (Monad m, MonadPlus n, HasSAT s, Default s, Codec a) =>

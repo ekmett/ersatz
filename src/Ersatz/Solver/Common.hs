@@ -14,6 +14,8 @@ module Ersatz.Solver.Common
   -- * Support for trying many solvers
   , trySolvers
   , NoSolvers(..)
+
+  , parseSolution5
   ) where
 
 import Control.Exception (Exception(..), throwIO)
@@ -22,6 +24,8 @@ import Ersatz.Solution
 import System.Exit (ExitCode(..))
 import System.IO.Error (isDoesNotExistError, tryIOError)
 import System.IO.Temp (withSystemTempDirectory)
+import Data.IntMap (IntMap)
+import qualified Data.IntMap.Strict as IntMap
 
 withTempFiles :: MonadIO m
               => FilePath  -- ^ Problem file extension including the dot, if any
@@ -60,3 +64,9 @@ trySolvers solvers problem = foldr runSolver noSolvers solvers []
              | isDoesNotExistError e -> next (e:es)
              | otherwise             -> ioError e
            Right x                   -> return x
+
+parseSolution5 :: String -> IntMap Bool
+parseSolution5 txt = IntMap.fromList [(abs v, v > 0) | v <- vars, v /= 0]
+  where
+    vlines = [l | ('v':l) <- lines txt]
+    vars = map read (foldMap words vlines)

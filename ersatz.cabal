@@ -196,6 +196,7 @@ library
     Ersatz.Solver
     Ersatz.Solver.DepQBF
     Ersatz.Solver.Minisat
+    Ersatz.Solver.Z3
     Ersatz.Variable
     Ersatz.Counting
     Ersatz.Relation
