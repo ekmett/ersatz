@@ -60,10 +60,8 @@ trySolvers solvers problem = foldr runSolver noSolvers solvers []
     runSolver solver next es =
       do res <- tryIOError (solver problem)
          case res of
-           Left e
-             | isDoesNotExistError e -> next (e:es)
-             | otherwise             -> ioError e
-           Right x                   -> return x
+           Left  e -> next (e:es)
+           Right x -> return x
 
 parseSolution5 :: String -> IntMap Bool
 parseSolution5 txt = IntMap.fromList [(abs v, v > 0) | v <- vars, v /= 0]
