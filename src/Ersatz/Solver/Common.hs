@@ -22,7 +22,7 @@ import Control.Exception (Exception(..), throwIO)
 import Control.Monad.IO.Class
 import Ersatz.Solution
 import System.Exit (ExitCode(..))
-import System.IO.Error (isDoesNotExistError, tryIOError)
+import System.IO.Error (tryIOError)
 import System.IO.Temp (withSystemTempDirectory)
 import Data.IntMap (IntMap)
 import qualified Data.IntMap.Strict as IntMap
