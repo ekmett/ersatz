@@ -3,6 +3,7 @@ module Sudoku.Problem (problem, range) where
 
 import Prelude hiding ((&&), (||), not, and, or, all, any)
 
+import Control.Monad (forM_, replicateM, when)
 import Control.Monad.Reader
 import Data.Array (Array, (!))
 import qualified Data.Array as Array
