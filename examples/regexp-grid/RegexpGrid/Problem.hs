@@ -10,6 +10,7 @@ import Prelude hiding ((&&), (||), not, and, or, all, any)
 
 import Control.Applicative
 import qualified Control.Monad.Fail as Fail
+import Control.Monad (guard)
 import Control.Monad.Reader
 import Control.Monad.RWS.Strict hiding ((<>))
 import Control.Lens
