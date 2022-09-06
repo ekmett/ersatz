@@ -15,7 +15,7 @@
 --
 -- 'Bits' is an arbitrary length natural number type.
 -- The least significant bit comes first.
--- 'Bits' had full arithmetic
+-- 'Bits' has full arithmetic
 -- (the result has large enough width so that there is no overflow).
 
 
