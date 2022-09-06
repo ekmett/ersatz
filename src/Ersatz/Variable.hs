@@ -51,8 +51,26 @@ instance Variable a => GVariable (K1 i a) where
 instance GVariable f => GVariable (M1 i c f) where
   gliterally = fmap M1 . gliterally
 
--- | Instances for this class for product-like types can be automatically derived
+-- | This class describes all types that can be represented
+-- by a collection of literals. The class method 'literally'
+-- is usually applied to 'literalExists' or 'literalForall',
+-- see implementations of 'exists' and 'forall'.
+--
+-- Instances for this class for product-like types can be automatically derived
 -- for any type that is an instance of 'Generic'.
+--
+-- === __Example usage__
+--
+-- @
+-- {-# language DeriveGeneric, TypeApplications #-}
+-- import GHC.Generics
+--
+-- data T = C Bit Bit deriving Generic
+-- instance Variable T
+--
+-- constraint = do t <- exists @T ; ...
+-- @
+
 class Variable t where
   literally :: MonadSAT s m => m Literal -> m t
   default literally ::
