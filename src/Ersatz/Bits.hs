@@ -8,7 +8,17 @@
 -- Stability :  experimental
 -- Portability: non-portable
 --
--- 'Bits' is an arbitrary length natural number type
+-- 'Bit1' .. 'Bit8' represent fixed length bit vectors.
+-- The most significant bit comes first.
+-- 'Bit1' and 'Bit2' have modular arithmetic
+-- (the result has the same width as the arguments, overflow is ignored).
+--
+-- 'Bits' is an arbitrary length natural number type.
+-- The least significant bit comes first.
+-- 'Bits' had full arithmetic
+-- (the result has large enough width so that there is no overflow).
+
+
 --------------------------------------------------------------------
 module Ersatz.Bits
   (
@@ -41,21 +51,21 @@ import Ersatz.Variable
 import GHC.Generics
 import Prelude hiding (and, or, not, (&&), (||))
 
--- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'
+-- | A container of 1 'Bit' that 'encode's from and 'decode's to 'Word8'.
 newtype Bit1 = Bit1 Bit deriving (Show,Generic)
--- | A container of 2 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 2 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit2 = Bit2 !Bit !Bit deriving (Show,Generic)
--- | A container of 3 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 3 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit3 = Bit3 !Bit !Bit !Bit deriving (Show,Generic)
--- | A container of 4 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 4 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit4 = Bit4 !Bit !Bit !Bit !Bit deriving (Show,Generic)
--- | A container of 5 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 5 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit5 = Bit5 !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
--- | A container of 6 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 6 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit6 = Bit6 !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
--- | A container of 7 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 7 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit7 = Bit7 !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
--- | A container of 8 'Bit's that 'encode's from and 'decode's to 'Word8'
+-- | A container of 8 'Bit's that 'encode's from and 'decode's to 'Word8'. MSB is first.
 data Bit8 = Bit8 !Bit !Bit !Bit !Bit !Bit !Bit !Bit !Bit deriving (Show,Generic)
 
 instance Boolean Bit1
@@ -176,6 +186,8 @@ boolToNum False = 0
 boolToNum True  = 1
 {-# INLINE boolToNum #-}
 
+
+-- | This instance provides modular arithmetic (overflow is ignored).
 instance Num Bit1 where
   Bit1 a + Bit1 b = Bit1 (xor a b)
   Bit1 a * Bit1 b = Bit1 (a && b)
@@ -210,6 +222,7 @@ fullAdder a b c =
 halfAdder :: Bit -> Bit -> (Bit, Bit) -- ^ (sum, carry)
 halfAdder a b = (a `xor` b, a && b)
 
+-- | This instance provides modular arithmetic (overflow is ignored).
 instance Num Bit2 where
   Bit2 a2 a1 + Bit2 b2 b1 = Bit2 s2 s1 where
     (s1,c2) = halfAdder a1 b1
@@ -231,8 +244,8 @@ instance Num Bit2 where
   signum (Bit2 a b) = Bit2 false (a || b)
   fromInteger k = Bit2 (bool (k .&. 2 /= 0)) (bool (k .&. 1 /= 0))
 
--- suitable for comparisons and arithmetic. Bits are stored
--- in little-endian order to enable phantom 'false' values
+-- | A container of 'Bit's that is suitable for comparisons and arithmetic. Bits are stored
+-- with least significant bit first to enable phantom 'false' values
 -- to be truncated.
 newtype Bits = Bits { _getBits :: [Bit] }
 
@@ -391,6 +404,16 @@ mulBits (Bits xs) (Bits ys0)
   times2 = (false:)
   aux x ys = Bits (map (x &&) ys)
 
+-- | This instance provides full arithmetic.
+-- The result has large enough width so that there is no overflow.
+--
+-- Subtraction is modified: @a - b@ denotes @max 0 (a - b)@.
+--
+-- Width of @a + b@ is @1 + max (width a) (width b)@,
+-- width of @a * b@ is @(width a) + (width b)@,
+-- width of @a - b@ is @max (width a) (width b)@.
+--
+-- @fromInteger@ will raise 'error' for negative arguments.
 instance Num Bits where
   (+) = addBits false
   (*) = mulBits
