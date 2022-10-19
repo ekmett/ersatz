@@ -97,32 +97,32 @@ reflexive r = and $ do
     x <- range (a,c)
     return $ r ! (x,x)
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) and
--- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) holds.
+-- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) hold.
 regular :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) holds.
 regular_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) holds.
 regular_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | \leq n \) holds.
 max_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | \geq n \) holds.
 min_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | \leq n \) holds.
 max_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Tests for an 'Int' \( n \) and a relation \( R \subseteq A \times B \), if
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | \geq n \) holds.
 min_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
@@ -145,7 +145,7 @@ out_degree_helper f deg r = and $ do
         y <- range (b,d)
         return $ r ! (x,y)
 
--- | Tests if a relation \( R \subseteq A \times A \) is transitive, i. e.,
+-- | Tests if a relation \( R \subseteq A \times A \) is transitive, i.e.,
 -- \( \forall x, y \in A: ((x,y) \in R) \land ((y,z) \in R) \rightarrow ((x,z) \in R) \).
 transitive :: ( Ix a )
            => Relation a a -> Bit

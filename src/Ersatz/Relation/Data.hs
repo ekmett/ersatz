@@ -58,14 +58,14 @@ relation bnd = do
             return ( p, x )
     return $ build bnd pairs
 
--- | Constructs an indeterminate relation \( R \subseteq A \times A \) with the constraint, 
+-- | Constructs an indeterminate relation \( R \subseteq A \times A \) with the constraint
 -- that it is symmetric, i.e., \( \forall x, y \in A: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
 --
 -- It can be thought of a symmetric relation as an undirected graph.
 symmetric_relation ::
   (MonadSAT s m, Ix b) =>
-  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equals the codomain, 
-                   -- hence for the bounds @((p,q),(r,s))@ must hold @p=q@ and @r=s@.
+  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain. 
+                   -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
   -> m (Relation b b)
 symmetric_relation bnd = do
     pairs <- sequence $ do
@@ -88,8 +88,8 @@ symmetric_relation bnd = do
 build :: ( Ix a, Ix b )
       => ((a,b),(a,b))
       -> [ ((a,b), Bit ) ] -- ^ A list of tuples, where the first element represents an element
-                           -- \( (x,y) \in A \times B \) and the second element is a positive 'Bit',
-                           -- if \( (x,y) \in R \) or a negative 'Bit', if \( (x,y) \notin R \).
+                           -- \( (x,y) \in A \times B \) and the second element is a positive 'Bit'
+                           -- if \( (x,y) \in R \), or a negative 'Bit' if \( (x,y) \notin R \).
       -> Relation a b
 build bnd pairs = Relation $ A.array bnd pairs
 
@@ -103,13 +103,13 @@ buildFrom p bnd = build bnd $ flip map (A.range bnd) $ \ (i,j) -> ((i, j), p i j
 
 -- | Constructs the identity relation \(I \subseteq A \times A, I = \{ (x,x) ~|~ x \in A \} \).
 identity :: (Ix a)
-         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equals the codomain, 
-                          -- hence for the bounds @((p,q),(r,s))@ must hold @p=q@ and @r=s@.
+         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equal the codomain. 
+                          -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
          -> Relation a a
 identity = buildFrom (\ i j -> bool $ i == j)
 
 
--- | The bounds of the array, that correspond to the matrix representation of the given relation.
+-- | The bounds of the array that correspond to the matrix representation of the given relation.
 --
 -- ==== __Example__
 --
@@ -142,8 +142,8 @@ indices ( Relation r ) = A.indices r
 assocs :: (Ix a, Ix b) => Relation a b -> [((a, b), Bit)]
 assocs ( Relation r ) = A.assocs r
 
--- | The list of elements of the array,
--- that correspont to the matrix representation of the given relation.
+-- | The list of elements of the array
+-- that correspond to the matrix representation of the given relation.
 --
 -- ==== __Example__
 --
@@ -154,7 +154,7 @@ elems :: (Ix a, Ix b) => Relation a b -> [Bit]
 elems ( Relation r ) = A.elems r
 
 -- | The 'Bit'-value for a given element \( (x,y) \in A \times B \) 
--- and a given relation \(R \subseteq A \times B \) that indicates,
+-- and a given relation \(R \subseteq A \times B \) that indicates
 -- if \( (x,y) \in R \) or not.
 -- 
 -- ==== __Example__
@@ -167,7 +167,7 @@ elems ( Relation r ) = A.elems r
 (!) :: (Ix a, Ix b) => Relation a b -> (a, b) -> Bit
 Relation r ! p = r A.! p
 
--- | To print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
+-- | Print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
 -- @putStrLn $ table \</assignment/\>@ corresponds to the matrix representation of this relation.
 table :: (Enum a, Ix a, Enum b, Ix b)
       => Array (a,b) Bool -> String

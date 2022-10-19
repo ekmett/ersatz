@@ -51,8 +51,8 @@ difference r s =
 
 -- | Constructs the union \( R \cup S \) of the relations \( R \) and \( S \).
 --
--- Note that for \( R \subseteq A \times B \) and \( S \subseteq C \times D \)
--- must hold \( A \times B \subseteq C \times D \).
+-- Note that for \( R \subseteq A \times B \) and \( S \subseteq C \times D \),
+-- it must hold that \( A \times B \subseteq C \times D \).
 union :: ( Ix a , Ix b )
         => Relation a b -> Relation a b ->  Relation a b
 union r s =  build ( bounds r ) $ do
@@ -75,7 +75,7 @@ product a b =
                 return $ and [ a!(x,y), b!(y,z) ]
                 )
 
--- | Constructs the relation \( R^{n} \) that results, if a relation
+-- | Constructs the relation \( R^{n} \) that results if a relation
 -- \( R \subseteq A \times A \) is composed \(n\) times with itself.
 --
 -- \( R^{0} \) is the identity relation \( I_{R} = \{ (x,x) ~|~ x \in A \} \) of \(R\).
@@ -94,8 +94,8 @@ power e r =
 
 -- | Constructs the intersection \( R \cap S \) of the relations \( R \) and \( S \).
 --
--- Note that for \( R \subseteq A \times B \) and \( S \subseteq C \times D \)
--- must hold \( A \times B \subseteq C \times D \).
+-- Note that for \( R \subseteq A \times B \) and \( S \subseteq C \times D \),
+-- it must hold that \( A \times B \subseteq C \times D \).
 intersection :: ( Ix a , Ix b)
       => Relation a b -> Relation a b
       -> Relation a b
