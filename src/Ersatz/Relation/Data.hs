@@ -26,14 +26,14 @@ import qualified Data.Array as A
 import Data.Array ( Array, Ix )
 
 
--- | Here, a 'Relation' is thought of as a binary relation \(R \subseteq A \times B \)
--- with domain \(A\) and codomain \(B\). All \( x \in A \) are represented by values in @a@
--- and all \( y \in B \) by values in @b@.
--- Since a relation is stored internally as a matrix, i.e., as an 'Array' of 'Bit'-values, 
--- @a@ and @b@ have to be instances of 'Ix'.
+-- | @Relation a b@ represents a binary relation \(R \subseteq A \times B \),
+-- where the domain \(A\) is a finite subset of the type @a@,
+-- and the codomain \(B\) is a finite subset of the type @b@.
 --
--- It can also be thought of a 'Relation', for example, as an abstract rewriting system
--- or a directed graph.
+-- A relation is stored internally as @Array (a,b) Bit@,
+-- so @a@ and @b@ have to be instances of 'Ix',
+-- and both \(A\) and \(B\) are intervals.
+
 newtype Relation a b = Relation (A.Array (a, b) Bit)
 
 instance (Ix a, Ix b) => Codec (Relation a b) where
@@ -42,14 +42,11 @@ instance (Ix a, Ix b) => Codec (Relation a b) where
   encode a = Relation $ encode a
 
 
--- | Constructs an indeterminate relation \( R \subseteq A \times B \).
+-- | @relation ((amin,bmin),(amax,mbax))@ constructs an indeterminate relation \( R \subseteq A \times B \)
+-- where \(A\) is @{amin .. amax}@ and \(B\) is @{bmin .. bmax}$.
 relation :: ( Ix a, Ix b, MonadSAT s m ) =>
-  ((a,b),(a,b)) -- ^ A tuple of bounds, which are the lowest and highest indices in the array, 
-                -- that correspond to the matrix representation of \(R\).
-                -- Each index within the bounds represents an element \( (x,y) \in A \times B \) 
-                -- that may be contained in \(R\).
-  -> m ( Relation a b ) -- ^ An indeterminate relation \(R\) with a fixed domain \(A\) and codomain \(B\). 
-                        -- The relation carries a SAT state and can be evaluated by a 'Ersatz.Solution.Solver'.
+  ((a,b),(a,b)) 
+  -> m ( Relation a b )
 relation bnd = do
     pairs <- sequence $ do
         p <- A.range bnd
@@ -58,10 +55,10 @@ relation bnd = do
             return ( p, x )
     return $ build bnd pairs
 
--- | Constructs an indeterminate relation \( R \subseteq A \times A \) with the constraint
--- that it is symmetric, i.e., \( \forall x, y \in A: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
+-- | Constructs an indeterminate relation \( R \subseteq B \times B \)
+-- that it is symmetric, i.e., \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
 --
--- It can be thought of a symmetric relation as an undirected graph.
+-- A symmetric relation is an undirected graph, possibly with loops.
 symmetric_relation ::
   (MonadSAT s m, Ix b) =>
   ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain. 
