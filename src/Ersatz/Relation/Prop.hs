@@ -1,7 +1,8 @@
-
 module Ersatz.Relation.Prop
 
-( implies
+( 
+-- * Properties
+  implies
 , symmetric
 , anti_symmetric
 , transitive
@@ -31,49 +32,99 @@ import Ersatz.Counting
 
 import Data.Ix
 
+-- | Tests if the first relation \(R\) is a subset of the second relation \(S\), 
+-- i.e., every element that is contained in \(R\) is also contained in \(S\).
+--
+-- Note that if \( R \subseteq A \times B \) and \( S \subseteq C \times D \),
+-- then \( A \times B \) must be a subset of \( C \times D \).
 implies :: ( Ix a, Ix b )
         => Relation a b -> Relation a b -> Bit
 implies r s = and $ do
     i <- indices r
     return $ or [ not $ r ! i, s ! i ]
 
+-- | Tests if a relation is empty, i.e., the relation doesn't contain any elements.
 empty ::  ( Ix a, Ix b )
         => Relation a b -> Bit
 empty r = and $ do
     i <- indices r
     return $ not $ r ! i
 
+-- | Tests if a relation \( R \subseteq A \times B \) is complete,
+-- i.e., \(R = A \times B \).
 complete :: (Ix a, Ix b) => Relation a b -> Bit
 complete r = empty $ complement r
 
+-- | Tests if a relation \( R \subseteq A \times A \) is strongly connected, i.e.,
+-- \( \forall x, y \in A: ((x,y) \in R) \lor ((y,x) \in R) \).
 total :: ( Ix a) => Relation a a -> Bit
 total r = complete $ symmetric_closure r
 
+-- | Tests if two relations are disjoint, i.e., 
+-- there is no element that is contained in both relations.
 disjoint :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 disjoint r s = empty $ intersection r s
 
+-- | Tests if two relations \( R, S \subseteq A \times B \) are equal, 
+-- i.e., they contain the same elements.
 equals :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 equals r s = and [implies r s, implies s r]
 
+-- | Tests if a relation \( R \subseteq A \times A \) is symmetric,
+-- i.e., \( \forall x, y \in A: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
 symmetric :: ( Ix a) => Relation a a -> Bit
 symmetric r = implies r ( mirror r )
 
+
+-- | Tests if a relation \( R \subseteq A \times A \) is antisymmetric,
+-- i.e., \( \forall x, y \in A: ((x,y) \in R) \land ((y,x) \in R)) \rightarrow (x = y) \).
 anti_symmetric :: ( Ix a) => Relation a a -> Bit
 anti_symmetric r = implies (intersection r (mirror r)) (identity (bounds r))
 
+-- | Tests if a relation \( R \subseteq A \times A \) is irreflexive, i.e.,
+-- \( \forall x \in A: (x,x) \notin R \).
 irreflexive :: ( Ix a ) => Relation a a -> Bit
 irreflexive r = and $ do
     let ((a,_),(c,_)) = bounds r
     x <- range (a, c)
     return $ not $ r ! (x,x)
 
+-- | Tests if a relation \( R \subseteq A \times A \) is reflexive, i.e.,
+-- \( \forall x \in A: (x,x) \in R \).
 reflexive :: ( Ix a ) => Relation a a -> Bit
 reflexive r = and $ do
     let ((a,_),(c,_)) = bounds r
     x <- range (a,c)
     return $ r ! (x,x)
 
-regular, regular_in_degree, regular_out_degree, max_in_degree, min_in_degree, max_out_degree, min_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) and
+-- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) hold.
+regular :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) holds.
+regular_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) holds.
+regular_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall y \in B: | \{ (x,y) \in R \} | \leq n \) holds.
+max_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall y \in B: | \{ (x,y) \in R \} | \geq n \) holds.
+min_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall x \in A: | \{ (x,y) \in R \} | \leq n \) holds.
+max_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
+
+-- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- \( \forall x \in A: | \{ (x,y) \in R \} | \geq n \) holds.
+min_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
 regular deg r = and [ regular_in_degree deg r, regular_out_degree deg r ]
 
@@ -94,6 +145,8 @@ out_degree_helper f deg r = and $ do
         y <- range (b,d)
         return $ r ! (x,y)
 
+-- | Tests if a relation \( R \subseteq A \times A \) is transitive, i.e.,
+-- \( \forall x, y \in A: ((x,y) \in R) \land ((y,z) \in R) \rightarrow ((x,z) \in R) \).
 transitive :: ( Ix a )
            => Relation a a -> Bit
 transitive r = implies (product r r) r
