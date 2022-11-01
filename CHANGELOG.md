@@ -1,3 +1,9 @@
+next [????.??.??]
+-----------------
+* Make the examples compile with `mtl-2.3.*`.
+* Add more documentation to the `Ersatz.Relation.*` modules, the `Variable`
+  class, and the data types in `Ersatz.Bits`.
+
 0.4.12 [2022.08.11]
 -------------------
 * Add `Equatable` and `Orderable` instances for more base and containers types
