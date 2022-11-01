@@ -11,8 +11,10 @@ import Prelude hiding ((&&), (||), not, and, or, all, any)
 import Control.Applicative
 import qualified Control.Monad.Fail as Fail
 import Control.Monad (guard)
-import Control.Monad.Reader
-import Control.Monad.RWS.Strict hiding ((<>))
+import Control.Monad.Reader (MonadReader(..), ReaderT(..))
+import Control.Monad.RWS.Strict (RWST, evalRWST)
+import Control.Monad.Trans (MonadTrans(..))
+import Control.Monad.Writer.Strict (MonadWriter(..))
 import Control.Lens
 import qualified Data.Foldable as F (asum)
 import Data.Map (Map)
