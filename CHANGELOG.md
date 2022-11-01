@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.4.13 [2022.11.01]
+-------------------
 * Make the examples compile with `mtl-2.3.*`.
 * Add more documentation to the `Ersatz.Relation.*` modules, the `Variable`
   class, and the data types in `Ersatz.Bits`.
