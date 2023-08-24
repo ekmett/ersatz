@@ -15,7 +15,7 @@
 module Ersatz.Variable
   ( Variable(..)
 #ifndef HLINT
-  , forall
+  , forall_
 #endif
   , exists
 
@@ -32,8 +32,8 @@ exists :: (Variable a, MonadSAT s m)  => m a
 exists = literally literalExists
 
 #ifndef HLINT
-forall :: (Variable a, MonadQSAT s m)  => m a
-forall = literally literalForall
+forall_ :: (Variable a, MonadQSAT s m) => m a
+forall_ = literally literalForall
 #endif
 
 class GVariable f where

@@ -1,3 +1,9 @@
+0.5 [????.??.??]
+----------------
+* The `forall` function in `Ersatz.Variable` has been renamed to
+  `forall_`, since a future version of GHC will make the use of `forall` as an
+  identifier an error.
+
 0.4.13 [2022.11.01]
 -------------------
 * Make the examples compile with `mtl-2.3.*`.
