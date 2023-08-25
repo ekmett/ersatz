@@ -16,8 +16,12 @@ mainf n = do
   putStrLn $ unwords [ "n",  show n ]
   (s, mgs) <- solveWith anyminisat $ do
       gs <- replicateM n exists
-      forM_ (zip gs $ tail gs) $ \ (x,y) -> assert ( x /== y )
+      forM_ (zipTail gs) $ \ (x,y) -> assert ( x /== y )
       return (gs :: [Bit])
   case (s, mgs) of
      (Satisfied, Just gs) -> do print $ length $ filter id gs
      _ -> do return ()
+
+zipTail :: [a] -> [(a, a)]
+zipTail []         = []
+zipTail xss@(_:xs) = zip xss xs

@@ -53,6 +53,7 @@ import Data.Int
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NE
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
@@ -247,12 +248,12 @@ qdimacs t = comments <> problem <> quantified <> clauses
                     , intDec (Seq.length tClauses)
                     ]
     quantified = foldMap go tQuantGroups
-      where go ls = bLine0 (q (head ls) : map (intDec . getQuant) ls)
+      where go ls = bLine0 (q (NE.head ls) : map (intDec . getQuant) (NE.toList ls))
             q Exists{} = char7 'e'
             q Forall{} = char7 'a'
     clauses = foldMap bClause tClauses
 
-    tQuantGroups = List.groupBy eqQuant (qdimacsQuantified t)
+    tQuantGroups = NE.groupBy eqQuant (qdimacsQuantified t)
       where
         eqQuant :: Quant -> Quant -> Bool
         eqQuant Exists{} Exists{} = True
@@ -311,9 +312,10 @@ instance QDIMACS QSAT where
   -- "Unbound atoms are to be considered as being existentially quantified in
   -- the first (i.e., the outermost) quantified set." per QDIMACS standard.
   -- Skip the implicit first existentials.
-  qdimacsQuantified q
-    | IntSet.null (q^.universals) = []
-    | otherwise = quants [head qUniversals..lastAtom'] qUniversals
+  qdimacsQuantified q =
+    case qUniversals of
+      []    -> []
+      (i:_) -> quants [i..lastAtom'] qUniversals
     where
       lastAtom'   = qdimacsNumVariables q
       qUniversals = IntSet.toAscList (q^.universals)
