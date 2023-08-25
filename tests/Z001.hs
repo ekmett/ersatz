@@ -41,6 +41,8 @@ class Unknown a where
   unknown :: MonadSAT s m => m a
 
 -- | square matrices
+--
+-- Invariant: @dim >= 2@
 newtype Matrix (dim::Nat)  a = Matrix [[a]]
   deriving ( Show, Equatable, Orderable )
 
@@ -68,9 +70,33 @@ instance Num a => Num (Matrix dim a) where
 
 for = flip map
 
-topleft (Matrix xss) = head (head xss)
-botright (Matrix xss) = last (last xss)
-topright (Matrix xss) = last (head xss)
+topleft (Matrix xss) =
+  case xss of
+    ((x:_):_) -> x
+    _ -> matrixInvariantViolated
+
+botright (Matrix xss)
+  | Just (_, xs) <- unsnoc xss
+  , Just (_, x)  <- unsnoc xs
+  = x
+  | otherwise
+  = matrixInvariantViolated
+
+topright (Matrix xss)
+  | xs:_ <- xss
+  , Just (_, x) <- unsnoc xs
+  = x
+  | otherwise
+  = matrixInvariantViolated
+
+unsnoc :: [a] -> Maybe ([a], a)
+unsnoc []     = Nothing
+unsnoc (x:xs) = case unsnoc xs of
+                  Nothing    -> Just ([], x)
+                  Just (a,b) -> Just (x:a, b)
+
+matrixInvariantViolated :: a
+matrixInvariantViolated = error "Matrix invariant violated"
 
 monotone m = positive (topleft m) && positive (botright m)
 

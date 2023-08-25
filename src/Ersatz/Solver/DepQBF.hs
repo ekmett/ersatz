@@ -32,6 +32,20 @@ parseLiteral :: String -> (Int, Bool)
 parseLiteral ('-':xs) = (read xs, False)
 parseLiteral xs = (read xs, True)
 
+-- Parse the QDIMACS output format, which is described in
+-- http://www.qbflib.org/qdimacs.html#output
+parseOutput :: String -> [(Int, Bool)]
+parseOutput out =
+  case lines out of
+    (_preamble:certLines) -> map parseCertLine certLines
+    [] -> error "QDIMACS output without preamble"
+  where
+    parseCertLine :: String -> (Int, Bool)
+    parseCertLine certLine =
+      case words certLine of
+        (_v:lit:_) -> parseLiteral lit
+        _ -> error $ "Malformed QDIMACS certificate line: " ++ certLine
+
 -- | This is a 'Solver' for 'QSAT' problems that lets you specify the path to the @depqbf@ executable.
 depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
 depqbfPath path problem = liftIO $
@@ -47,6 +61,6 @@ depqbfPath path problem = liftIO $
     return $ (,) result $
       case result of
         Satisfied ->
-          I.fromList $ map (parseLiteral . head . tail . words) $ tail $ lines out
+          I.fromList $ parseOutput out
         _ ->
           I.empty
