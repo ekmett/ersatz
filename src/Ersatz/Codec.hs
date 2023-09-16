@@ -30,13 +30,14 @@ import Prelude hiding (mapM)
 -- | This class describes data types that can be marshaled to or from a SAT solver.
 class Codec a where
   type Decoded a :: Type
-  -- | Return a value based on the solution if one can be determined.
-  decode :: MonadPlus f => Solution -> a -> f (Decoded a)
+  -- | Return 'Just' a value based on the solution if one can be determined.
+  -- Otherwise, return 'Nothing'.
+  decode :: Solution -> a -> Maybe (Decoded a)
   encode :: Decoded a -> a
 
 instance Codec Literal where
   type Decoded Literal = Bool
-  decode s a = maybe (pure False <|> pure True) pure (solutionLiteral s a)
+  decode s a = solutionLiteral s a <|> Just False
   encode True  = literalTrue
   encode False = literalFalse
 

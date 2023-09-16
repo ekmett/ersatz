@@ -27,7 +27,7 @@ import Prelude hiding ((&&),(||),not,and,or,all,any)
 import qualified Prelude
 
 import Control.Applicative
-import Control.Monad (MonadPlus(..), liftM2, liftM3)
+import Control.Monad (liftM2, liftM3)
 import Data.Foldable (toList)
 import qualified Data.Foldable as Foldable
 import qualified Data.Traversable as Traversable
@@ -123,8 +123,7 @@ instance Codec Bit where
   type Decoded Bit = Bool
   encode = bool
   decode sol b
-      = maybe (pure False <|> pure True) pure $
-        solutionStableName sol (unsafePerformIO (makeStableName' b))
+      = solutionStableName sol (unsafePerformIO (makeStableName' b))
      -- The StableName didn’t have an associated literal with a solution,
      -- recurse to compute the value.
     <|> case b of
@@ -135,7 +134,9 @@ instance Codec Bit where
             decode sol $ if p then ct else cf
           Not c'  -> not <$> decode sol c'
           Var l   -> decode sol l
-          Run _ -> mzero
+          Run _ -> Nothing
+      -- If all else false, just return False.
+    <|> Just False
     where
       andMaybeBools :: [Maybe Bool] -> Maybe Bool
       andMaybeBools mbs

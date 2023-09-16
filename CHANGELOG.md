@@ -3,6 +3,24 @@
 * The `forall` function in `Ersatz.Variable` has been renamed to
   `forall_`, since a future version of GHC will make the use of `forall` as an
   identifier an error.
+* The types of `decode` and `solveWith` have been slightly less general:
+
+  ```diff
+  -decode :: MonadPlus f => Solution -> a -> f     (Decoded a)
+  +decode ::                Solution -> a -> Maybe (Decoded a)
+
+  -solveWith :: (Monad m, MonadPlus n, HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, n     (Decoded a))
+  +solveWith :: (Monad m,              HasSAT s, Default s, Codec a) => Solver s m -> StateT s m a -> m (Result, Maybe (Decoded a))
+  ```
+
+  That is, these functions now use `Maybe` instead of an arbitrary `MonadPlus`.
+  This change came about because:
+
+  1. Practically all uses of `solveWith` in the wild are already picking `n` to
+     be `Maybe`, and
+  2. The behavior of `decode` and `solveWith` for `MonadPlus` instances besides
+     `Maybe` could  produce surprising results, as this behavior was not well
+     specified.
 
 0.4.13 [2022.11.01]
 -------------------
