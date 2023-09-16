@@ -24,6 +24,9 @@ import System.Mem.StableName (StableName)
 
 data Solution = Solution
   { solutionLiteral    :: Literal -> Maybe Bool
+    -- ^ If a 'Literal' is uniquely assigned to a particular value, this will
+    -- return 'Just' of that value. If a 'Literal' is unconstrained (i.e., it
+    -- can be assigned either 'True' or 'False'), this will return 'Nothing'.
   , solutionStableName :: StableName () -> Maybe Bool
   }
 
