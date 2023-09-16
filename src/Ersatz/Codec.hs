@@ -35,9 +35,18 @@ class Codec a where
   decode :: Solution -> a -> Maybe (Decoded a)
   encode :: Decoded a -> a
 
+-- | By convention, the 'decode' implementation will return 'False' for
+-- unconstrained non-negative 'Literal's and 'True' for unconstrained negative
+-- 'Literal's.
 instance Codec Literal where
   type Decoded Literal = Bool
-  decode s a = solutionLiteral s a <|> Just False
+  decode s a = case solutionLiteral s a of
+                 sol@(Just _) -> sol
+                 Nothing
+                   | i >= 0    -> Just False
+                   | otherwise -> Just True
+    where
+      i = literalId a
   encode True  = literalTrue
   encode False = literalFalse
 
