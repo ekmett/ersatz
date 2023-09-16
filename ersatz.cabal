@@ -273,6 +273,21 @@ executable ersatz-sudoku
 --   hs-source-dirs: tests
 --   Main-is: properties.hs
 
+test-suite hunit
+  type: exitcode-stdio-1.0
+  main-is: HUnit.hs
+  hs-source-dirs: tests
+  build-depends:
+    base,
+    containers,
+    data-default,
+    ersatz,
+    HUnit >= 1.2,
+    test-framework >= 0.6,
+    test-framework-hunit >= 0.2
+  default-language: Haskell2010
+  ghc-options: -Wall
+
 test-suite speed
   type: exitcode-stdio-1.0
   main-is: Speed.hs

@@ -21,6 +21,19 @@
   2. The behavior of `decode` and `solveWith` for `MonadPlus` instances besides
      `Maybe` could  produce surprising results, as this behavior was not well
      specified.
+* Fix a bug in which `decode` could return inconsistent results with solution
+  that underconstrain variables. For instance:
+
+  ```hs
+  do b <- exists
+     pure [b, not b]
+  ```
+
+  Previously, this could decode to `[False, False]` (an invalid assignment).
+  `ersatz` now adopts the convention that unconstrained non-negative `Literal`s
+  will always be assigned `False`, and unconstrained negative `Literal`s will
+  always be assigned `True`. This means that the example above would now decode
+  to `[False, True]`.
 
 0.4.13 [2022.11.01]
 -------------------
