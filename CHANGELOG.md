@@ -1,4 +1,4 @@
-0.5 [????.??.??]
+0.5 [2023.09.08]
 ----------------
 * The `forall` function in `Ersatz.Variable` has been renamed to
   `forall_`, since a future version of GHC will make the use of `forall` as an
