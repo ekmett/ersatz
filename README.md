@@ -46,7 +46,7 @@ To allocate fresh existentially or universally quantified variables or to assert
 ```haskell
 verify_currying :: (MonadQSAT s m) => m ()
 verify_currying = do
-  (x::Bit, y::Bit, z::Bit) <- forall
+  (x::Bit, y::Bit, z::Bit) <- forall_
   assert $ ((x && y) ==> z) === (x ==> y ==> z)
 ```
 
