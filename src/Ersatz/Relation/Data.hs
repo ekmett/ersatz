@@ -6,20 +6,25 @@ module Ersatz.Relation.Data (
 -- * Construction
 , relation, symmetric_relation
 , build
-, buildFrom
+, buildFrom, buildFromM
 , identity
 -- * Components
 , bounds, (!), indices, assocs, elems
--- *
-, table
+, domain, codomain, universe
+, universeSize
+, is_homogeneous
+-- * Pretty printing
+, table, tableR
 )  where
 
-import Prelude hiding ( and )
+import Prelude hiding ( and, (&&) )
 
 import Ersatz.Bit
 import Ersatz.Codec
 import Ersatz.Variable (exists)
+import Ersatz.Internal.Literal (literalTrue)
 import Ersatz.Problem (MonadSAT)
+import Ersatz.Solution
 
 import Control.Monad (guard)
 import qualified Data.Array as A
@@ -34,16 +39,16 @@ import Data.Array ( Array, Ix )
 -- so @a@ and @b@ have to be instances of 'Ix',
 -- and both \(A\) and \(B\) are intervals.
 
-newtype Relation a b = Relation (A.Array (a, b) Bit)
+newtype Relation a b = Relation (Array (a, b) Bit)
 
 instance (Ix a, Ix b) => Codec (Relation a b) where
-  type Decoded (Relation a b) = A.Array (a, b) Bool
+  type Decoded (Relation a b) = Array (a, b) Bool
   decode s (Relation a) = decode s a
   encode a = Relation $ encode a
 
 
 -- | @relation ((amin,bmin),(amax,mbax))@ constructs an indeterminate relation \( R \subseteq A \times B \)
--- where \(A\) is @{amin .. amax}@ and \(B\) is @{bmin .. bmax}$.
+-- where \(A\) is @{amin .. amax}@ and \(B\) is @{bmin .. bmax}@.
 relation :: ( Ix a, Ix b, MonadSAT s m ) =>
   ((a,b),(a,b)) 
   -> m ( Relation a b )
@@ -56,9 +61,7 @@ relation bnd = do
     return $ build bnd pairs
 
 -- | Constructs an indeterminate relation \( R \subseteq B \times B \)
--- that it is symmetric, i.e., \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
---
--- A symmetric relation is an undirected graph, possibly with loops.
+-- that is symmetric, i.e., \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
 symmetric_relation ::
   (MonadSAT s m, Ix b) =>
   ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain. 
@@ -92,18 +95,33 @@ build bnd pairs = Relation $ A.array bnd pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
-          => (a -> b -> Bit) -- ^ A function with the specified signature, that assigns a 'Bit'-value 
-                             -- to each element \( (x,y) \in A \times B \).
-          -> ((a,b),(a,b))
+          => ((a,b),(a,b))
+          -> ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
+                            -- to each element \( (x,y) \in A \times B \).
           -> Relation a b
-buildFrom p bnd = build bnd $ flip map (A.range bnd) $ \ (i,j) -> ((i, j), p i j)
+buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
 
--- | Constructs the identity relation \(I \subseteq A \times A, I = \{ (x,x) ~|~ x \in A \} \).
+-- | Constructs an indeterminate relation \(R \subseteq A \times B\) from a function.
+buildFromM :: (Ix a, Ix b, MonadSAT s m)
+          => ((a,b),(a,b))
+          -> ((a,b) -> m Bit)
+          -> m (Relation a b)
+buildFromM bnd p = do
+    pairs <- sequence $ do
+        i <- A.range bnd
+        return $ do
+            x <- p i
+            return (i, x)
+    return $ build bnd pairs
+
+-- | Constructs the identity relation \(I = \{ (x,x) ~|~ x \in A \} \subseteq A \times A\).
 identity :: (Ix a)
          => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equal the codomain. 
                           -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
          -> Relation a a
-identity = buildFrom (\ i j -> bool $ i == j)
+identity ((a,b),(c,d))
+    | (a,c) == (b,d) = buildFrom ((a,b),(c,d)) (\ (i,j) -> bool $ i == j)
+    | otherwise      = error "The domain must equal the codomain!"
 
 
 -- | The bounds of the array that correspond to the matrix representation of the given relation.
@@ -164,17 +182,60 @@ elems ( Relation r ) = A.elems r
 (!) :: (Ix a, Ix b) => Relation a b -> (a, b) -> Bit
 Relation r ! p = r A.! p
 
+-- | The domain \(A\) of a relation \(R \subseteq A \times B\). 
+domain :: (Ix a, Ix b) => Relation a b -> [a]
+domain r =
+  let ((x,_),(x',_)) = bounds r
+  in A.range (x,x')
+
+-- | The codomain \(B\) of a relation \(R \subseteq A \times B\). 
+codomain :: (Ix a, Ix b) => Relation a b -> [b]
+codomain r =
+  let ((_,y),(_,y')) = bounds r
+  in A.range (y,y')
+
+-- | The universe \(A\) of a relation \(R \subseteq A \times A\). 
+universe :: Ix a => Relation a a -> [a]
+universe r
+  | is_homogeneous r = domain r
+  | otherwise = error "Relation is not homogeneous!"
+
+-- | The size of the universe \(A\) of a relation \(R \subseteq A \times A\). 
+universeSize :: Ix a => Relation a a -> Int
+universeSize r 
+  | is_homogeneous r =
+      let ((a,_),(c,_)) = bounds r
+      in A.rangeSize (a,c)
+  | otherwise = error "Relation is not homogeneous!"
+
+-- | Tests if a relation is homogeneous, i.e., if the domain is equal to the codomain.
+is_homogeneous :: Ix a => Relation a a -> Bool
+is_homogeneous r =
+  let ((a,b),(c,d)) = bounds r 
+  in (a == b) && (c == d)
+
+
 -- | Print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
 -- @putStrLn $ table \</assignment/\>@ corresponds to the matrix representation of this relation.
-table :: (Enum a, Ix a, Enum b, Ix b)
+table :: (Ix a, Ix b)
       => Array (a,b) Bool -> String
 table r = unlines $ do
     let ((a,b),(c,d)) = A.bounds r
-    x <- [ a .. c ]
+    x <- A.range (a,c)
     return $ unwords $ do
-        y <- [ b .. d ]
+        y <- A.range (b,d)
         return $ if r A.! (x,y) then "*" else "."
 
+-- | Print a relation where each element is a boolean 'Bit' value. 
+-- @putStrLn $ tableR \</relation/\>@ corresponds to the matrix representation of this relation.
+--
+-- If a 'Bit' value is indetermined, it is set to 'false'.
+tableR :: (Ix a, Ix b) => Relation a b -> String
+tableR r = 
+  let sol = Solution 
+            (\ x -> if x == literalTrue then Just True else Nothing) 
+            $ const Nothing
+  in table $ maybe undefined id $ decode sol r
 
 
 
