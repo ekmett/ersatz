@@ -15,9 +15,11 @@ module Ersatz.Relation
 ( module Ersatz.Relation.Data
 , module Ersatz.Relation.Op
 , module Ersatz.Relation.Prop
+, module Ersatz.Relation.ARS
 ) where
 
 import Ersatz.Relation.Data
 import Ersatz.Relation.Op
 import Ersatz.Relation.Prop
+import Ersatz.Relation.ARS
 
