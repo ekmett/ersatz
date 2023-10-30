@@ -89,32 +89,32 @@ irreflexive r = empty $ intersection (identity $ bounds r) r
 reflexive :: ( Ix a ) => Relation a a -> Bit
 reflexive r = implies (identity $ bounds r) r
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) and
 -- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) hold.
 regular :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | = n \) holds.
 regular_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) holds.
 regular_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | \leq n \) holds.
 max_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall y \in B: | \{ (x,y) \in R \} | \geq n \) holds.
 min_in_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | \leq n \) holds.
 max_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 
--- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
+-- | Given an @Int@ \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | \geq n \) holds.
 min_out_degree :: (Ix a, Ix b) => Int -> Relation a b -> Bit
 

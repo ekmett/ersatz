@@ -37,9 +37,9 @@ import Control.Monad ( guard )
 terminating :: Ix a => Relation a a -> Bit
 terminating r = irreflexive $ transitive_closure r
 
--- | Monadic version of 'terminating'. 
+-- | Monadic version of @'terminating'@. 
 --
--- Note that 'assert_terminating' cannot be used for expressing non-termination of a relation,
+-- Note that @assert_terminating@ cannot be used for expressing non-termination of a relation,
 -- only for expressing termination.
 --
 -- Formula size: linear in \( |A|^3 \)
@@ -100,7 +100,7 @@ confluent r =
 -- | Tests if a relation \( R \subseteq A \times A \) is semi-confluent, i.e.,
 -- \( \forall a,b,c \in A: ((a,b) \in R) \land ((a,c) \in R^*) \rightarrow \exists d \in A: ((b,d) \in R^*) \land ((c,d)\in R^*) \).
 --
--- 'confluent' and 'semiconfluent' are equivalent.
+-- @semiconfluent@ is equivalent to @'confluent'@.
 --
 -- Formula size: linear in \( |A|^3 \)
 semiconfluent :: Ix a => Relation a a -> Bit
@@ -109,15 +109,15 @@ semiconfluent r =
   in implies (peak r r') (valley r' r')
 
 -- | Tests if a relation \( R \subseteq A \times A \) is convergent, i.e., 
--- \( R \) is 'terminating' and 'confluent'.
+-- \( R \) is @'terminating'@ and @'confluent'@.
 --
 -- Formula size: linear in \( |A|^3 \)
 convergent :: Ix a => Relation a a -> Bit
 convergent r = (terminating r) && (locally_confluent r)
 
--- | Monadic version of 'convergent'. 
+-- | Monadic version of @'convergent'@. 
 --
--- Note that 'assert_convergent' cannot be used for expressing non-convergence of a relation,
+-- Note that @assert_convergent@ cannot be used for expressing non-convergence of a relation,
 -- only for expressing convergence.
 --
 -- Formula size: linear in \( |A|^3 \)

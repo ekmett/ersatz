@@ -1,7 +1,7 @@
 {-# language TypeFamilies #-}
 
 module Ersatz.Relation.Data ( 
--- * The 'Relation' type
+-- * The @Relation@ type
   Relation
 -- * Construction
 , relation, symmetric_relation
@@ -14,7 +14,7 @@ module Ersatz.Relation.Data (
 , universeSize
 , is_homogeneous
 -- * Pretty printing
-, table, tableR
+, table
 )  where
 
 import Prelude hiding ( and, (&&) )
@@ -22,9 +22,7 @@ import Prelude hiding ( and, (&&) )
 import Ersatz.Bit
 import Ersatz.Codec
 import Ersatz.Variable (exists)
-import Ersatz.Internal.Literal (literalTrue)
 import Ersatz.Problem (MonadSAT)
-import Ersatz.Solution
 
 import Control.Monad (guard)
 import qualified Data.Array as A
@@ -36,7 +34,7 @@ import Data.Array ( Array, Ix )
 -- and the codomain \(B\) is a finite subset of the type @b@.
 --
 -- A relation is stored internally as @Array (a,b) Bit@,
--- so @a@ and @b@ have to be instances of 'Ix',
+-- so @a@ and @b@ have to be instances of @Ix@,
 -- and both \(A\) and \(B\) are intervals.
 
 newtype Relation a b = Relation (Array (a, b) Bit)
@@ -82,21 +80,21 @@ symmetric_relation bnd = do
 -- ==== __Example__
 --
 -- @
--- r = build ((0,'a'),(1,'b')) [((0,'a'), true), ((0,'b'), false), 
---                          ((1,'a'), false), ((1,'b'), true))]
+-- r = build ((0,'a'),(1,'b')) [ ((0,'a'), true), ((0,'b'), false)
+--                         , ((1,'a'), false), ((1,'b'), true) ]
 -- @
 build :: ( Ix a, Ix b )
       => ((a,b),(a,b))
       -> [ ((a,b), Bit ) ] -- ^ A list of tuples, where the first element represents an element
-                           -- \( (x,y) \in A \times B \) and the second element is a positive 'Bit'
-                           -- if \( (x,y) \in R \), or a negative 'Bit' if \( (x,y) \notin R \).
+                           -- \( (x,y) \in A \times B \) and the second element is a positive @Bit@
+                           -- if \( (x,y) \in R \), or a negative @Bit@ if \( (x,y) \notin R \).
       -> Relation a b
 build bnd pairs = Relation $ A.array bnd pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
           => ((a,b),(a,b))
-          -> ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
+          -> ((a,b) -> Bit) -- ^ A function that assigns a @Bit@-value 
                             -- to each element \( (x,y) \in A \times B \).
           -> Relation a b
 buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
@@ -128,7 +126,7 @@ identity ((a,b),(c,d))
 --
 -- ==== __Example__
 --
--- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false))]
+-- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false)]
 -- >>> bounds r
 -- ((0,0),(1,1))
 bounds :: (Ix a, Ix b) => Relation a b -> ((a,b),(a,b))
@@ -139,7 +137,7 @@ bounds ( Relation r ) = A.bounds r
 --
 -- ==== __Example__
 --
--- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false))]
+-- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false)]
 -- >>> indices r
 -- [(0,0),(0,1),(1,0),(1,1)]
 indices :: (Ix a, Ix b) => Relation a b -> [(a, b)]
@@ -147,11 +145,11 @@ indices ( Relation r ) = A.indices r
 
 -- | The list of tuples for the given relation \(R \subseteq A \times B \), 
 -- where the first element represents an element \( (x,y) \in A \times B \) 
--- and the second element indicates via a 'Bit' , if \( (x,y) \in R \) or not.
+-- and the second element indicates via a @Bit@ , if \( (x,y) \in R \) or not.
 -- 
 -- ==== __Example__
 --
--- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false))]
+-- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false)]
 -- >>> assocs r
 -- [((0,0),Var (-1)),((0,1),Var 1),((1,0),Var 1),((1,1),Var (-1))]
 assocs :: (Ix a, Ix b) => Relation a b -> [((a, b), Bit)]
@@ -168,7 +166,7 @@ assocs ( Relation r ) = A.assocs r
 elems :: (Ix a, Ix b) => Relation a b -> [Bit]
 elems ( Relation r ) = A.elems r
 
--- | The 'Bit'-value for a given element \( (x,y) \in A \times B \) 
+-- | The @Bit@-value for a given element \( (x,y) \in A \times B \) 
 -- and a given relation \(R \subseteq A \times B \) that indicates
 -- if \( (x,y) \in R \) or not.
 -- 
@@ -225,17 +223,6 @@ table r = unlines $ do
     return $ unwords $ do
         y <- A.range (b,d)
         return $ if r A.! (x,y) then "*" else "."
-
--- | Print a relation where each element is a boolean 'Bit' value. 
--- @putStrLn $ tableR \</relation/\>@ corresponds to the matrix representation of this relation.
---
--- If a 'Bit' value is indetermined, it is set to 'false'.
-tableR :: (Ix a, Ix b) => Relation a b -> String
-tableR r = 
-  let sol = Solution 
-            (\ x -> if x == literalTrue then Just True else Nothing) 
-            $ const Nothing
-  in table $ maybe undefined id $ decode sol r
 
 
 
