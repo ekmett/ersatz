@@ -6,6 +6,11 @@
 - ignore:
     name: Use lambda-case
 
+- ignore:
+    name: Use || # We define a different `or`
+
+- ignore:
+    name: Use && # We define a different `and`
+
 - ignore: {name: Hoist not, within: [Ersatz.Bit]} # This is how we define `any`, ya dingus
-- ignore: {name: Use ||, within: [Ersatz.Relation.Prop]} # This is a different `or`
-- ignore: {name: Use &&, within: [Ersatz.Relation.Prop]} # This is a different `and`
+- ignore: {name: Use infix, within: [Ersatz.Relation.Op]} # We define a different `union` function in this module
