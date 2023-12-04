@@ -70,7 +70,7 @@ assert_terminating r = do
 --
 -- Formula size: linear in \( |A|^3 \)
 peak :: Ix a => Relation a a -> Relation a a -> Relation a a
-peak r s = product (mirror r) s
+peak r = product (mirror r)
 
 -- | Constructs the valley \( R \circ S^{-1} \) of two relations
 -- \( R, S \subseteq A \times A \).
@@ -113,7 +113,7 @@ semiconfluent r =
 --
 -- Formula size: linear in \( |A|^3 \)
 convergent :: Ix a => Relation a a -> Bit
-convergent r = (terminating r) && (locally_confluent r)
+convergent r = and [terminating r, locally_confluent r]
 
 -- | Monadic version of @'convergent'@. 
 --
@@ -196,7 +196,7 @@ nf_property r = and $ do
   let trc = transitive_reflexive_closure r
       ec = equivalence_closure r
   (x,y) <- indices r
-  return $ (is_nf y r) && (ec ! (x,y)) ==> trc ! (x,y)
+  return $ and [is_nf y r, ec ! (x,y)] ==> trc ! (x,y)
 
 -- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property, 
 -- i.e., \( \forall a,b \in A \) with \( a \neq b \) holds: if \(a\) and \(b\) are normal forms, 
@@ -208,7 +208,7 @@ unique_nfs r = and $ do
   let ec = equivalence_closure r
   (x,y) <- indices r
   guard $ x < y
-  return $ (is_nf x r) && (is_nf y r) ==> not $ ec ! (x,y)
+  return $ and [is_nf x r, is_nf y r] ==> not $ ec ! (x,y)
 
 -- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property 
 -- with respect to reduction, i.e., \( \forall a,b \in A \) with \( a \neq b \) holds:
@@ -220,4 +220,4 @@ unique_nfs_reduction r = and $ do
   let trc = transitive_reflexive_closure r
   (x,y) <- indices r
   guard $ x < y
-  return $ (is_nf x r) && (is_nf y r) ==> not $ (peak trc trc) ! (x,y)
+  return $ and [is_nf x r, is_nf y r] ==> not $ peak trc trc ! (x,y)

@@ -55,7 +55,7 @@ union :: ( Ix a , Ix b )
 union r s
     | bounds r == bounds s = build ( bounds r ) $ do
         i <- indices r
-        return (i, (r!i || s!i))
+        return (i, r!i || s!i)
     | otherwise = error "Relations don't have the same bounds!"
 
 -- | Constructs the composition \( R \circ S \) of the relations 
