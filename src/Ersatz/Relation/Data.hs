@@ -34,7 +34,7 @@ import Data.Array ( Array, Ix )
 -- and the codomain \(B\) is a finite subset of the type @b@.
 --
 -- A relation is stored internally as @Array (a,b) Bit@,
--- so @a@ and @b@ have to be instances of @Ix@,
+-- so @a@ and @b@ have to be instances of 'Ix',
 -- and both \(A\) and \(B\) are intervals.
 
 newtype Relation a b = Relation (Array (a, b) Bit)
@@ -86,25 +86,25 @@ symmetric_relation bnd = do
 build :: ( Ix a, Ix b )
       => ((a,b),(a,b))
       -> [ ((a,b), Bit ) ] -- ^ A list of tuples, where the first element represents an element
-                           -- \( (x,y) \in A \times B \) and the second element is a positive @Bit@
-                           -- if \( (x,y) \in R \), or a negative @Bit@ if \( (x,y) \notin R \).
+                           -- \( (x,y) \in A \times B \) and the second element is a positive 'Bit'
+                           -- if \( (x,y) \in R \), or a negative 'Bit' if \( (x,y) \notin R \).
       -> Relation a b
 build bnd pairs = Relation $ A.array bnd pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
-          => ((a,b),(a,b))
-          -> ((a,b) -> Bit) -- ^ A function that assigns a @Bit@-value 
+          => ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
                             -- to each element \( (x,y) \in A \times B \).
+          -> ((a,b),(a,b))
           -> Relation a b
-buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
+buildFrom p bnd = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
 
 -- | Constructs an indeterminate relation \(R \subseteq A \times B\) from a function.
 buildFromM :: (Ix a, Ix b, MonadSAT s m)
-          => ((a,b),(a,b))
-          -> ((a,b) -> m Bit)
+          => ((a,b) -> m Bit)
+          -> ((a,b),(a,b))
           -> m (Relation a b)
-buildFromM bnd p = do
+buildFromM p bnd = do
     pairs <- sequence $ do
         i <- A.range bnd
         return $ do
@@ -118,7 +118,7 @@ identity :: (Ix a)
                           -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
          -> Relation a a
 identity ((a,b),(c,d))
-    | (a,c) == (b,d) = buildFrom ((a,b),(c,d)) (\ (i,j) -> bool $ i == j)
+    | (a,c) == (b,d) = buildFrom (\ (i,j) -> bool $ i == j) ((a,b),(c,d))
     | otherwise      = error "The domain must equal the codomain!"
 
 
@@ -145,7 +145,7 @@ indices ( Relation r ) = A.indices r
 
 -- | The list of tuples for the given relation \(R \subseteq A \times B \), 
 -- where the first element represents an element \( (x,y) \in A \times B \) 
--- and the second element indicates via a @Bit@ , if \( (x,y) \in R \) or not.
+-- and the second element indicates via a 'Bit' , if \( (x,y) \in R \) or not.
 -- 
 -- ==== __Example__
 --
@@ -166,7 +166,7 @@ assocs ( Relation r ) = A.assocs r
 elems :: (Ix a, Ix b) => Relation a b -> [Bit]
 elems ( Relation r ) = A.elems r
 
--- | The @Bit@-value for a given element \( (x,y) \in A \times B \) 
+-- | The 'Bit'-value for a given element \( (x,y) \in A \times B \) 
 -- and a given relation \(R \subseteq A \times B \) that indicates
 -- if \( (x,y) \in R \) or not.
 -- 
