@@ -93,18 +93,18 @@ build bnd pairs = Relation $ A.array bnd pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
-          => ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
+          => ((a,b),(a,b))
+          -> ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
                             -- to each element \( (x,y) \in A \times B \).
-          -> ((a,b),(a,b))
           -> Relation a b
-buildFrom p bnd = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
+buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
 
 -- | Constructs an indeterminate relation \(R \subseteq A \times B\) from a function.
 buildFromM :: (Ix a, Ix b, MonadSAT s m)
-          => ((a,b) -> m Bit)
-          -> ((a,b),(a,b))
+          => ((a,b),(a,b))
+          -> ((a,b) -> m Bit)
           -> m (Relation a b)
-buildFromM p bnd = do
+buildFromM bnd p = do
     pairs <- sequence $ do
         i <- A.range bnd
         return $ do
@@ -118,7 +118,7 @@ identity :: (Ix a)
                           -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
          -> Relation a a
 identity ((a,b),(c,d))
-    | (a,c) == (b,d) = buildFrom (\ (i,j) -> bool $ i == j) ((a,b),(c,d))
+    | (a,c) == (b,d) = buildFrom ((a,b),(c,d)) (\ (i,j) -> bool $ i == j)
     | otherwise      = error "The domain must equal the codomain!"
 
 
