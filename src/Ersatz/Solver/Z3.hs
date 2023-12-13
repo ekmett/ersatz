@@ -14,7 +14,7 @@ module Ersatz.Solver.Z3
 
 import Data.ByteString.Builder
 import Control.Monad.IO.Class
-import Ersatz.Problem
+import Ersatz.Problem ( SAT, writeDimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import System.IO
@@ -30,8 +30,7 @@ z3 = z3Path "z3"
 z3Path :: MonadIO m => FilePath -> Solver SAT m
 z3Path path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
-    withFile problemPath WriteMode $ \fh ->
-      hPutBuilder fh (dimacs problem)
+    writeDimacs' problemPath problem
 
     (_exit, out, _err) <-
       readProcessWithExitCode path ["-dimacs", problemPath] []
