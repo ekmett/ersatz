@@ -16,7 +16,7 @@ module Ersatz.Solver.DepQBF
 
 import Data.ByteString.Builder
 import Control.Monad.IO.Class
-import Ersatz.Problem
+import Ersatz.Problem ( QSAT, writeQdimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as I
@@ -50,8 +50,7 @@ parseOutput out =
 depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
 depqbfPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
-    withFile problemPath WriteMode $ \fh ->
-      hPutBuilder fh (qdimacs problem)
+    writeQdimacs' problemPath problem
 
     (exit, out, _err) <-
       readProcessWithExitCode path [problemPath, "--qdo"] []

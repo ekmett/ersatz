@@ -39,6 +39,8 @@ module Ersatz.Problem
   , QDIMACS(..)
   , WDIMACS(..)
   , dimacs, qdimacs, wdimacs
+  , writeDimacs, writeQdimacs, writeWdimacs
+  , writeDimacs', writeQdimacs', writeWdimacs'
   ) where
 
 import Data.ByteString.Builder
@@ -57,6 +59,7 @@ import qualified Data.List.NonEmpty as NE
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
+import System.IO ( withFile, IOMode(WriteMode) )
 import System.IO.Unsafe
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
@@ -333,3 +336,52 @@ instance QDIMACS QSAT where
 -- Or is this fused away (because of Coercible)?
 satClauses :: HasSAT s => s -> Seq IntSet
 satClauses s = fmap clauseSet (formulaSet (s^.formula))
+
+
+------------------------------------------------------------------------------
+-- Writing SATs
+------------------------------------------------------------------------------
+
+writeBuilder :: MonadIO m => FilePath -> Builder -> m ()
+writeBuilder path builder = liftIO $ do
+  withFile path WriteMode $ \fh ->
+    hPutBuilder fh builder
+
+-- | Write a 'DIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+--
+-- @writeDimacs path m@ can be used in the same contexts you would call
+-- @solveWith solverName m@.
+writeDimacs :: (MonadIO m, DIMACS s, Default s) => FilePath -> StateT s m a -> m ()
+writeDimacs path m = writeDimacs' path . snd =<< runStateT m def
+
+-- | Write a 'QDIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+--
+-- @writeQDimacs path m@ can be used in the same contexts you would call
+-- @solveWith solverName m@.
+writeQdimacs :: (MonadIO m, QDIMACS s, Default s) => FilePath -> StateT s m a -> m ()
+writeQdimacs path m = writeQdimacs' path . snd =<< runStateT m def
+
+-- | Write a 'WDIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+--
+-- | @writeWdimacs path m@ can be used in the same contexts you would call
+-- @solveWith solverName m@
+writeWdimacs :: (MonadIO m, WDIMACS s, Default s) => FilePath -> StateT s m a -> m ()
+writeWdimacs path m = writeWdimacs' path . snd =<< runStateT m def
+
+-- | Write a 'DIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+writeDimacs' :: (MonadIO m, DIMACS t) => FilePath -> t -> m ()
+writeDimacs' path = writeBuilder path . dimacs
+
+-- | Write a 'QDIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+writeQdimacs' :: (MonadIO m, QDIMACS t) => FilePath -> t -> m ()
+writeQdimacs' path = writeBuilder path . qdimacs
+
+-- | Write a 'WDIMACS' problem to a file at a particular path. Useful if you want
+-- to experiment with solvers, solver options, or measure effects of different encodings.
+writeWdimacs' :: (MonadIO m, WDIMACS t) => FilePath -> t -> m ()
+writeWdimacs' path = writeBuilder path . wdimacs
