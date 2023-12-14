@@ -10,13 +10,15 @@ module Ersatz.Relation.Data (
 , identity
 -- * Components
 , bounds, (!), indices, assocs, elems
+, card
 -- *
 , table
 )  where
 
-import Prelude hiding ( and )
+import Prelude hiding ( and, any )
 
 import Ersatz.Bit
+import Ersatz.Bits ( Bits, sumBit )
 import Ersatz.Codec
 import Ersatz.Variable (exists)
 import Ersatz.Problem (MonadSAT)
@@ -164,6 +166,11 @@ elems ( Relation r ) = A.elems r
 (!) :: (Ix a, Ix b) => Relation a b -> (a, b) -> Bit
 Relation r ! p = r A.! p
 
+-- | The number of pairs \( (x,y) \in R \) for the given relation
+-- \( R \subseteq A \times B \).
+card :: (Ix a, Ix b) => Relation a b -> Bits
+card = sumBit . elems
+
 -- | Print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
 -- @putStrLn $ table \</assignment/\>@ corresponds to the matrix representation of this relation.
 table :: (Enum a, Ix a, Enum b, Ix b)
@@ -174,7 +181,3 @@ table r = unlines $ do
     return $ unwords $ do
         y <- [ b .. d ]
         return $ if r A.! (x,y) then "*" else "."
-
-
-
-
