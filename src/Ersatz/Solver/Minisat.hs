@@ -23,7 +23,7 @@ import Data.ByteString.Builder
 import Control.Exception (IOException, handle)
 import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
-import Ersatz.Problem
+import Ersatz.Problem ( SAT, writeDimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap.Strict as IntMap
@@ -51,8 +51,7 @@ cryptominisat = minisatPath "cryptominisat"
 minisatPath :: MonadIO m => FilePath -> Solver SAT m
 minisatPath path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath solutionPath -> do
-    withFile problemPath WriteMode $ \fh ->
-      hPutBuilder fh (dimacs problem)
+    writeDimacs' problemPath problem
 
     (exit, _out, _err) <-
       readProcessWithExitCode path [problemPath, solutionPath] []
@@ -87,8 +86,7 @@ cryptominisat5 = cryptominisat5Path "cryptominisat5"
 cryptominisat5Path :: MonadIO m => FilePath -> Solver SAT m
 cryptominisat5Path path problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
-    withFile problemPath WriteMode $ \fh ->
-      hPutBuilder fh (dimacs problem)
+    writeDimacs' problemPath problem
 
     (exit, out, _err) <-
       readProcessWithExitCode path [problemPath] []

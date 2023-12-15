@@ -13,13 +13,15 @@ module Ersatz.Relation.Data (
 , domain, codomain, universe
 , universeSize
 , is_homogeneous
+, card
 -- * Pretty printing
 , table
 )  where
 
-import Prelude hiding ( and, (&&) )
+import Prelude hiding ( and, (&&), any )
 
 import Ersatz.Bit
+import Ersatz.Bits ( Bits, sumBit )
 import Ersatz.Codec
 import Ersatz.Variable (exists)
 import Ersatz.Problem (MonadSAT)
@@ -212,6 +214,10 @@ is_homogeneous r =
   let ((a,b),(c,d)) = bounds r 
   in (a == b) && (c == d)
 
+-- | The number of pairs \( (x,y) \in R \) for the given relation
+-- \( R \subseteq A \times B \).
+card :: (Ix a, Ix b) => Relation a b -> Bits
+card = sumBit . elems
 
 -- | Print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
 -- @putStrLn $ table \</assignment/\>@ corresponds to the matrix representation of this relation.
@@ -223,6 +229,3 @@ table r = unlines $ do
     return $ unwords $ do
         y <- A.range (b,d)
         return $ if r A.! (x,y) then "*" else "."
-
-
-
