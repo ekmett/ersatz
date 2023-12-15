@@ -1,3 +1,11 @@
+* Add the `Ersatz.Relation.ARS` module
+* Change the type of `buildFrom`:
+
+  ```diff
+  -buildFrom :: (Ix a, Ix b) => (a -> b -> Bit) -> ((a,b),(a,b))  -> Relation a b
+  +buildFrom :: (Ix a, Ix b) => ((a,b),(a,b))   -> ((a,b) -> Bit) -> Relation a b
+  ```
+
 0.5 [2023.09.08]
 ----------------
 * The `forall` function in `Ersatz.Variable` has been renamed to
