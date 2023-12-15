@@ -39,7 +39,7 @@ mainf d k n s = do
   putStrLn $ unwords [ "degree <=", show d, "diameter <=", show k, "nodes ==", show n, "symmetry ==", show s ]
   (s, mg) <- solveWith anyminisat $ moore d k n s
   case (s, mg) of
-     (Satisfied, Just g) -> do printA g ; return True
+     (Satisfied, Just g) -> do putStrLn $ R.table g ; return True
      _ -> do return False
 
 moore ::
@@ -65,14 +65,4 @@ periodic_relation s bnd = do
   return $ R.build bnd $ do
     i <- A.range bnd
     return (i, r R.! normal i)
-  
--- | FIXME: this needs to go into a library
-printA :: A.Array (Int,Int) Bool -> IO ()
-printA a = putStrLn $ unlines $ do
-         let ((u,l),(o,r)) = A.bounds a
-         x <- [u .. o]
-         return $ unwords $ do 
-             y <- [ l ..r ]
-             return $ case a A.! (x,y) of
-                  True -> "* " ; False -> ". "
 

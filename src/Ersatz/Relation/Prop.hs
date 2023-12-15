@@ -19,7 +19,6 @@ module Ersatz.Relation.Prop
 , complete
 , total
 , disjoint
-, equals
 )
 
 where
@@ -29,19 +28,23 @@ import Ersatz.Bit
 import Ersatz.Relation.Data
 import Ersatz.Relation.Op
 import Ersatz.Counting
+import Ersatz.Equatable
 
 import Data.Ix
 
--- | Tests if the first relation \(R\) is a subset of the second relation \(S\), 
--- i.e., every element that is contained in \(R\) is also contained in \(S\).
---
--- Note that if \( R \subseteq A \times B \) and \( S \subseteq C \times D \),
--- then \( A \times B \) must be a subset of \( C \times D \).
+
+instance (Ix a, Ix b) => Equatable (Relation a b) where
+  r === s = and [implies r s, implies s r]
+  r /== s = not $ r === s
+
+-- | Given two relations \( R, S \subseteq A \times B \), check if \(R\) is a subset of \(S\).
 implies :: ( Ix a, Ix b )
         => Relation a b -> Relation a b -> Bit
-implies r s = and $ do
-    i <- indices r
-    return $ or [ not $ r ! i, s ! i ]
+implies r s 
+  | bounds r == bounds s = and $ do
+      i <- indices r
+      return $ (r ! i) ==> (s ! i)
+  | otherwise = error "Relations don't have the same bounds!"
 
 -- | Tests if a relation is empty, i.e., the relation doesn't contain any elements.
 empty ::  ( Ix a, Ix b )
@@ -56,8 +59,8 @@ complete :: (Ix a, Ix b) => Relation a b -> Bit
 complete r = empty $ complement r
 
 -- | Tests if a relation \( R \subseteq A \times A \) is strongly connected, i.e.,
--- \( \forall x, y \in A: ((x,y) \in R) \lor ((y,x) \in R) \).
-total :: ( Ix a) => Relation a a -> Bit
+-- \( R \cup R^{-1} = A \times A \).
+total :: ( Ix a ) => Relation a a -> Bit
 total r = complete $ symmetric_closure r
 
 -- | Tests if two relations are disjoint, i.e., 
@@ -65,37 +68,26 @@ total r = complete $ symmetric_closure r
 disjoint :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 disjoint r s = empty $ intersection r s
 
--- | Tests if two relations \( R, S \subseteq A \times B \) are equal, 
--- i.e., they contain the same elements.
-equals :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
-equals r s = and [implies r s, implies s r]
-
 -- | Tests if a relation \( R \subseteq A \times A \) is symmetric,
--- i.e., \( \forall x, y \in A: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
-symmetric :: ( Ix a) => Relation a a -> Bit
+-- i.e., \( R \cup R^{-1} = R \).
+symmetric :: ( Ix a ) => Relation a a -> Bit
 symmetric r = implies r ( mirror r )
 
 
 -- | Tests if a relation \( R \subseteq A \times A \) is antisymmetric,
--- i.e., \( \forall x, y \in A: ((x,y) \in R) \land ((y,x) \in R)) \rightarrow (x = y) \).
-anti_symmetric :: ( Ix a) => Relation a a -> Bit
+-- i.e., \( R \cap R^{-1} \subseteq R^{0} \).
+anti_symmetric :: ( Ix a ) => Relation a a -> Bit
 anti_symmetric r = implies (intersection r (mirror r)) (identity (bounds r))
 
 -- | Tests if a relation \( R \subseteq A \times A \) is irreflexive, i.e.,
--- \( \forall x \in A: (x,x) \notin R \).
+-- \( R \cap R^{0} = \emptyset \).
 irreflexive :: ( Ix a ) => Relation a a -> Bit
-irreflexive r = and $ do
-    let ((a,_),(c,_)) = bounds r
-    x <- range (a, c)
-    return $ not $ r ! (x,x)
+irreflexive r = empty $ intersection (identity $ bounds r) r
 
 -- | Tests if a relation \( R \subseteq A \times A \) is reflexive, i.e.,
--- \( \forall x \in A: (x,x) \in R \).
+-- \( R^{0} \subseteq R \).
 reflexive :: ( Ix a ) => Relation a a -> Bit
-reflexive r = and $ do
-    let ((a,_),(c,_)) = bounds r
-    x <- range (a,c)
-    return $ r ! (x,x)
+reflexive r = implies (identity $ bounds r) r
 
 -- | Given an 'Int' \( n \) and a relation \( R \subseteq A \times B \), check if
 -- \( \forall x \in A: | \{ (x,y) \in R \} | = n \) and
@@ -146,7 +138,9 @@ out_degree_helper f deg r = and $ do
         return $ r ! (x,y)
 
 -- | Tests if a relation \( R \subseteq A \times A \) is transitive, i.e.,
--- \( \forall x, y \in A: ((x,y) \in R) \land ((y,z) \in R) \rightarrow ((x,z) \in R) \).
+-- \( R \circ R = R \).
+--
+-- Formula size: linear in \( |A|^3 \)
 transitive :: ( Ix a )
            => Relation a a -> Bit
 transitive r = implies (product r r) r
