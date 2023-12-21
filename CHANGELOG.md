@@ -7,6 +7,8 @@ next [????.??.??]
   -buildFrom :: (Ix a, Ix b) => (a -> b -> Bit) -> ((a,b),(a,b))  -> Relation a b
   +buildFrom :: (Ix a, Ix b) => ((a,b),(a,b))   -> ((a,b) -> Bit) -> Relation a b
   ```
+* Add support for `kissat` and the `lingeling` trio (`lingeling`, `plingeling`,
+  `treengeling`) of SAT solvers.
 
 0.5 [2023.09.08]
 ----------------
