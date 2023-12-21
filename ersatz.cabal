@@ -197,6 +197,8 @@ library
     Ersatz.Solution
     Ersatz.Solver
     Ersatz.Solver.DepQBF
+    Ersatz.Solver.Kissat
+    Ersatz.Solver.Lingeling
     Ersatz.Solver.Minisat
     Ersatz.Solver.Z3
     Ersatz.Variable

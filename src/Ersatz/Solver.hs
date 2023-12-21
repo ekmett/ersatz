@@ -9,6 +9,8 @@
 --------------------------------------------------------------------
 module Ersatz.Solver
   ( module Ersatz.Solver.DepQBF
+  , module Ersatz.Solver.Kissat
+  , module Ersatz.Solver.Lingeling
   , module Ersatz.Solver.Minisat
   , module Ersatz.Solver.Z3
   , solveWith
@@ -20,6 +22,8 @@ import Ersatz.Codec
 import Ersatz.Problem
 import Ersatz.Solution
 import Ersatz.Solver.DepQBF
+import Ersatz.Solver.Kissat
+import Ersatz.Solver.Lingeling
 import Ersatz.Solver.Minisat
 import Ersatz.Solver.Z3
 
