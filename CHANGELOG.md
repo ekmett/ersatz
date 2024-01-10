@@ -9,6 +9,21 @@ next [????.??.??]
   ```
 * Add support for `kissat` and the `lingeling` trio (`lingeling`, `plingeling`,
   `treengeling`) of SAT solvers.
+* Add `Ersatz.Relation.Set` module.
+* Align the `Ersatz.Relation` API with the `Set` interface from `containers`:
+  * `null` now tests a `Relation` for emptiness instead of `empty` and `empty` 
+    constructs an empty relation:
+    
+    ```diff
+    -empty :: (Ix a, Ix b ) => Relation a b -> Bit
+    +empty :: (Ix a, Ix b ) => Relation a b
+    ```
+  * Add a `singleton` constructor, `insert`, `delete` operations.
+  * Add flipped non-infix synonym for `!`, `member`.
+  * Add `map`, `filter`, `partition`.
+  * Add `symmetricDifference`, `isSubsetOf`, `isProperSubsetOf`.
+  * All `Relation` identifiers are now homogeneously camel case, like
+    `containers` (and the rest of `Ersatz`).
 
 0.5 [2023.09.08]
 ----------------

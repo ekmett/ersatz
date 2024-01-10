@@ -171,8 +171,10 @@ library
     array                >= 0.2      && < 0.6,
     base                 >= 4.9      && < 5,
     bytestring           >= 0.10.4.0 && < 0.13,
+    composition          >= 1.0.2    && < 1.1,
     containers           >= 0.2.0.1  && < 0.8,
     data-default         >= 0.5      && < 0.8,
+    hashable             >= 1.2.5    && < 1.5,
     lens                 >= 4        && < 6,
     mtl                  >= 1.1      && < 2.4,
     process              >= 1.1      && < 1.7,
@@ -204,6 +206,7 @@ library
     Ersatz.Variable
     Ersatz.Counting
     Ersatz.Relation
+    Ersatz.Relation.Set
 
   other-modules:
     Ersatz.Internal.Parser

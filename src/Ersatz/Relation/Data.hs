@@ -1,34 +1,46 @@
-{-# language TypeFamilies #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DeriveGeneric #-}
+#if __GLASGOW_HASKELL__ >= 802
+{-# LANGUAGE DerivingStrategies #-}
+#endif
 
-module Ersatz.Relation.Data ( 
--- * The @Relation@ type
-  Relation
--- * Construction
-, relation, symmetric_relation
-, build
-, buildFrom, buildFromM
-, identity
--- * Components
-, bounds, (!), indices, assocs, elems
-, domain, codomain, universe
-, universeSize
-, is_homogeneous
-, card
--- * Pretty printing
-, table
-)  where
+module Ersatz.Relation.Data
+  ( -- * The @Relation@ type
+    Relation
+    -- * Construction
+  , relation, symmetricRelation
+  , build
+  , buildFrom, buildFromM
+  , identity, empty, singleton
+    -- * Components
+  , bounds, domBounds, codBounds
+  , (!), member, notMember, indices, assocs, elems
+  , domain, codomain, universe
+  , universeSize
+  , isHomogeneous
+  , size
+    -- * Pretty printing
+  , table
+  )  where
 
-import Prelude hiding ( and, (&&), any )
+import Prelude hiding ( and, (&&), any, not )
+import Control.Arrow ((***), (&&&))
+import Control.Monad (guard)
+import Data.Composition ((.:))
+
+import GHC.Generics (Generic)
+
+import qualified Data.Array as A
+import Data.Array ( Array, Ix )
 
 import Ersatz.Bit
 import Ersatz.Bits ( Bits, sumBit )
 import Ersatz.Codec
-import Ersatz.Variable (exists)
 import Ersatz.Problem (MonadSAT)
+import Ersatz.Variable (exists)
 
-import Control.Monad (guard)
-import qualified Data.Array as A
-import Data.Array ( Array, Ix )
 
 
 -- | @Relation a b@ represents a binary relation \(R \subseteq A \times B \),
@@ -40,6 +52,12 @@ import Data.Array ( Array, Ix )
 -- and both \(A\) and \(B\) are intervals.
 
 newtype Relation a b = Relation (Array (a, b) Bit)
+#if __GLASGOW_HASKELL__ >= 802
+  deriving stock (Generic, Show)
+#endif
+#if __GLASGOW_HASKELL__ <  802
+  deriving (Generic, Show)
+#endif
 
 instance (Ix a, Ix b) => Codec (Relation a b) where
   type Decoded (Relation a b) = Array (a, b) Bool
@@ -47,35 +65,38 @@ instance (Ix a, Ix b) => Codec (Relation a b) where
   encode a = Relation $ encode a
 
 
--- | @relation ((amin,bmin),(amax,mbax))@ constructs an indeterminate relation \( R \subseteq A \times B \)
--- where \(A\) is @{amin .. amax}@ and \(B\) is @{bmin .. bmax}@.
-relation :: ( Ix a, Ix b, MonadSAT s m ) =>
+-- | @relation ((amin,bmin),(amax,mbax))@ constructs an indeterminate relation
+-- \( R \subseteq A \times B \) where \(A\) is @{amin .. amax}@ and \(B\) is
+-- @{bmin .. bmax}@.
+relation :: (Ix a, Ix b, MonadSAT s m) =>
   ((a,b),(a,b)) 
   -> m ( Relation a b )
 relation bnd = do
-    pairs <- sequence $ do
-        p <- A.range bnd
-        return $ do
-            x <- exists
-            return ( p, x )
-    return $ build bnd pairs
+  pairs <- sequence $ do
+      p <- A.range bnd
+      return $ do
+          x <- exists
+          return ( p, x )
+  return $ build bnd pairs
 
--- | Constructs an indeterminate relation \( R \subseteq B \times B \)
--- that is symmetric, i.e., \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
-symmetric_relation ::
+-- | Constructs an indeterminate relation \( R \subseteq B \times B \) that is
+-- symmetric, i.e.,
+-- \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
+symmetricRelation ::
   (MonadSAT s m, Ix b) =>
-  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain. 
-                   -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
+  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the
+                   -- domain must equal the codomain. Therefore, given bounds
+                   -- @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
   -> m (Relation b b)
-symmetric_relation bnd = do
-    pairs <- sequence $ do
-        (p,q) <- A.range bnd
-        guard $ p <= q
-        return $ do
-            x <- exists
-            return $   ((p,q), x)
-                   : [ ((q,p), x) | p /= q ]
-    return $ build bnd $ concat pairs
+symmetricRelation bnd = do
+  pairs <- sequence $ do
+      (p,q) <- A.range bnd
+      guard $ p <= q
+      return $ do
+          x <- exists
+          return $   ((p,q), x)
+                 : [ ((q,p), x) | p /= q ]
+  return $ build bnd $ concat pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a list.
 -- 
@@ -85,13 +106,15 @@ symmetric_relation bnd = do
 -- r = build ((0,'a'),(1,'b')) [ ((0,'a'), true), ((0,'b'), false)
 --                         , ((1,'a'), false), ((1,'b'), true) ]
 -- @
-build :: ( Ix a, Ix b )
+build :: (Ix a, Ix b)
       => ((a,b),(a,b))
-      -> [ ((a,b), Bit ) ] -- ^ A list of tuples, where the first element represents an element
-                           -- \( (x,y) \in A \times B \) and the second element is a positive 'Bit'
-                           -- if \( (x,y) \in R \), or a negative 'Bit' if \( (x,y) \notin R \).
+      -> [((a,b), Bit)] -- ^ A list of tuples, where the first element
+                        -- represents an element \( (x,y) \in A \times B \) and
+                        -- the second element is a positive 'Bit' if
+                        -- \( (x,y) \in R \), or a negative 'Bit' if
+                        -- \( (x,y) \notin R \).
       -> Relation a b
-build bnd pairs = Relation $ A.array bnd pairs
+build = Relation .: A.array
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
@@ -101,30 +124,49 @@ buildFrom :: (Ix a, Ix b)
           -> Relation a b
 buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
 
--- | Constructs an indeterminate relation \(R \subseteq A \times B\) from a function.
+-- | Constructs an indeterminate relation \(R \subseteq A \times B\) from a
+-- function.
 buildFromM :: (Ix a, Ix b, MonadSAT s m)
           => ((a,b),(a,b))
           -> ((a,b) -> m Bit)
           -> m (Relation a b)
 buildFromM bnd p = do
-    pairs <- sequence $ do
-        i <- A.range bnd
-        return $ do
-            x <- p i
-            return (i, x)
-    return $ build bnd pairs
+  pairs <- sequence $ do
+      i <- A.range bnd
+      return $ do
+          x <- p i
+          return (i, x)
+  return $ build bnd pairs
 
--- | Constructs the identity relation \(I = \{ (x,x) ~|~ x \in A \} \subseteq A \times A\).
+-- | Constructs the identity relation
+-- \(I = \{ (x,x) ~|~ x \in A \} \subseteq A \times A\).
 identity :: (Ix a)
-         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equal the codomain. 
-                          -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
+         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the
+                          -- domain must equal the codomain. Therefore, given
+                          -- bounds @((p,q),(r,s))@, it must hold that @p=q@ and
+                          -- @r=s@.
          -> Relation a a
 identity ((a,b),(c,d))
-    | (a,c) == (b,d) = buildFrom ((a,b),(c,d)) (\ (i,j) -> bool $ i == j)
-    | otherwise      = error "The domain must equal the codomain!"
+  | (a,c) == (b,d) = buildFrom ((a,b),(c,d)) (\ (i,j) -> bool $ i == j)
+  | otherwise      = error "The domain must equal the codomain!"
 
+-- | Constructs the empty relation \( \varnothing \subseteq A \times B \).
+empty :: (Ix a, Ix b)
+      => ((a,b),(a,b))
+      -> Relation a b
+empty = build <*> map (, false) . A.range
 
--- | The bounds of the array that correspond to the matrix representation of the given relation.
+-- | Constructs the relation containing just the provided pair.
+singleton :: (Ix a, Ix b)
+          => ((a,b),(a,b))
+          -> (a,b)
+          -> Relation a b
+singleton bnds xy = build bnds
+                  $ (\ab -> if ab == xy then (xy, true) else (ab, false))
+                 <$> A.range bnds
+
+-- | The bounds of the array that correspond to the matrix representation of the
+-- given relation.
 --
 -- ==== __Example__
 --
@@ -132,10 +174,22 @@ identity ((a,b),(c,d))
 -- >>> bounds r
 -- ((0,0),(1,1))
 bounds :: (Ix a, Ix b) => Relation a b -> ((a,b),(a,b))
-bounds ( Relation r ) = A.bounds r
+bounds (Relation r) = A.bounds r
 
--- | The list of indices, where each index represents an element \( (x,y) \in A \times B \) 
--- that may be contained in the given relation \(R \subseteq A \times B \).
+-- | The bounds of the domain dimension of the matrix representation of the
+-- given relation.
+domBounds :: (Ix a, Ix b) => Relation a b -> (a, a)
+domBounds = (fst *** fst) . bounds
+
+-- | The bounds of the codomain dimension of the matrix representation of the
+-- given relation.
+codBounds :: (Ix a, Ix b) => Relation a b -> (b, b)
+codBounds = (snd *** snd) . bounds
+
+
+-- | The list of indices, where each index represents an element
+-- \( (x,y) \in A \times B \) that may be contained in the given relation
+-- \(R \subseteq A \times B \).
 --
 -- ==== __Example__
 --
@@ -143,7 +197,7 @@ bounds ( Relation r ) = A.bounds r
 -- >>> indices r
 -- [(0,0),(0,1),(1,0),(1,1)]
 indices :: (Ix a, Ix b) => Relation a b -> [(a, b)]
-indices ( Relation r ) = A.indices r
+indices (Relation r) = A.indices r
 
 -- | The list of tuples for the given relation \(R \subseteq A \times B \), 
 -- where the first element represents an element \( (x,y) \in A \times B \) 
@@ -155,7 +209,7 @@ indices ( Relation r ) = A.indices r
 -- >>> assocs r
 -- [((0,0),Var (-1)),((0,1),Var 1),((1,0),Var 1),((1,1),Var (-1))]
 assocs :: (Ix a, Ix b) => Relation a b -> [((a, b), Bit)]
-assocs ( Relation r ) = A.assocs r
+assocs (Relation r) = A.assocs r
 
 -- | The list of elements of the array
 -- that correspond to the matrix representation of the given relation.
@@ -166,7 +220,7 @@ assocs ( Relation r ) = A.assocs r
 -- >>> elems r
 -- [Var (-1),Var 1,Var 1,Var (-1)]
 elems :: (Ix a, Ix b) => Relation a b -> [Bit]
-elems ( Relation r ) = A.elems r
+elems (Relation r) = A.elems r
 
 -- | The 'Bit'-value for a given element \( (x,y) \in A \times B \) 
 -- and a given relation \(R \subseteq A \times B \) that indicates
@@ -182,50 +236,52 @@ elems ( Relation r ) = A.elems r
 (!) :: (Ix a, Ix b) => Relation a b -> (a, b) -> Bit
 Relation r ! p = r A.! p
 
--- | The domain \(A\) of a relation \(R \subseteq A \times B\). 
+-- | Flipped, non-infix synonym for '!'.
+member :: (Ix a, Ix b) => (a, b) -> Relation a b -> Bit
+member = flip (!)
+
+-- | Negation of 'member'.
+notMember :: (Ix a, Ix b) => (a, b) -> Relation a b -> Bit
+notMember = not .: member
+
+-- | The domain \(A\) of a relation \(R \subseteq A \times B\).
 domain :: (Ix a, Ix b) => Relation a b -> [a]
-domain r =
-  let ((x,_),(x',_)) = bounds r
-  in A.range (x,x')
+domain = A.range . domBounds
 
 -- | The codomain \(B\) of a relation \(R \subseteq A \times B\). 
 codomain :: (Ix a, Ix b) => Relation a b -> [b]
-codomain r =
-  let ((_,y),(_,y')) = bounds r
-  in A.range (y,y')
+codomain = A.range . codBounds
 
 -- | The universe \(A\) of a relation \(R \subseteq A \times A\). 
 universe :: Ix a => Relation a a -> [a]
 universe r
-  | is_homogeneous r = domain r
+  | isHomogeneous r = domain r
   | otherwise = error "Relation is not homogeneous!"
 
 -- | The size of the universe \(A\) of a relation \(R \subseteq A \times A\). 
 universeSize :: Ix a => Relation a a -> Int
 universeSize r 
-  | is_homogeneous r =
-      let ((a,_),(c,_)) = bounds r
-      in A.rangeSize (a,c)
+  | isHomogeneous r = A.rangeSize . domBounds $ r
   | otherwise = error "Relation is not homogeneous!"
 
--- | Tests if a relation is homogeneous, i.e., if the domain is equal to the codomain.
-is_homogeneous :: Ix a => Relation a a -> Bool
-is_homogeneous r =
-  let ((a,b),(c,d)) = bounds r 
-  in (a == b) && (c == d)
+-- | Tests if a relation is homogeneous, i.e., if the domain is equal to the
+-- codomain.
+isHomogeneous :: Ix a => Relation a a -> Bool
+isHomogeneous = uncurry (==) . (domBounds &&& codBounds)
 
 -- | The number of pairs \( (x,y) \in R \) for the given relation
 -- \( R \subseteq A \times B \).
-card :: (Ix a, Ix b) => Relation a b -> Bits
-card = sumBit . elems
+size :: (Ix a, Ix b) => Relation a b -> Bits
+size = sumBit . elems
 
--- | Print a satisfying assignment from a SAT solver, where the assignment is interpreted as a relation.
--- @putStrLn $ table \</assignment/\>@ corresponds to the matrix representation of this relation.
+-- | Print a satisfying assignment from a SAT solver, where the assignment is
+-- interpreted as a relation. @putStrLn $ table \</assignment/\>@ corresponds to
+-- the matrix representation of this relation.
 table :: (Ix a, Ix b)
       => Array (a,b) Bool -> String
 table r = unlines $ do
-    let ((a,b),(c,d)) = A.bounds r
-    x <- A.range (a,c)
-    return $ unwords $ do
-        y <- A.range (b,d)
-        return $ if r A.! (x,y) then "*" else "."
+  let ((a,b),(c,d)) = A.bounds r
+  x <- A.range (a,c)
+  return $ unwords $ do
+    y <- A.range (b,d)
+    return $ if r A.! (x,y) then "*" else "."
