@@ -12,6 +12,7 @@
 module Ersatz.Solver.DepQBF
   ( depqbf
   , depqbfPath
+  , depqbfPathArgs
   ) where
 
 import Data.ByteString.Builder
@@ -48,12 +49,18 @@ parseOutput out =
 
 -- | This is a 'Solver' for 'QSAT' problems that lets you specify the path to the @depqbf@ executable.
 depqbfPath :: MonadIO m => FilePath -> Solver QSAT m
-depqbfPath path problem = liftIO $
+depqbfPath path = depqbfPathArgs path [ "--qdo" ]
+
+-- | This is a 'Solver' for 'QSAT' problems that lets you specify the path to the @depqbf@ executable
+-- as well as a list of command line arguments. They will appear after the problem file name.
+-- @depqbf@ expects @["--qdo"]@ here, but version 6.03 needs @["--qdo", "--no-dynamic-nenofex"]@.
+depqbfPathArgs :: MonadIO m => FilePath -> [String] -> Solver QSAT m
+depqbfPathArgs path args problem = liftIO $
   withTempFiles ".cnf" "" $ \problemPath _ -> do
     writeQdimacs' problemPath problem
 
     (exit, out, _err) <-
-      readProcessWithExitCode path [problemPath, "--qdo"] []
+      readProcessWithExitCode path (problemPath : args) []
 
     let result = resultOf exit
 
