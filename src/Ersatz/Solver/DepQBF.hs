@@ -41,7 +41,10 @@ parseOutput out =
     (_preamble:certLines) -> map parseCertLine certLines
     [] -> error "QDIMACS output without preamble"
   where
-    comment [] = True; comment ('c' : _) = True; comment _ = False
+    comment [] = True
+    comment ('c' : _) = True
+    comment _ = False
+
     parseCertLine :: String -> (Int, Bool)
     parseCertLine certLine =
       case words certLine of
