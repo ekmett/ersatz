@@ -37,10 +37,14 @@ parseLiteral xs = (read xs, True)
 -- http://www.qbflib.org/qdimacs.html#output
 parseOutput :: String -> [(Int, Bool)]
 parseOutput out =
-  case lines out of
+  case filter (not . comment) $ lines out of
     (_preamble:certLines) -> map parseCertLine certLines
     [] -> error "QDIMACS output without preamble"
   where
+    comment [] = True
+    comment ('c' : _) = True
+    comment _ = False
+
     parseCertLine :: String -> (Int, Bool)
     parseCertLine certLine =
       case words certLine of
