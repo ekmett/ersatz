@@ -4,6 +4,7 @@ module Ersatz.Relation.Prop
 -- * Properties
   implies
 , symmetric
+, asymmetric
 , anti_symmetric
 , transitive
 , irreflexive
@@ -63,7 +64,7 @@ complete r = empty $ complement r
 total :: ( Ix a ) => Relation a a -> Bit
 total r = complete $ symmetric_closure r
 
--- | Tests if two relations are disjoint, i.e., 
+-- | Tests if two relations are disjoint, i.e.,
 -- there is no element that is contained in both relations.
 disjoint :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 disjoint r s = empty $ intersection r s
@@ -73,11 +74,21 @@ disjoint r s = empty $ intersection r s
 symmetric :: ( Ix a ) => Relation a a -> Bit
 symmetric r = implies r ( mirror r )
 
+-- | Tests if a relation \( R \subseteq A \times A \) is asymmetric,
+-- i.e., \( \forall x, y \in A: ((x,y) \in R) \rightarrow ((y,x) \notin R) \).
+asymmetric :: ( Ix a ) => Relation a a -> Bit
+asymmetric = implies <*> (complement . mirror)
 
 -- | Tests if a relation \( R \subseteq A \times A \) is antisymmetric,
 -- i.e., \( R \cap R^{-1} \subseteq R^{0} \).
 anti_symmetric :: ( Ix a ) => Relation a a -> Bit
 anti_symmetric r = implies (intersection r (mirror r)) (identity (bounds r))
+
+-- | Tests if a relation \( R \subseteq A \times A \) is transitive, i.e.,
+-- \( \forall x, y \in A: ((x,y) \in R) \land ((y,z) \in R) \rightarrow ((x,z) \in R) \).
+transitive :: ( Ix a )
+           => Relation a a -> Bit
+transitive r = implies (product r r) r
 
 -- | Tests if a relation \( R \subseteq A \times A \) is irreflexive, i.e.,
 -- \( R \cap R^{0} = \emptyset \).
@@ -136,12 +147,3 @@ out_degree_helper f deg r = and $ do
     return $ f deg $ do
         y <- range (b,d)
         return $ r ! (x,y)
-
--- | Tests if a relation \( R \subseteq A \times A \) is transitive, i.e.,
--- \( R \circ R = R \).
---
--- Formula size: linear in \( |A|^3 \)
-transitive :: ( Ix a )
-           => Relation a a -> Bit
-transitive r = implies (product r r) r
-
