@@ -1,32 +1,32 @@
-module Ersatz.Relation.ARS (
--- * Abstract rewriting
-  terminating, assert_terminating
-, peak, valley
-, locally_confluent
-, confluent, semiconfluent
-, convergent, assert_convergent
-, point_symmetric
-, relative_to
-, connected
-, is_nf
-, nf_property
-, unique_nfs, unique_nfs_reduction
-)
-
-where
+module Ersatz.Relation.ARS
+  ( -- * Abstract rewriting
+    terminating, assertTerminating
+  , peak, valley
+  , locallyConfluent
+  , confluent, semiconfluent
+  , convergent, assertConvergent
+  , pointSymmetric
+  , relativeTo
+  , connected
+  , isNF
+  , nfProperty
+  , uniqueNFs, uniqueNFsReduction
+  ) where
 
 import Prelude hiding ( (&&), not, or, and, all, product )
 
+import Control.Monad (guard)
+
+import Data.Ix
+
 import Ersatz.Bit
 import Ersatz.Equatable
-import Ersatz.Problem ( MonadSAT )
+import Ersatz.Problem (MonadSAT)
 
 import Ersatz.Relation.Data
 import Ersatz.Relation.Op
 import Ersatz.Relation.Prop
 
-import Data.Ix
-import Control.Monad ( guard )
 
 
 -- | Tests if a relation \( R \subseteq A \times A \) is terminating, i.e., 
@@ -35,12 +35,12 @@ import Control.Monad ( guard )
 --
 -- Formula size: linear in \( |A|^3 \)
 terminating :: Ix a => Relation a a -> Bit
-terminating r = irreflexive $ transitive_closure r
+terminating = irreflexive . transitiveClosure
 
 -- | Monadic version of 'terminating'. 
 --
--- Note that @assert_terminating@ cannot be used for expressing non-termination of a relation,
--- only for expressing termination.
+-- Note that @assert_terminating@ cannot be used for expressing non-termination
+-- of a relation, only for expressing termination.
 --
 -- Formula size: linear in \( |A|^3 \)
 --
@@ -51,14 +51,14 @@ terminating r = irreflexive $ transitive_closure r
 --   result <- 'Ersatz.Solver.solveWith' 'Ersatz.Solver.Minisat.minisat' $ do
 --     r <- 'relation' ((0,0),(2,2))
 --     'Ersatz.Bit.assert' $ 'Ersatz.Counting.atleast' 3 $ 'elems' r
---     'assert_terminating' r
+--     'assertTerminating' r
 --     return r
 --   case result of
 --     (Satisfied, Just r) -> do putStrLn $ 'table' r; return True
 --     _                   -> return False
 -- @
-assert_terminating :: (Ix a, MonadSAT s m) => Relation a a -> m ()
-assert_terminating r = do   
+assertTerminating :: (Ix a, MonadSAT s m) => Relation a a -> m ()
+assertTerminating r = do
   s <- relation $ bounds r
   assert $ and [
       transitive s
@@ -83,9 +83,9 @@ valley r s = product r (mirror s)
 -- \( \forall a,b,c \in A: ((a,b) \in R) \land ((a,c) \in R) \rightarrow \exists d \in A: ((b,d) \in R^*) \land ((c,d)\in R^*) \).
 --
 -- Formula size: linear in \( |A|^3 \)
-locally_confluent :: Ix a => Relation a a -> Bit
-locally_confluent r = 
-  let r' = transitive_reflexive_closure r
+locallyConfluent :: Ix a => Relation a a -> Bit
+locallyConfluent r =
+  let r' = transitiveReflexiveClosure r
   in implies (peak r r) (valley r' r')
 
 -- | Tests if a relation \( R \subseteq A \times A \) is confluent, i.e.,
@@ -94,7 +94,7 @@ locally_confluent r =
 -- Formula size: linear in \( |A|^3 \)
 confluent :: Ix a => Relation a a -> Bit
 confluent r = 
-  let r' = transitive_reflexive_closure r
+  let r' = transitiveReflexiveClosure r
   in implies (peak r' r') (valley r' r')
 
 -- | Tests if a relation \( R \subseteq A \times A \) is semi-confluent, i.e.,
@@ -105,7 +105,7 @@ confluent r =
 -- Formula size: linear in \( |A|^3 \)
 semiconfluent :: Ix a => Relation a a -> Bit
 semiconfluent r =
-  let r' = transitive_reflexive_closure r
+  let r' = transitiveReflexiveClosure r
   in implies (peak r r') (valley r' r')
 
 -- | Tests if a relation \( R \subseteq A \times A \) is convergent, i.e., 
@@ -113,12 +113,12 @@ semiconfluent r =
 --
 -- Formula size: linear in \( |A|^3 \)
 convergent :: Ix a => Relation a a -> Bit
-convergent r = and [terminating r, locally_confluent r]
+convergent r = terminating r && locallyConfluent r
 
 -- | Monadic version of 'convergent'. 
 --
--- Note that @assert_convergent@ cannot be used for expressing non-convergence of a relation,
--- only for expressing convergence.
+-- Note that @assert_convergent@ cannot be used for expressing non-convergence
+-- of a relation, only for expressing convergence.
 --
 -- Formula size: linear in \( |A|^3 \)
 --
@@ -129,15 +129,15 @@ convergent r = and [terminating r, locally_confluent r]
 --   result <- 'Ersatz.Solver.solveWith' 'Ersatz.Solver.Minisat.minisat' $ do
 --     r <- 'relation' ((0,0),(3,3))
 --     'Ersatz.Bit.assert' $ 'Ersatz.Counting.exactly' 3 $ 'elems' r
---     'assert_convergent' r
+--     'assertConvergent' r
 --     'Ersatz.Bit.assert' $ 'Ersatz.Bit.not' $ 'transitive' r
 --     return r
 --   case result of
 --     (Satisfied, Just r) -> do putStrLn $ 'table' r; return True
 --     _                   -> return False
 -- @
-assert_convergent :: (Ix a, MonadSAT s m) => Relation a a -> m ()
-assert_convergent r = do   
+assertConvergent :: (Ix a, MonadSAT s m) => Relation a a -> m ()
+assertConvergent r = do
   s <- relation $ bounds r
   t <- relation $ bounds r
   let u = universe r
@@ -146,28 +146,30 @@ assert_convergent r = do
       transitive s
     , irreflexive s
     , implies r s
-    , all (\x -> is_nf x r ==> t ! (x,x)) u
+    , all (\x -> isNF x r ==> t ! (x,x)) u
     , all (\(x,y) -> s!(x,y) && t!(y,y) ==> t!(x,y)) i
     , nor $ do
         (x,y) <- i; z <- u; guard $ y /= z
         return $ t ! (x,y) && t ! (x,z) ]
 
 -- | Tests if the matrix representation (i.e. the array) of a relation 
--- \( R \subseteq A \times A \) is point symmetric, i.e., for the matrix representation
+-- \( R \subseteq A \times A \) is point symmetric, i.e., for the matrix
+-- representation
 -- \( \begin{pmatrix} a_{11} & \dots & a_{1n} \\ \vdots & \ddots & \vdots \\ a_{n1} & \dots & a_{nn} \end{pmatrix} \)
 -- holds \( a_{ij} = a_{(n-i+1)(n-j+1)} \).
-point_symmetric :: Ix a => Relation a a -> Bit
-point_symmetric r 
-  | is_homogeneous r = elems r === reverse (elems r)
+pointSymmetric :: Ix a => Relation a a -> Bit
+pointSymmetric r
+  | isHomogeneous r = elems r === reverse (elems r)
   | otherwise = error "The domain must equal the codomain!"
 
 -- | Given two relations \( R, S \subseteq A \times A \), 
--- construct \( R \) relative to \( S \) defined by \( R/S = S^* \circ R \circ S^* \).
+-- construct
+-- \( R \) relative to \( S \) defined by \( R/S = S^* \circ R \circ S^* \).
 --
 -- Formula size: linear in \( |A|^3 \)
-relative_to :: Ix a => Relation a a -> Relation a a -> Relation a a
-r `relative_to` s = 
-  let s' = transitive_reflexive_closure s
+relativeTo :: Ix a => Relation a a -> Relation a a -> Relation a a
+r `relativeTo` s =
+  let s' = transitiveReflexiveClosure s
   in foldl1 product [ s', r , s' ]
 
 -- | Tests if a relation \( R \subseteq A \times A \) is connected, 
@@ -175,49 +177,51 @@ r `relative_to` s =
 --
 -- Formula size: linear in \( |A|^3 \)
 connected :: Ix a => Relation a a -> Bit
-connected r = complete $ equivalence_closure r
+connected = complete . equivalenceClosure
 
 -- | Given an element \( x \in A \) and a relation \( R \subseteq A \times A \), 
--- check if \( x \) is a normal form, i.e., \( \forall y \in A: (x,y) \notin R \).
+-- check if \( x \) is a normal form, i.e.,
+-- \( \forall y \in A: (x,y) \notin R \).
 --
 -- Formula size: linear in \( |A| \)
-is_nf :: Ix a => a -> Relation a a -> Bit
-is_nf x r =
-  let ((_,b),(_,d)) = bounds r
-  in nor $ map (r !) $ range ((x,b),(x,d))
+isNF :: Ix a => a -> Relation a a -> Bit
+isNF x r =
+  let (b,d) = codBounds r
+  in nor $ (r !) <$> range ((x,b),(x,d))
 
--- | Tests if a relation \( R \subseteq A \times A \) has the normal form property, 
--- i.e., \( \forall a,b \in A \) holds: if \(b\) is a normal form and 
+-- | Tests if a relation \( R \subseteq A \times A \) has the normal form
+-- property, i.e., \( \forall a,b \in A \) holds: if \(b\) is a normal form and
 -- \( (a,b) \in (R \cup R^{-1})^{*} \), then \( (a,b) \in R^{*} \).
 --
 -- Formula size: linear in \( |A|^3 \)
-nf_property :: Ix a => Relation a a -> Bit
-nf_property r = and $ do
-  let trc = transitive_reflexive_closure r
-      ec = equivalence_closure r
+nfProperty :: Ix a => Relation a a -> Bit
+nfProperty r = and $ do
+  let trc = transitiveReflexiveClosure r
+      ec  = equivalenceClosure r
   (x,y) <- indices r
-  return $ and [is_nf y r, ec ! (x,y)] ==> trc ! (x,y)
+  return $ (isNF y r && ec ! (x,y)) ==> trc ! (x,y)
 
--- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property, 
--- i.e., \( \forall a,b \in A \) with \( a \neq b \) holds: if \(a\) and \(b\) are normal forms, 
--- then \( (a,b) \notin (R \cup R^{-1})^{*} \).
+-- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form
+-- property, i.e., \( \forall a,b \in A \) with \( a \neq b \) holds: if \(a\)
+-- and \(b\) are normal forms, then \( (a,b) \notin (R \cup R^{-1})^{*} \).
 --
 -- Formula size: linear in \( |A|^3 \)
-unique_nfs :: Ix a => Relation a a -> Bit
-unique_nfs r = and $ do
-  let ec = equivalence_closure r
+uniqueNFs :: Ix a => Relation a a -> Bit
+uniqueNFs r = and $ do
+  let ec = equivalenceClosure r
   (x,y) <- indices r
   guard $ x < y
-  return $ and [is_nf x r, is_nf y r] ==> not $ ec ! (x,y)
+  return $ (isNF x r && isNF y r) ==> not $ ec ! (x,y)
 
--- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property 
--- with respect to reduction, i.e., \( \forall a,b \in A \) with \( a \neq b \) holds:
--- if \(a\) and \(b\) are normal forms, then \( (a,b) \notin ((R^{*})^{-1} \circ R^{*}) \).
+-- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form
+-- property with respect to reduction, i.e., \( \forall a,b \in A \) with
+-- \( a \neq b \) holds: if \(a\) and \(b\) are normal forms, then
+-- \( (a,b) \notin ((R^{*})^{-1} \circ R^{*}) \).
 --
 -- Formula size: linear in \( |A|^3 \)
-unique_nfs_reduction :: Ix a => Relation a a -> Bit
-unique_nfs_reduction r = and $ do
-  let trc = transitive_reflexive_closure r
+uniqueNFsReduction :: Ix a => Relation a a -> Bit
+uniqueNFsReduction r = and $ do
+  let trc = transitiveReflexiveClosure r
   (x,y) <- indices r
   guard $ x < y
-  return $ and [is_nf x r, is_nf y r] ==> not $ peak trc trc ! (x,y)
+  return $ (isNF x r && isNF y r) ==> not $ peak trc trc ! (x,y)

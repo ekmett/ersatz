@@ -51,8 +51,8 @@ moore d k n s = do
   g <- periodic_relation s ((0,0),(n-1,n-1))
   assert $ R.symmetric g
   assert $ R.reflexive g 
-  assert $ R.max_in_degree (d+1) g 
-  assert $ R.max_out_degree (d+1) g 
+  assert $ R.maxInDegree (d+1) g 
+  assert $ R.maxOutDegree (d+1) g 
   let p = R.power k g
   assert $ R.complete p 
   return g
