@@ -1,15 +1,19 @@
-{-# language FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TupleSections #-}
 
 module Ersatz.Relation.Op
 
 ( 
 -- * Operations
-  mirror
-, union
+  union
 , complement
 , difference
-, product, power
 , intersection
+, mirror
+, product, power
+, restrict
+, override
+, update
+, fiber_product
 , reflexive_closure
 , symmetric_closure
 , transitive_closure
@@ -19,22 +23,17 @@ module Ersatz.Relation.Op
 
 where
 
-import Ersatz.Relation.Data
 
-import Prelude hiding ( (&&), (||), and, or, not, product )
-import Ersatz.Bit
+import Prelude hiding ( (&&), (||), and, any, or, not, product )
+import Control.Arrow ( (&&&), (***) )
+
+import Ersatz.Bit ( Bit, (&&), (||), and, any, or, not )
+import Ersatz.Relation.Data
 
 import qualified Data.Array as A
 import Data.Ix
 
--- | Constructs the converse relation \( R^{-1} \) of a relation 
--- \( R \subseteq A \times B \), which is defined by \( R^{-1} = \{ (y,x) ~|~ (x,y) \in R \} \subseteq B \times A \).
-mirror :: ( Ix a , Ix b ) => Relation a b -> Relation b a
-mirror r =
-    let ((a,b),(c,d)) = bounds r
-    in  build ((b,a),(d,c)) $ do (x,y) <- indices r ; return ((y,x), r!(x,y))
-
--- | Constructs the complement relation \( \overline{R} \) 
+-- | Constructs the complement relation \( \overline{R} \)
 -- of a relation \( R \subseteq A \times B \), which is defined by 
 -- \( \overline{R}  = \{ (x,y) \in A \times B ~|~ (x,y) \notin R \} \).
 complement :: ( Ix a , Ix b ) => Relation a b -> Relation a b
@@ -58,7 +57,25 @@ union r s
         return (i, r!i || s!i)
     | otherwise = error "Relations don't have the same bounds!"
 
--- | Constructs the composition \( R \circ S \) of the relations 
+-- | Constructs the intersection \( R \cap S \) of the relations \( R \) and \( S \).
+--
+-- Note that for \( R \subseteq A \times B \) and \( S \subseteq C \times D \),
+-- it must hold that \( A \times B \subseteq C \times D \).
+intersection :: ( Ix a , Ix b)
+      => Relation a b -> Relation a b
+      -> Relation a b
+intersection r s = build ( bounds r ) $ do
+        i <- indices r
+        return (i, and [ r!i, s!i ] )
+
+-- | Constructs the converse relation \( R^{-1} \subseteq B \times A \) of a relation
+-- \( R \subseteq A \times B \), which is defined by \( R^{-1} = \{ (y,x) ~|~ (x,y) \in R \} \).
+mirror :: ( Ix a , Ix b ) => Relation a b -> Relation b a
+mirror r =
+    let ((a,b),(c,d)) = bounds r
+    in  build ((b,a),(d,c)) $ do (x,y) <- indices r ; return ((y,x), r!(x,y))
+
+-- | Constructs the composition \( R \cdot S \) of the relations
 -- \( R \subseteq A \times B \) and \( S \subseteq B \times C \), which is 
 -- defined by \( R \circ S = \{ (a,c) ~|~ (a,b) \in R \land (b,c) \in S \} \).
 --
@@ -95,18 +112,84 @@ power e r =
         0 -> s2
         _ -> product s2 r
 
--- | Constructs the intersection \( R \cap S \) of the relations \( R, S \subseteq A \times B \).
-intersection :: ( Ix a , Ix b )
-      => Relation a b -> Relation a b
-      -> Relation a b
-intersection r s 
-    | bounds r == bounds s = build ( bounds r ) $ do
-        i <- indices r
-        return (i, and [ r!i, s!i ] )
-    | otherwise = error "Relations don't have the same bounds!"
+-- | Constructs the restriction \( R_{\big|S} \) of a relation
+-- \( R \subseteq A \times B \) to a subset \( S \subseteq A \) of its domain
+-- defined by a membership predicate. \( R_{\big|S} \) is defined by
+--  \( R_{\big|S} = \{ (x,y) \in R ~|~ x \in S \} \).
+restrict :: ( Ix a, Ix b ) => Relation a b -> (a -> Bit) -> Relation a b
+restrict r p =
+    buildFrom (bounds r) (\(x,y) -> p x && r ! (x,y))
 
--- | Constructs the reflexive closure \( R \cup R^{0} \) of the relation 
--- \( R \subseteq A \times A \).
+-- | Constructs the override ("[right] priority union", "preferential union") of
+-- the relations \( R, S \subseteq A \times B \), defined as
+-- \( R \rhd S = \{ (x,y) \in R | \nexists z \in B . (x,z) \in S \} \cup S \).
+--
+-- Equivalently, \( R \rhd S \) is the union of \( S \) with the restriction of
+-- \( R \) to the complement of \( S \)'s domain of definition.
+--
+-- Unlike the commutative union of relations, the override of two functional
+-- relations is always another functional relation.
+--
+-- Two more familiar versions of this are the (left-biased) @union@ of
+-- [Data.Map](https://hackage.haskell.org/package/containers-0.7/docs/Data-Map-Lazy.html#g:12)
+-- and the function-into-monoid monoid for 'Alt'/'First'. (See e.g. §4 of
+-- [Elliot, 2009](http://conal.net/papers/type-class-morphisms/type-class-morphisms-long.pdf)
+-- for brief discussion.)
+--
+-- Returns @Nothing@ iff the arguments do not have the same bounds.
+override :: ( Ix a , Ix b ) => Relation a b -> Relation a b -> Maybe (Relation a b)
+override r s
+    | bounds r /= bounds s = Nothing
+    | otherwise = let
+           in_dom_def t a = any ((t !) . (a,)) $ codomain t
+        in Just $ union r $ restrict s (not . in_dom_def r)
+
+-- | Constructs the update of relation \( R \subseteq A \times B \) by
+-- the relation \( S \subseteq A \times B \), defined as
+-- \( R[S] = R - S \cup \{ (x,y) \in S | \exists z \in B . (x,z) \in R \} \).
+--
+-- Note that 'update' cannot change \( R \)'s domain of definition — it only
+-- updates the image of \( R \) according to \( S \).
+--
+-- Returns @Nothing@ iff the arguments do not have the same bounds.
+update :: ( Ix a, Ix b ) => Relation a b -> Relation a b -> Maybe (Relation a b)
+update r s
+    | bounds r /= bounds s = Nothing
+    | otherwise = let
+           in_dom_def t a = any ((t !) . (a,)) $ codomain t
+           f (x,y) =  (r ! (x,y) && not (in_dom_def s x))
+                   || (s ! (x,y) &&      in_dom_def r x )
+        in Just $ buildFrom (bounds r) f
+
+-- | Constructs a generalization of the fiber product of functions to relations.
+--
+-- For functions \( f : A \rightarrow C \) and \( g : B \rightarrow C \), their
+-- fiber product is the relation
+-- \( \{ (a,b) \in A \times B ~|~ f(a) = g(b) \} \).
+-- Extending this to relations, given \( F \subseteq A \times C \) and
+-- \( G \subseteq B \times C \), the generalization of the fiber product is
+-- \( \{ (a,b) \in A \times B ~|~ \exists c \in C . (a,c) \in F \land (b,c) \in G \} \).
+--
+-- Returns @Nothing@ iff the arguments do not have the same bounds on their codomain.
+fiber_product :: (Ix a, Ix b, Ix c)
+  => Relation a c -> Relation b c -> Maybe (Relation a b)
+fiber_product f g
+    | uncurry (/=)
+      . ((snd *** snd) *** (snd *** snd))
+      . (bounds *** bounds)
+      $ (f, g)  = Nothing
+    | otherwise = let
+           ((aMin,cMin),(aMax,cMax)) = bounds f
+           ((bMin,_   ),(bMax,_   )) = bounds g
+           r (x,y) = any ( uncurry (&&)
+                         . ((f !) . (x,) &&& (g !) . (y,))
+                         )
+                         $ range (cMin,cMax)
+        in Just $ buildFrom ((aMin,bMin),(aMax,bMax)) r
+
+-- | Constructs the reflexive closure \( R \cup I_{R} \) of the relation
+-- \( R \subseteq A \times A \), where \( I_{R} = \{ (x,x) ~|~ x \in A \} \) 
+-- is the identity relation of \(R\).
 reflexive_closure :: Ix a => Relation a a -> Relation a a
 reflexive_closure t =
     union t $ identity $ bounds t

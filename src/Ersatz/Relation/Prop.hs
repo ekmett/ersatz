@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Ersatz.Relation.Prop
 
 ( 
@@ -19,16 +20,27 @@ module Ersatz.Relation.Prop
 , complete
 , total
 , disjoint
+, in_domain_def
+, in_image
+, left_total
+, constant
+, functional
+, injective
+, surjective
+, bijective
 )
 
 where
 
-import Prelude hiding ( and, or, not, product )
+import Prelude hiding ( all, any, and, or, not, product, (&&) )
+import Control.Arrow ( (&&&) )
+import Control.Lens ( (<&>) )
 import Ersatz.Bit
 import Ersatz.Relation.Data
 import Ersatz.Relation.Op
 import Ersatz.Counting
 import Ersatz.Equatable
+import Ersatz.Codec ( Codec( encode ) )
 
 import Data.Ix
 
@@ -145,3 +157,62 @@ transitive :: ( Ix a )
            => Relation a a -> Bit
 transitive r = implies (product r r) r
 
+-- | \( x \) is in the domain of /definition/ of a relation
+-- \( R \subseteq A \times B \) iff there is some \( y \in B \) such that
+-- \( (x, y) \in R \).
+in_domain_def :: ( Ix a, Ix b ) => Relation a b -> a -> Bit
+in_domain_def r a =
+    any ((r !) . (a,)) $ codomain r
+
+-- | \( y \) is in the image of a relation
+-- \( R \subseteq A \times B \) iff there is some \( x \in A \) such that
+-- \( (x, y) \in R \).
+in_image :: ( Ix a, Ix b ) => Relation a b -> b -> Bit
+in_image r b =
+    any ((r !) . (,b)) $ domain r
+
+-- | A relation \( R \subseteq A \times B \) is /left-total/ iff its domain of
+-- definition is identical to its domain; when \( R \) is a functional relation
+-- this means it defines a total rather than partial function.
+--
+-- For the property asserting that an /order/ relation is total ("strongly
+-- connected"), see 'total'.
+left_total :: ( Ix a, Ix b ) => Relation a b -> Bit
+left_total = uncurry (===) . (card &&& encode . fromIntegral . length . domain)
+
+-- | A relation \( R \subseteq A \times B \) is defined as /constant/ iff the
+-- image of its domain of definition is a single value in its codomain.
+--
+-- Note that this means the empty relation is not considered constant, and that
+-- a relation need not be left-total to be classified as constant.
+constant :: ( Ix a, Ix b ) => Relation a b -> Bit
+constant r = exactly 1 (in_image r <$> codomain r)
+
+-- | Tests if a relation \( R \subseteq A \times B \) defines a (partial) function, i.e.,
+-- \( \forall x \in A, y, z \in B: (x,y) \in R \land (x,z) \in R \implies y = z \).
+functional :: ( Ix a, Ix b ) => Relation a b -> Bit
+functional r =
+    all (\x -> atmost 1 
+                 $ codomain r <&> ((r !) . (x,)))
+        $ domain r
+
+-- | Tests if a relation \( R \subseteq A \times B \) is injective, i.e.
+-- \( \forall x, y \in A, z \in B: (x,z) \in R \land (y,z) \in R \implies x = y \).
+injective :: ( Ix a, Ix b ) => Relation a b -> Bit
+injective r =
+    all (\y -> atmost 1 
+                 $ domain r <&> ((r !) . (,y)))
+        $ codomain r
+
+-- | Tests if a relation \( R \subseteq A \times B \) is surjective, i.e.
+-- \( \forall y \in B, \exists x \in A: (x,y) \in R\).
+surjective :: ( Ix a, Ix b ) => Relation a b -> Bit
+surjective r =
+    all (\y -> any (\x -> r ! (x,y))
+                   $ domain r)
+        $ codomain r
+
+-- | Tests if a relation \( R \subseteq A \times B \) is bijective, i.e.
+-- both injective and surjective.
+bijective :: ( Ix a, Ix b ) => Relation a b -> Bit
+bijective = uncurry (&&) . (injective &&& surjective)
