@@ -40,7 +40,7 @@ import Control.Monad.Trans.State (State, runState, get, put)
 import Data.Bits ((.&.), (.|.), shiftL, shiftR)
 import qualified Data.Bits as Data
 import Data.Foldable (toList)
-import Data.List (unfoldr, foldl')
+import qualified Data.List as List (unfoldr, foldl')
 import Data.Stream.Infinite (Stream(..))
 import Data.Word (Word8)
 import Ersatz.Bit
@@ -178,7 +178,7 @@ numToBool _ = True
 {-# INLINE numToBool #-}
 
 boolsToNum :: (Num a, Data.Bits a) => [Bool] -> a
-boolsToNum = foldl' (\n a -> (n `shiftL` 1) .|. boolToNum a) 0
+boolsToNum = List.foldl' (\n a -> (n `shiftL` 1) .|. boolToNum a) 0
 {-# INLINE boolsToNum #-}
 
 boolToNum :: Num a => Bool -> a
@@ -284,7 +284,7 @@ instance Codec Bits where
        -- Integers to Integer
        return (foldr (\x acc -> x + 2 * acc) 0 zs)
 
-  encode = Bits . unfoldr step
+  encode = Bits . List.unfoldr step
     where
     step x =
       case compare x 0 of

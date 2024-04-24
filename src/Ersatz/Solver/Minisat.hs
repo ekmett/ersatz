@@ -31,7 +31,7 @@ import System.IO
 import System.Process (readProcessWithExitCode)
 
 import qualified Data.ByteString.Char8 as B
-import Data.List ( foldl' )
+import qualified Data.List as List ( foldl' )
 
 -- | Hybrid 'Solver' that tries to use: 'cryptominisat5', 'cryptominisat', and 'minisat'
 anyminisat :: Solver SAT IO
@@ -70,7 +70,8 @@ parseSolution :: B.ByteString -> IntMap Bool
 parseSolution s =
   case B.words s of
     x : ys | x == "SAT" ->
-          foldl' ( \ m y -> case B.readInt y of
+          List.foldl'
+                 ( \ m y -> case B.readInt y of
                               Just (v,_) -> if 0 == v then m else IntMap.insert (abs v) (v>0) m
                               Nothing    -> error $ "parseSolution: Expected an Int, received " ++ show y
                  ) IntMap.empty ys
