@@ -19,7 +19,6 @@ module Ersatz.Solver.Minisat
   , anyminisat
   ) where
 
-import Data.ByteString.Builder
 import Control.Exception (IOException, handle)
 import Control.Monad.IO.Class
 import Data.IntMap (IntMap)
@@ -27,7 +26,6 @@ import Ersatz.Problem ( SAT, writeDimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap.Strict as IntMap
-import System.IO
 import System.Process (readProcessWithExitCode)
 
 import qualified Data.ByteString.Char8 as B

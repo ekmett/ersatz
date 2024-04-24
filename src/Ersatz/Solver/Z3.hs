@@ -12,12 +12,10 @@ module Ersatz.Solver.Z3
   , z3Path
   ) where
 
-import Data.ByteString.Builder
 import Control.Monad.IO.Class
 import Ersatz.Problem ( SAT, writeDimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
-import System.IO
 import System.Process (readProcessWithExitCode)
 
 -- | 'Solver' for 'SAT' problems that tries to invoke the @z3@ executable from the @PATH@

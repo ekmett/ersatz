@@ -15,13 +15,11 @@ module Ersatz.Solver.DepQBF
   , depqbfPathArgs
   ) where
 
-import Data.ByteString.Builder
 import Control.Monad.IO.Class
 import Ersatz.Problem ( QSAT, writeQdimacs' )
 import Ersatz.Solution
 import Ersatz.Solver.Common
 import qualified Data.IntMap as I
-import System.IO
 import System.Process (readProcessWithExitCode)
 
 -- | This is a 'Solver' for 'QSAT' problems that runs the @depqbf@ solver using
