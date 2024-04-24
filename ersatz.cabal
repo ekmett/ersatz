@@ -255,6 +255,38 @@ executable ersatz-sudoku
   ghc-options: -Wall
   hs-source-dirs: examples/sudoku
 
+executable ersatz-graph-coloring
+  -- description: An example program that solves a graph coloring problem using Ersatz.
+  if flag(examples)
+    build-depends:
+      array,
+      base >=4.7 && <5,
+      bytestring,
+      ersatz,
+      mtl
+  else
+    buildable: False
+  default-language: Haskell2010
+  main-is: Coloring.hs
+  ghc-options: -Wall
+  hs-source-dirs: examples/qbf
+
+executable ersatz-circuit-synthesis
+  -- description: An example program that solves a circuit synthesis problem using Ersatz.
+  if flag(examples)
+    build-depends:
+      array,
+      base >=4.7 && <5,
+      bytestring,
+      ersatz,
+      mtl
+  else
+    buildable: False
+  default-language: Haskell2010
+  main-is: Synthesis.hs
+  ghc-options: -Wall -Wno-type-defaults
+  hs-source-dirs: examples/qbf
+
 -- test-suite properties
 --   type: exitcode-stdio-1.0
 --   ghc-options: -Wall
