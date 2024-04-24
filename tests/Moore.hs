@@ -1,4 +1,4 @@
--- | graphs n nodes of degree <= d and diameter <= k 
+-- | graphs n nodes of degree <= d and diameter <= k
 -- see http://combinatoricswiki.org/wiki/The_Degree_Diameter_Problem_for_General_Graphs
 
 -- usage: ./Moore d k n [s]
@@ -9,7 +9,7 @@
 -- s smaller => faster (more symmetries) but may lose solutions
 
 -- test cases:  3 2 10 2  -- petersen graph
---              5 2 24    
+--              5 2 24
 
 
 {-# language FlexibleContexts #-}
@@ -50,11 +50,11 @@ moore d k n s = do
   -- g <- R.symmetric_relation ((0,0),(n-1,n-1))
   g <- periodic_relation s ((0,0),(n-1,n-1))
   assert $ R.symmetric g
-  assert $ R.reflexive g 
-  assert $ R.max_in_degree (d+1) g 
-  assert $ R.max_out_degree (d+1) g 
+  assert $ R.reflexive g
+  assert $ R.max_in_degree (d+1) g
+  assert $ R.max_out_degree (d+1) g
   let p = R.power k g
-  assert $ R.complete p 
+  assert $ R.complete p
   return g
 
 periodic_relation s bnd = do

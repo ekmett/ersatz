@@ -1,6 +1,6 @@
 module Ersatz.Relation.Prop
 
-( 
+(
 -- * Properties
   implies
 , symmetric
@@ -40,7 +40,7 @@ instance (Ix a, Ix b) => Equatable (Relation a b) where
 -- | Given two relations \( R, S \subseteq A \times B \), check if \(R\) is a subset of \(S\).
 implies :: ( Ix a, Ix b )
         => Relation a b -> Relation a b -> Bit
-implies r s 
+implies r s
   | bounds r == bounds s = and $ do
       i <- indices r
       return $ (r ! i) ==> (s ! i)
@@ -63,7 +63,7 @@ complete r = empty $ complement r
 total :: ( Ix a ) => Relation a a -> Bit
 total r = complete $ symmetric_closure r
 
--- | Tests if two relations are disjoint, i.e., 
+-- | Tests if two relations are disjoint, i.e.,
 -- there is no element that is contained in both relations.
 disjoint :: (Ix a, Ix b) => Relation a b -> Relation a b -> Bit
 disjoint r s = empty $ intersection r s

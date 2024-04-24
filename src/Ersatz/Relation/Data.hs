@@ -1,6 +1,6 @@
 {-# language TypeFamilies #-}
 
-module Ersatz.Relation.Data ( 
+module Ersatz.Relation.Data (
 -- * The @Relation@ type
   Relation
 -- * Construction
@@ -50,7 +50,7 @@ instance (Ix a, Ix b) => Codec (Relation a b) where
 -- | @relation ((amin,bmin),(amax,mbax))@ constructs an indeterminate relation \( R \subseteq A \times B \)
 -- where \(A\) is @{amin .. amax}@ and \(B\) is @{bmin .. bmax}@.
 relation :: ( Ix a, Ix b, MonadSAT s m ) =>
-  ((a,b),(a,b)) 
+  ((a,b),(a,b))
   -> m ( Relation a b )
 relation bnd = do
     pairs <- sequence $ do
@@ -64,7 +64,7 @@ relation bnd = do
 -- that is symmetric, i.e., \( \forall x, y \in B: ((x,y) \in R) \rightarrow ((y,x) \in R) \).
 symmetric_relation ::
   (MonadSAT s m, Ix b) =>
-  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain. 
+  ((b, b), (b, b)) -- ^ Since a symmetric relation must be homogeneous, the domain must equal the codomain.
                    -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
   -> m (Relation b b)
 symmetric_relation bnd = do
@@ -78,7 +78,7 @@ symmetric_relation bnd = do
     return $ build bnd $ concat pairs
 
 -- | Constructs a relation \(R \subseteq A \times B \) from a list.
--- 
+--
 -- ==== __Example__
 --
 -- @
@@ -96,7 +96,7 @@ build bnd pairs = Relation $ A.array bnd pairs
 -- | Constructs a relation \(R \subseteq A \times B \) from a function.
 buildFrom :: (Ix a, Ix b)
           => ((a,b),(a,b))
-          -> ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value 
+          -> ((a,b) -> Bit) -- ^ A function that assigns a 'Bit'-value
                             -- to each element \( (x,y) \in A \times B \).
           -> Relation a b
 buildFrom bnd p = build bnd $ flip map (A.range bnd) $ \ i -> (i, p i)
@@ -116,7 +116,7 @@ buildFromM bnd p = do
 
 -- | Constructs the identity relation \(I = \{ (x,x) ~|~ x \in A \} \subseteq A \times A\).
 identity :: (Ix a)
-         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equal the codomain. 
+         => ((a,a),(a,a)) -- ^ Since the identity relation is homogeneous, the domain must equal the codomain.
                           -- Therefore, given bounds @((p,q),(r,s))@, it must hold that @p=q@ and @r=s@.
          -> Relation a a
 identity ((a,b),(c,d))
@@ -134,7 +134,7 @@ identity ((a,b),(c,d))
 bounds :: (Ix a, Ix b) => Relation a b -> ((a,b),(a,b))
 bounds ( Relation r ) = A.bounds r
 
--- | The list of indices, where each index represents an element \( (x,y) \in A \times B \) 
+-- | The list of indices, where each index represents an element \( (x,y) \in A \times B \)
 -- that may be contained in the given relation \(R \subseteq A \times B \).
 --
 -- ==== __Example__
@@ -145,10 +145,10 @@ bounds ( Relation r ) = A.bounds r
 indices :: (Ix a, Ix b) => Relation a b -> [(a, b)]
 indices ( Relation r ) = A.indices r
 
--- | The list of tuples for the given relation \(R \subseteq A \times B \), 
--- where the first element represents an element \( (x,y) \in A \times B \) 
+-- | The list of tuples for the given relation \(R \subseteq A \times B \),
+-- where the first element represents an element \( (x,y) \in A \times B \)
 -- and the second element indicates via a 'Bit' , if \( (x,y) \in R \) or not.
--- 
+--
 -- ==== __Example__
 --
 -- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false)]
@@ -168,10 +168,10 @@ assocs ( Relation r ) = A.assocs r
 elems :: (Ix a, Ix b) => Relation a b -> [Bit]
 elems ( Relation r ) = A.elems r
 
--- | The 'Bit'-value for a given element \( (x,y) \in A \times B \) 
+-- | The 'Bit'-value for a given element \( (x,y) \in A \times B \)
 -- and a given relation \(R \subseteq A \times B \) that indicates
 -- if \( (x,y) \in R \) or not.
--- 
+--
 -- ==== __Example__
 --
 -- >>> r = build ((0,0),(1,1)) [((0,0), false), ((0,1), true), ((1,0), true), ((1,1), false))]
@@ -182,27 +182,27 @@ elems ( Relation r ) = A.elems r
 (!) :: (Ix a, Ix b) => Relation a b -> (a, b) -> Bit
 Relation r ! p = r A.! p
 
--- | The domain \(A\) of a relation \(R \subseteq A \times B\). 
+-- | The domain \(A\) of a relation \(R \subseteq A \times B\).
 domain :: (Ix a, Ix b) => Relation a b -> [a]
 domain r =
   let ((x,_),(x',_)) = bounds r
   in A.range (x,x')
 
--- | The codomain \(B\) of a relation \(R \subseteq A \times B\). 
+-- | The codomain \(B\) of a relation \(R \subseteq A \times B\).
 codomain :: (Ix a, Ix b) => Relation a b -> [b]
 codomain r =
   let ((_,y),(_,y')) = bounds r
   in A.range (y,y')
 
--- | The universe \(A\) of a relation \(R \subseteq A \times A\). 
+-- | The universe \(A\) of a relation \(R \subseteq A \times A\).
 universe :: Ix a => Relation a a -> [a]
 universe r
   | is_homogeneous r = domain r
   | otherwise = error "Relation is not homogeneous!"
 
--- | The size of the universe \(A\) of a relation \(R \subseteq A \times A\). 
+-- | The size of the universe \(A\) of a relation \(R \subseteq A \times A\).
 universeSize :: Ix a => Relation a a -> Int
-universeSize r 
+universeSize r
   | is_homogeneous r =
       let ((a,_),(c,_)) = bounds r
       in A.rangeSize (a,c)
@@ -211,7 +211,7 @@ universeSize r
 -- | Tests if a relation is homogeneous, i.e., if the domain is equal to the codomain.
 is_homogeneous :: Ix a => Relation a a -> Bool
 is_homogeneous r =
-  let ((a,b),(c,d)) = bounds r 
+  let ((a,b),(c,d)) = bounds r
   in (a == b) && (c == d)
 
 -- | The number of pairs \( (x,y) \in R \) for the given relation

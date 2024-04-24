@@ -29,7 +29,7 @@ import Data.Ix
 import Control.Monad ( guard )
 
 
--- | Tests if a relation \( R \subseteq A \times A \) is terminating, i.e., 
+-- | Tests if a relation \( R \subseteq A \times A \) is terminating, i.e.,
 -- there is no infinite sequence \( x_1, x_2, ... \) with \( x_i \in A \)
 -- such that \( (x_i, x_{i+1}) \in R \) holds.
 --
@@ -37,7 +37,7 @@ import Control.Monad ( guard )
 terminating :: Ix a => Relation a a -> Bit
 terminating r = irreflexive $ transitive_closure r
 
--- | Monadic version of 'terminating'. 
+-- | Monadic version of 'terminating'.
 --
 -- Note that @assert_terminating@ cannot be used for expressing non-termination of a relation,
 -- only for expressing termination.
@@ -58,7 +58,7 @@ terminating r = irreflexive $ transitive_closure r
 --     _                   -> return False
 -- @
 assert_terminating :: (Ix a, MonadSAT s m) => Relation a a -> m ()
-assert_terminating r = do   
+assert_terminating r = do
   s <- relation $ bounds r
   assert $ and [
       transitive s
@@ -74,7 +74,7 @@ peak r = product (mirror r)
 
 -- | Constructs the valley \( R \circ S^{-1} \) of two relations
 -- \( R, S \subseteq A \times A \).
--- 
+--
 -- Formula size: linear in \( |A|^3 \)
 valley :: Ix a => Relation a a -> Relation a a -> Relation a a
 valley r s = product r (mirror s)
@@ -84,7 +84,7 @@ valley r s = product r (mirror s)
 --
 -- Formula size: linear in \( |A|^3 \)
 locally_confluent :: Ix a => Relation a a -> Bit
-locally_confluent r = 
+locally_confluent r =
   let r' = transitive_reflexive_closure r
   in implies (peak r r) (valley r' r')
 
@@ -93,7 +93,7 @@ locally_confluent r =
 --
 -- Formula size: linear in \( |A|^3 \)
 confluent :: Ix a => Relation a a -> Bit
-confluent r = 
+confluent r =
   let r' = transitive_reflexive_closure r
   in implies (peak r' r') (valley r' r')
 
@@ -108,14 +108,14 @@ semiconfluent r =
   let r' = transitive_reflexive_closure r
   in implies (peak r r') (valley r' r')
 
--- | Tests if a relation \( R \subseteq A \times A \) is convergent, i.e., 
+-- | Tests if a relation \( R \subseteq A \times A \) is convergent, i.e.,
 -- \( R \) is 'terminating' and 'confluent'.
 --
 -- Formula size: linear in \( |A|^3 \)
 convergent :: Ix a => Relation a a -> Bit
 convergent r = and [terminating r, locally_confluent r]
 
--- | Monadic version of 'convergent'. 
+-- | Monadic version of 'convergent'.
 --
 -- Note that @assert_convergent@ cannot be used for expressing non-convergence of a relation,
 -- only for expressing convergence.
@@ -137,7 +137,7 @@ convergent r = and [terminating r, locally_confluent r]
 --     _                   -> return False
 -- @
 assert_convergent :: (Ix a, MonadSAT s m) => Relation a a -> m ()
-assert_convergent r = do   
+assert_convergent r = do
   s <- relation $ bounds r
   t <- relation $ bounds r
   let u = universe r
@@ -152,32 +152,32 @@ assert_convergent r = do
         (x,y) <- i; z <- u; guard $ y /= z
         return $ t ! (x,y) && t ! (x,z) ]
 
--- | Tests if the matrix representation (i.e. the array) of a relation 
+-- | Tests if the matrix representation (i.e. the array) of a relation
 -- \( R \subseteq A \times A \) is point symmetric, i.e., for the matrix representation
 -- \( \begin{pmatrix} a_{11} & \dots & a_{1n} \\ \vdots & \ddots & \vdots \\ a_{n1} & \dots & a_{nn} \end{pmatrix} \)
 -- holds \( a_{ij} = a_{(n-i+1)(n-j+1)} \).
 point_symmetric :: Ix a => Relation a a -> Bit
-point_symmetric r 
+point_symmetric r
   | is_homogeneous r = elems r === reverse (elems r)
   | otherwise = error "The domain must equal the codomain!"
 
--- | Given two relations \( R, S \subseteq A \times A \), 
+-- | Given two relations \( R, S \subseteq A \times A \),
 -- construct \( R \) relative to \( S \) defined by \( R/S = S^* \circ R \circ S^* \).
 --
 -- Formula size: linear in \( |A|^3 \)
 relative_to :: Ix a => Relation a a -> Relation a a -> Relation a a
-r `relative_to` s = 
+r `relative_to` s =
   let s' = transitive_reflexive_closure s
   in foldl1 product [ s', r , s' ]
 
--- | Tests if a relation \( R \subseteq A \times A \) is connected, 
+-- | Tests if a relation \( R \subseteq A \times A \) is connected,
 -- i.e., \( (R \cup R^{-1})^* = A \times A \).
 --
 -- Formula size: linear in \( |A|^3 \)
 connected :: Ix a => Relation a a -> Bit
 connected r = complete $ equivalence_closure r
 
--- | Given an element \( x \in A \) and a relation \( R \subseteq A \times A \), 
+-- | Given an element \( x \in A \) and a relation \( R \subseteq A \times A \),
 -- check if \( x \) is a normal form, i.e., \( \forall y \in A: (x,y) \notin R \).
 --
 -- Formula size: linear in \( |A| \)
@@ -186,8 +186,8 @@ is_nf x r =
   let ((_,b),(_,d)) = bounds r
   in nor $ map (r !) $ range ((x,b),(x,d))
 
--- | Tests if a relation \( R \subseteq A \times A \) has the normal form property, 
--- i.e., \( \forall a,b \in A \) holds: if \(b\) is a normal form and 
+-- | Tests if a relation \( R \subseteq A \times A \) has the normal form property,
+-- i.e., \( \forall a,b \in A \) holds: if \(b\) is a normal form and
 -- \( (a,b) \in (R \cup R^{-1})^{*} \), then \( (a,b) \in R^{*} \).
 --
 -- Formula size: linear in \( |A|^3 \)
@@ -198,8 +198,8 @@ nf_property r = and $ do
   (x,y) <- indices r
   return $ and [is_nf y r, ec ! (x,y)] ==> trc ! (x,y)
 
--- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property, 
--- i.e., \( \forall a,b \in A \) with \( a \neq b \) holds: if \(a\) and \(b\) are normal forms, 
+-- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property,
+-- i.e., \( \forall a,b \in A \) with \( a \neq b \) holds: if \(a\) and \(b\) are normal forms,
 -- then \( (a,b) \notin (R \cup R^{-1})^{*} \).
 --
 -- Formula size: linear in \( |A|^3 \)
@@ -210,7 +210,7 @@ unique_nfs r = and $ do
   guard $ x < y
   return $ and [is_nf x r, is_nf y r] ==> not $ ec ! (x,y)
 
--- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property 
+-- | Tests if a relation \( R \subseteq A \times A \) has the unique normal form property
 -- with respect to reduction, i.e., \( \forall a,b \in A \) with \( a \neq b \) holds:
 -- if \(a\) and \(b\) are normal forms, then \( (a,b) \notin ((R^{*})^{-1} \circ R^{*}) \).
 --
