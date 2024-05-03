@@ -30,23 +30,27 @@ main = do
 -- | not 4-colorable and K3-free (21 or 22 nodes?)
 variant_a :: IO ()
 variant_a = do
-  let n = 22; c = 4; k = 3
+  let n = 22
+      c = 4
+      k = 3
   formulaSize $ problem n c k
   solve $ problem n c k
 
 -- | not 4-colorable and K4-free (11 nodes)
 variant_b :: IO ()
 variant_b = do
-  let n = 11; c = 4; k = 4
+  let n = 11
+      c = 4
+      k = 4
   formulaSize $ problem n c k
   solve $ problem n c k
 
 
 solve :: StateT QSAT IO (Relation Int Int) -> IO ()
 solve p = do
-  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) $ p
+  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) p
   case result of
-    (Satisfied, Just r) -> mapM_ putStrLn $ [table r, show $ edgesA r]
+    (Satisfied, Just r) -> mapM_ putStrLn [table r, show $ edgesA r]
     _                   -> putStrLn "unsat"
 
 -- | @problem n c k@ generates a QBF problem that encodes a graph with @n@ nodes,
@@ -73,7 +77,7 @@ universally_quantified_relation bnd = do
       return (p,x)
   return $ build bnd pairs
 
--- | @has_k n r@ encodes the constraint, that @r@ has a complete subgraph with @n@ nodes.
+-- | @has_k n r@ encodes the constraint that @r@ has a complete subgraph with @n@ nodes.
 has_k :: Ix a => Int -> Relation a a -> Bit
 has_k n r = or $ do
   xss <- select n $ universe r
@@ -86,9 +90,9 @@ has_k n r = or $ do
 select :: Int -> [a] -> [[a]]
 select 0 _ = [[]]
 select _ [] = []
-select k (x:xs) = map (x:) (select (k-1) xs) <> select k xs
+select k (x:xs) = map (x:) (select (k-1) xs) ++ select k xs
 
--- | Given a relation r with domain a und codomain b, check if r matches every element in a
+-- | Given a relation r with domain a and codomain b, check if r matches every element in a
 -- to exactly one element in b.
 is_coloring :: Ix a => Relation a a -> Bit
 is_coloring c = and $ do
@@ -97,7 +101,7 @@ is_coloring c = and $ do
     j <- codomain c
     return $ c!(i,j)
 
--- | @proper c r@ encodes the constraint, that @c@ is a proper coloring for @r@.
+-- | @proper c r@ encodes the constraint that @c@ is a proper coloring for @r@.
 proper :: Ix a => Relation a a -> Relation a a -> Bit
 proper col r = and $ do
   (p,q) <- indices r
@@ -109,4 +113,4 @@ edgesA :: (Ix a, Ix b) => Array (a,b) Bool -> [(a,b)]
 edgesA a = [ i | (i, b) <- A.assocs a, b == True]
 
 formulaSize :: StateT QSAT Identity a -> IO ()
-formulaSize p = mapM_ C.putStrLn $ take 2 $ B.split 10 $ qdimacsQSAT $ p
+formulaSize p = mapM_ C.putStrLn $ take 2 $ B.split 10 $ qdimacsQSAT p

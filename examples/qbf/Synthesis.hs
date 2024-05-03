@@ -60,7 +60,7 @@ aig_exactly = do
 
 solve :: StateT QSAT IO (Relation Int Int, Relation Int Int) -> IO ()
 solve p = do
-  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) $ p
+  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) p
   case result of
     (Satisfied, Just (s,o)) -> printf "output: %s\nAIG:\n%s%s\n" (show $ map fst $ sortOn snd $ edgesA o) (table s) (show $ edgesA s)
     _                       -> putStrLn "unsat"
@@ -72,7 +72,7 @@ problem f n l m = do
   s <- relation ((n+1,1),(n+l,n+l)) -- selection variables: (x,y) is in s iff gate x takes gate/input y as an input
   assert $ and $ do -- ensure that s is acyclic (DAG)
     (i,j) <- indices s
-    guard $ (i <= j)
+    guard (i <= j)
     return $ s!(i,j) === false
   o <- relation ((1,1),(n+l,m)) -- output variables: (x,y) is in o iff output y is gate/input x
   assert $ regular_in_degree 1 o
@@ -103,7 +103,7 @@ universally_quantified_relation bnd = do
 
 
 edgesA :: (Ix a, Ix b) => Array (a,b) Bool -> [(a,b)]
-edgesA a = [ i | (i, b) <- A.assocs a, b == True]
+edgesA a = [ i | (i, True) <- A.assocs a]
 
 formulaSize :: StateT QSAT Identity a -> IO ()
-formulaSize p = mapM_ C.putStrLn $ take 2 $ B.split 10 $ qdimacsQSAT $ p
+formulaSize p = mapM_ C.putStrLn $ take 2 $ B.split 10 $ qdimacsQSAT p
