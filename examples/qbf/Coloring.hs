@@ -17,31 +17,26 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Functor.Identity
 
+import Options.Applicative
+import Text.Printf (printf)
 
--- | Grötzsch graph: not 3-colorable and K3-free (11 nodes)
+
+data Coloring = Coloring Int Int Int
+
+coloring :: Parser Coloring
+coloring = Coloring
+  <$> argument auto ( metavar "n" <> showDefault <> value 11 <> help "Number of nodes of graph G" )
+  <*> argument auto ( metavar "c" <> showDefault <> value 3 <> help "G is not c-colorable" )
+  <*> argument auto ( metavar "k" <> showDefault <> value 3 <> help "G has no complete subgraph with k nodes" )
+
+-- | default: Grötzsch graph: not 3-colorable and K3-free (11 nodes)
 main :: IO ()
-main = do
-  let n = 11 -- number of nodes
-      c = 3  -- not 3-colorable
-      k = 3  -- K3-free
-  formulaSize $ problem n c k
-  solve $ problem n c k
+main = execParser options >>= run
+  where options = info (coloring <**> helper) fullDesc
 
--- | not 4-colorable and K3-free (21 or 22 nodes?)
-variant_a :: IO ()
-variant_a = do
-  let n = 22
-      c = 4
-      k = 3
-  formulaSize $ problem n c k
-  solve $ problem n c k
-
--- | not 4-colorable and K4-free (11 nodes)
-variant_b :: IO ()
-variant_b = do
-  let n = 11
-      c = 4
-      k = 4
+run :: Coloring -> IO ()
+run (Coloring n c k) = do
+  printf "n = %d, c = %d, k = %d\n" n c k
   formulaSize $ problem n c k
   solve $ problem n c k
 
