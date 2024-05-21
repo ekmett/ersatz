@@ -40,6 +40,7 @@ main = do
   solve $ problem f n l m
 
 
+-- | requires DepQBF solver (version >= 6.03)
 solve :: StateT QSAT IO (Relation Int Int, Relation Int Int) -> IO ()
 solve p = do
   result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) p
