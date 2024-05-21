@@ -24,36 +24,18 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Functor.Identity
 
 
--- | AIG where @1 && 2@ is equivalent to @4@
+-- | AIG where @atmost 2 [1,2,3,4]@ is equivalent to @10@
+--
+-- Another problem that can be quickly solved is, for example:
+-- n = 3, l = 5, m = 1, f xs = [exactly 2 xs]
+-- (AIG where @exactly 2 [1,2,3]@ is equivalent to @8@)
 main :: IO ()
 main = do
-  let n = 2 -- number of inputs
-      l = 2 -- number of steps (gates)
-      m = 1 -- number of outputs
-      f :: [Bit] -> [Bit]
-      f xs = [and xs]
-  formulaSize $ problem f n l m
-  solve $ problem f n l m
-
--- | AIG where @atmost 2 [1,2,3,4]@ is equivalent to @10@
-aig_atmost :: IO ()
-aig_atmost = do
   let n = 4 -- number of inputs
       l = 6 -- number of steps (gates)
       m = 1 -- number of outputs
       f :: [Bit] -> [Bit]
       f xs = [atmost 2 xs]
-  formulaSize $ problem f n l m
-  solve $ problem f n l m
-
--- | AIG where @exactly 2 [1,2,3]@ is equivalent to @8@
-aig_exactly :: IO ()
-aig_exactly = do
-  let n = 3 -- number of inputs
-      l = 5 -- number of steps (gates)
-      m = 1 -- number of outputs
-      f :: [Bit] -> [Bit]
-      f xs = [exactly 2 xs]
   formulaSize $ problem f n l m
   solve $ problem f n l m
 
