@@ -9,6 +9,7 @@ next [????.??.??]
   ```
 * Add support for `kissat` and the `lingeling` trio (`lingeling`, `plingeling`,
   `treengeling`) of SAT solvers.
+* Add QBF examples (requires DepQBF solver)
 
 0.5 [2023.09.08]
 ----------------
