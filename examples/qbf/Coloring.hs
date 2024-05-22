@@ -45,10 +45,9 @@ run (Coloring n c k) = do
   solve $ problem n c k
 
 
--- | requires DepQBF solver (version >= 6.03)
 solve :: StateT QSAT IO (Relation Int Int) -> IO ()
 solve p = do
-  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) p
+  result <- solveWith depqbf p
   case result of
     (Satisfied, Just r) -> mapM_ putStrLn [table r, show $ edgesA r]
     _                   -> putStrLn "unsat"
