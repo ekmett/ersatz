@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Prelude hiding (not, (&&), and, or)
@@ -16,6 +17,9 @@ import Data.List (tails)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Functor.Identity
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup(..))
+#endif
 
 import Options.Applicative
 import Text.Printf (printf)
@@ -63,7 +67,7 @@ problem n c k = do
   return r
 
 
-universally_quantified_relation :: (Ix a, Ix b, MonadQSAT s m) 
+universally_quantified_relation :: (Ix a, Ix b, MonadQSAT s m)
   => ((a,b),(a,b)) -> m (Relation a b)
 universally_quantified_relation bnd = do
   pairs <- sequence $ do
