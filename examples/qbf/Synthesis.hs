@@ -40,10 +40,9 @@ main = do
   solve $ problem f n l m
 
 
--- | requires DepQBF solver (version >= 6.03)
 solve :: StateT QSAT IO (Relation Int Int, Relation Int Int) -> IO ()
 solve p = do
-  result <- solveWith (depqbfPathArgs "depqbf" ["--qdo", "--no-dynamic-nenofex"]) p
+  result <- solveWith depqbf p
   case result of
     (Satisfied, Just (s,o)) -> printf "output: %s\nAIG:\n%s%s\n" (show $ map fst $ sortOn snd $ edgesA o) (table s) (show $ edgesA s)
     _                       -> putStrLn "unsat"
