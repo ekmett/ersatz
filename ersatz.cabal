@@ -157,7 +157,7 @@ data-files:
 
 source-repository head
   type: git
-  location: git://github.com/ekmett/ersatz.git
+  location: https://github.com/ekmett/ersatz.git
 
 flag examples
   description: Build examples
