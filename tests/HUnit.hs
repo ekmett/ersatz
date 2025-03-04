@@ -6,9 +6,8 @@ import Prelude hiding ((||), (&&), not)
 import Data.Default
 import qualified Data.IntMap.Strict as IntMap
 
-import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit (Assertion, (@?=))
+import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty.HUnit (Assertion, (@?=), testCase)
 
 import Ersatz
 import Ersatz.Internal.Literal
@@ -16,12 +15,11 @@ import Ersatz.Internal.Literal
 main :: IO ()
 main = defaultMain tests
 
-tests :: [Test]
+tests :: TestTree
 tests =
-  [ testGroup "unit tests"
-      [ testCase "unconstrained literals" case_unconstrained_literals
-      ]
-  ]
+  testGroup "unit tests"
+    [ testCase "unconstrained literals" case_unconstrained_literals
+    ]
 
 -- A regression test for #60 and #76.
 case_unconstrained_literals :: Assertion
