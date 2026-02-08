@@ -100,6 +100,16 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends gnupg ca-certificates dirmngr curl git software-properties-common libtinfo5 libnuma-dev
           apt-get install -y minisat
+          apt-get install -y unzip
+      - name: Install ApproxMC
+        run: |
+          VERSION=4.2.0
+          ASSET=approxmc-linux-amd64.zip
+          curl -L -o approxmc.zip "https://github.com/meelgroup/approxmc/releases/download/release/${VERSION}/${ASSET}"
+          unzip approxmc.zip
+          chmod +x approxmc
+          mv approxmc /usr/local/bin/
+          approxmc --version || true
       - name: Install GHCup
         run: |
           mkdir -p "$HOME/.ghcup/bin"

@@ -207,6 +207,8 @@ library
     Ersatz.Variable
     Ersatz.Counting
     Ersatz.Relation
+    Ersatz.Counter.Common
+    Ersatz.Counter.ApproxMC
 
   other-modules:
     Ersatz.Internal.Parser
@@ -346,3 +348,17 @@ test-suite z001
   hs-source-dirs: tests
   build-depends: base, ersatz
   default-language: Haskell2010
+
+test-suite counter
+   type: exitcode-stdio-1.0
+   main-is: counter.hs
+   hs-source-dirs: tests
+   build-depends: base, ersatz
+   default-language: Haskell2010
+
+test-suite approxmc
+   type: exitcode-stdio-1.0
+   main-is: approxmc.hs
+   hs-source-dirs: tests
+   build-depends: base, ersatz, temporary, process
+   default-language: Haskell2010

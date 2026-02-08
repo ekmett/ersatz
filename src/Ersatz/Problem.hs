@@ -41,6 +41,7 @@ module Ersatz.Problem
   , dimacs, qdimacs, wdimacs
   , writeDimacs, writeQdimacs, writeWdimacs
   , writeDimacs', writeQdimacs', writeWdimacs'
+  , writeProjectionSet
   ) where
 
 import Data.ByteString.Builder
@@ -59,7 +60,7 @@ import qualified Data.List.NonEmpty as NE
 import Ersatz.Internal.Formula
 import Ersatz.Internal.Literal
 import Ersatz.Internal.StableName
-import System.IO ( withFile, IOMode(WriteMode) )
+import System.IO ( withFile, IOMode(WriteMode, AppendMode) )
 import System.IO.Unsafe
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
@@ -278,6 +279,13 @@ wdimacs t = comments <> problem <> clauses
 
     tClauses = wdimacsClauses t
 
+-- | Generate a 'Builder' out of a projection variable set.
+projectionSet :: [Int] -> Builder
+projectionSet ps =
+    string7 "c p show "
+    <> mconcat (map (\i -> intDec i <> char7 ' ') ps)
+    <> string7 "0\n"
+
 bComment :: ByteString -> Builder
 bComment bs = bLine [ char7 'c', byteString bs ]
 
@@ -385,3 +393,10 @@ writeQdimacs' path = writeBuilder path . qdimacs
 -- to experiment with solvers, solver options, or measure effects of different encodings.
 writeWdimacs' :: (MonadIO m, WDIMACS t) => FilePath -> t -> m ()
 writeWdimacs' path = writeBuilder path . wdimacs
+
+-- | Write a projection set to a file at a particular path. Useful
+-- for ApproxMC. For example, if `ps` is [1, 2, 3, 4, 5], writes "c p show 1 2 3 4 5 0"
+writeProjectionSet :: MonadIO m => FilePath -> [Int] -> m ()
+writeProjectionSet path ps = liftIO $ do
+  withFile path AppendMode $ \fh ->
+    hPutBuilder fh (projectionSet ps)

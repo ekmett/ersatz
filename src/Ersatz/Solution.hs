@@ -11,6 +11,8 @@ module Ersatz.Solution
   ( Solution(..), solutionFrom
   , Result(..)
   , Solver
+  , CountResult(..)
+  , Counter
   ) where
 
 import Control.Lens
@@ -68,3 +70,18 @@ instance Bounded Result where
 --
 -- * @m@ is typically 'IO'
 type Solver s m = s -> m (Result, IntMap Bool)
+
+data CountResult
+  = CountUnsolved
+  | Count Integer
+  deriving (Eq, Ord, Show, Read)
+
+-- | A @'Counter' m@ is responsible for invoking a counter and
+-- returning a 'CountResult'.
+--
+-- * @s@ is typically 'SAT' or 'QSAT'
+--
+-- * [Int] is the list of variables to project over
+--
+-- * @m@ is typically 'IO'
+type Counter s m = s -> [Int] -> m CountResult
